@@ -41,7 +41,6 @@
         "@babel/preset-env": "^7.15.6"
     },
     "scripts": {
-        "preinstall": "git config pull.rebase true",
         "lint": "npx eslint \"./**/*.ts\" --config .eslintrc.js",
         "lint:fix": "npm run lint -- --fix",
         "build": "tsc --project tsconfig.json --noemit false",
