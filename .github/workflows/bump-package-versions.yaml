@@ -37,7 +37,7 @@ jobs:
           git config user.email 'kartoffelgames@users.noreply.github.com'
       - name: Bump version numbers
         run: |
-          npm version patch
+          npm version --git-tag-version false patch
       - name: Push updated versions
         run: |         
           git commit -am "Bump package versions."
