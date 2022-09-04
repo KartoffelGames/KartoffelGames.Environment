@@ -1,0 +1,23 @@
+{
+    "folders": [
+        {
+            "name": "KartoffelGames.Enviroment",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.nyc_output": true,
+            "**/.turbo": true,
+            "**/*.tsbuildinfo": true,
+            "**/coverage": true,
+            "**/dist": true,
+            "**/node_modules": true
+        },
+        "typescript.implementationsCodeLens.enabled": true,
+        "typescript.referencesCodeLens.enabled": true,
+        "javascript.format.semicolons": "insert",
+        "typescript.referencesCodeLens.showOnAllFunctions": true,
+        "typescript.tsdk": "node_modules\\typescript\\lib"
+    }
+}

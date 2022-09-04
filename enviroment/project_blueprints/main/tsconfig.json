@@ -1,0 +1,52 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+      "allowUnreachableCode": false,
+      "alwaysStrict": true,
+      "baseUrl": "./",
+      "build": true,
+      "composite": true,
+      "declaration": true,
+      "declarationMap": true,
+      "emitDecoratorMetadata": true,
+      "exactOptionalPropertyTypes": true,
+      "experimentalDecorators": true,
+      "forceConsistentCasingInFileNames": true,
+      "lib": [
+        "ES2021",
+        "DOM"
+      ],
+      "module": "CommonJS",
+      "moduleResolution": "Node",
+      "noEmit": true,
+      "noEmitOnError": true,
+      "noImplicitAny": true,
+      "noImplicitOverride": true,
+      "noImplicitReturns": true,
+      "noImplicitThis": true,
+      "noPropertyAccessFromIndexSignature": true,
+      "noUnusedParameters": true,
+      "removeComments": false,
+      "sourceMap": true,
+      "strictBindCallApply": true,
+      "strictFunctionTypes": true,
+      "strictNullChecks": true,
+      "strictPropertyInitialization": true,
+      "target": "ESNext",
+      "useUnknownInCatchVariables": true
+    },
+    "exclude": [
+      "**/node_modules/*",
+      "node_modules",
+      "**/tmp/*",
+      "tmp",
+      "**/Library/*",
+      "Library"
+    ],
+    "files": [
+      "node_modules/@kartoffelgames/enviroment/enviroment/declaration/module-declaration.d.ts"
+    ],
+    "include": [
+      "./**/*.ts"
+    ]
+  }

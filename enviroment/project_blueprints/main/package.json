@@ -1,0 +1,23 @@
+{
+    "name": "{{PROJECT_NAME}}",
+    "version": "0.0.0",
+    "license": "MIT",
+    "scripts": {
+        "preinstall": "git config pull.rebase true",
+        "lint": "npx eslint \"./**/*.ts\" --config .eslintrc.js",
+        "lint:fix": "npm run lint -- --fix"
+    },
+    "private": true,
+    "workspaces": [
+        "./packages/*"
+    ],
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.36.1",
+        "@typescript-eslint/parser": "^5.36.1",
+        "eslint": "^8.23.0",
+        "turbo": "^1.0.28",
+        "@kartoffelgames/enviroment": "^0.0.1"
+    },
+    "packageManager": "npm@8.1.2",
+    "kg.root": true
+}
