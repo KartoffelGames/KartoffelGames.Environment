@@ -41,7 +41,7 @@ jobs:
           git config user.email 'kartoffelgames@users.noreply.github.com'
       - name: Bump version numbers
         run: |
-          npm version patch
+          npm version --git-tag-version false patch
       - name: Npm install
         run: npm ci --ignore-scripts
       - name: Build
