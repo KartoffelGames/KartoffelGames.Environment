@@ -38,8 +38,8 @@
   },
   "exclude": [
     "node_modules/**/*",
-    "Enviroment/**/*",
-    "Library/**/*"
+    "enviroment/**/*",
+    "library/**/*",
   ],
   "files": [
     "enviroment/declaration/module-declaration.d.ts"

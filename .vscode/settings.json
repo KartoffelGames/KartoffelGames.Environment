@@ -1,5 +1,5 @@
 {
     "eslint.options": {
-        "overrideConfigFile": "./../../.eslintrc.js"
+        "overrideConfigFile": "./.eslintrc.js"
     }
 }
