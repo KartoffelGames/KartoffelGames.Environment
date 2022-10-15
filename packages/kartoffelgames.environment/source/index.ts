@@ -16,13 +16,13 @@ import { Workspace } from './helper/workspace';
         // Get paths.
         const lCliRootPath: string = path.resolve(__dirname, '..', '..'); // Called from /library/source
 
-        // Setup enviroment information.
+        // Setup environment information.
         const lParameter: Parameter = new Parameter('index.js');
         const lWorkspace: Workspace = new Workspace(process.cwd(), lCliRootPath);
         const lCommandMap: CommandMap = new CommandMap('kg', lParameter);
 
         // Output main banner.
-        lConsole.banner('KG ENVIROMENT');
+        lConsole.banner('KG ENVIRONMENT');
 
         // Add commands.
         lCommandMap.add('create <blueprint_name>', async (pData: CommandData) => {

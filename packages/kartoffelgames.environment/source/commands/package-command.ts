@@ -22,7 +22,7 @@ export class PackageCommand {
      */
     public async create(pBlueprintType: string): Promise<void> {
         const lConsole = new Console();
-        const lBlueprintPath = path.resolve(this.mWorkspace.paths.cli.enviroment.packageBlueprints, pBlueprintType.toLowerCase());
+        const lBlueprintPath = path.resolve(this.mWorkspace.paths.cli.environment.packageBlueprints, pBlueprintType.toLowerCase());
 
         // Output heading.
         lConsole.writeLine('Create Package');
@@ -82,7 +82,7 @@ export class PackageCommand {
      */
     public async init(pBlueprintType: string, pWorkingDirectory: string): Promise<void> {
         const lConsole = new Console();
-        const lBlueprintPath = path.resolve(this.mWorkspace.paths.cli.enviroment.projectBlueprints, pBlueprintType.toLowerCase());
+        const lBlueprintPath = path.resolve(this.mWorkspace.paths.cli.environment.projectBlueprints, pBlueprintType.toLowerCase());
         const lWorkingDirectory: string = path.resolve(pWorkingDirectory);
 
         // Output heading.

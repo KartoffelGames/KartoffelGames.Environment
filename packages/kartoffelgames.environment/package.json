@@ -1,0 +1,62 @@
+{
+    "name": "@kartoffelgames/environment",
+    "projectName": "KartoffelGames.Environment",
+    "version": "0.0.1",
+    "description": "KartoffelGames.Environment",
+    "author": {
+        "name": "KartoffelGames"
+    },
+    "files": [
+        "library/source/**/*",
+        "environment/**/*"
+    ],
+    "types": "library/source/index.d.ts",
+    "bin": {
+        "kg": "library/source/index.js"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.36.1",
+        "@typescript-eslint/parser": "^5.36.1",
+        "eslint": "^8.23.0"
+    },
+    "dependencies": {
+        "@types/chai": "^4.2.21",
+        "@types/mocha": "^5.2.7",
+        "@types/node": "^18.7.13",
+        "chai": "^4.3.4",
+        "mocha": "^9.1.3",
+        "nyc": "^15.1.0",
+        "jsdom": "^19.0.0",
+        "jsdom-global": "^3.0.2",
+        "typescript": "^4.4.2",
+        "webpack": "^5.51.1",
+        "webpack-cli": "^4.8.0",
+        "webpack-dev-server": "^4.10.0",
+        "url-loader": "^4.1.1",
+        "ts-loader": "^8.0.9",
+        "raw-loader": "^4.0.2",
+        "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
+        "babel-loader": "^8.2.2",
+        "@babel/plugin-transform-async-to-generator": "^7.14.5",
+        "@babel/preset-env": "^7.15.6"
+    },
+    "scripts": {
+        "build": "kg build KartoffelGames.Environment",
+        "test": "kg test KartoffelGames.Environment"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/KartoffelGames/KartoffelGames.Environment.git",
+        "directory": "packages/kartoffelgames.environment"
+    },
+    "bugs": {
+        "url": "https://github.com/KartoffelGames/KartoffelGames.Environment/issues"
+    },
+    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
+    "kg": {
+        "config": {
+            "blueprint": "package",
+            "pack": false
+        }
+    }
+}
