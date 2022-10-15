@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment",
     "projectName": "KartoffelGames.Environment",
-    "version": "0.0.1",
+    "version": "0.0.6",
     "description": "KartoffelGames.Environment",
     "author": {
         "name": "KartoffelGames"
@@ -41,8 +41,8 @@
         "@babel/preset-env": "^7.15.6"
     },
     "scripts": {
-        "build": "kg build KartoffelGames.Environment",
-        "test": "kg test KartoffelGames.Environment"
+        "build": "tsc",
+        "test": "echo EMPTY"
     },
     "repository": {
         "type": "git",
