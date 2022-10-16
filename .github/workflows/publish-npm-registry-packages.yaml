@@ -24,7 +24,7 @@ jobs:
       - name: Install updated verions
         run: npm ci --ignore-scripts
       - name: Run tests
-      - run: npm run test
+        run: npm run test
 
   publish-npm-packages:
     needs: test
