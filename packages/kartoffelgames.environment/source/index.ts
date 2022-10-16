@@ -37,7 +37,7 @@ import { Workspace } from './helper/workspace';
 
         lCommandMap.add('sync', async (_pData: CommandData) => {
             await new PackageCommand(lWorkspace).sync();
-        }, 'Sync all local dependency verions.');
+        }, 'Sync all local dependency versions.');
 
         lCommandMap.add('build <project_name>', async (pData: CommandData) => {
             const lPackageName: string = pData.pathData['project_name'];
