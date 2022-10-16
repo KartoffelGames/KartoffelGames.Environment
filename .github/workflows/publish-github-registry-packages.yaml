@@ -22,7 +22,7 @@ jobs:
       - name: build
         run: npx turbo run build --force
       - name: Sync versions
-        run: npx @kartoffelgames/environment sync
+        run: npx kg sync
       - name: Install updated verions
         run: npm ci --ignore-scripts
       - name: Run tests
@@ -55,7 +55,7 @@ jobs:
         run: |
           npm version --git-tag-version false patch
       - name: Sync versions
-        run: npx @kartoffelgames/environment sync
+        run: npx kg sync
       - name: Push updated versions
         run: |         
           git commit -am "Bump package versions."
