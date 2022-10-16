@@ -18,6 +18,8 @@ jobs:
         with:
           node-version: 16
       - run: npm ci --ignore-scripts
+      - run: npx @kartoffelgames/environment sync
+      - run: npm ci --ignore-scripts
       - run: npm run test
 
   publish-github-packages:
@@ -39,13 +41,16 @@ jobs:
         run: |
           git config user.name "GITHUBACTION"
           git config user.email 'kartoffelgames@users.noreply.github.com'
+      - name: Initial npm install
+        run: npm ci --ignore-scripts
       - name: Bump version numbers
-        run: |
-          npm version --git-tag-version false patch
-      - name: Npm install
+        run: npm version --git-tag-version false patch
+      - name: Sync version numbers
+        run: npx @kartoffelgames/environment sync
+      - name: Npm install updated versions
         run: npm ci --ignore-scripts
       - name: Build
-        run: npm run build
+        run: npx turbo run build --force
       - name: Push updated versions
         run: |         
           git commit -am "Bump package versions."
