@@ -22,7 +22,7 @@ jobs:
       - name: build
         run: npx turbo run build --force
       - name: Sync versions
-        run: npx kg sync
+        run: npm run sync
       - name: Install updated verions
         run: npm ci --ignore-scripts
       - name: Run tests

@@ -5,7 +5,8 @@
     "scripts": {
         "init-local-git": "git config pull.rebase true",
         "lint": "npx eslint \"./**/*.ts\" --config .eslintrc.js",
-        "lint:fix": "npm run lint -- --fix"
+        "lint:fix": "npm run lint -- --fix",
+        "sync": "node .\\packages\\kartoffelgames.environment\\library\\source\\index.js sync"
     },
     "private": true,
     "workspaces": [
