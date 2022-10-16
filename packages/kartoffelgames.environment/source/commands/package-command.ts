@@ -110,7 +110,7 @@ export class PackageCommand {
     }
 
     /**
-     * Sync all local dependency verions.
+     * Sync all local dependency versions.
      */
     public async sync(): Promise<void> {
         const lConsole = new Console();
