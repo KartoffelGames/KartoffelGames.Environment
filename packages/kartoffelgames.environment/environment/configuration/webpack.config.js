@@ -78,9 +78,9 @@ const gGetProjectName = () => {
 
 /**
  * Get webpack config.
- * @param pEnviroment - { buildType: 'release' | 'debug' | 'test' | 'scratchpad'; coverage: boolan; }
+ * @param pEnvironment - { buildType: 'release' | 'debug' | 'test' | 'scratchpad'; coverage: boolan; }
  */
-module.exports = (pEnviroment) => {
+module.exports = (pEnvironment) => {
     const lProjectName = gGetProjectName().toLowerCase();
 
     // Set variable configuration default values.
@@ -93,7 +93,7 @@ module.exports = (pEnviroment) => {
         includeCoverage: false
     };
 
-    switch (pEnviroment.buildType) {
+    switch (pEnvironment.buildType) {
         case 'release':
             lBuildSettings.target = 'web';
             lBuildSettings.entryFile = './source/index.ts';

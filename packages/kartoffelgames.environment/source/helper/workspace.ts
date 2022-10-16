@@ -19,17 +19,17 @@ export class Workspace {
             packages: path.resolve(this.mRootPath, 'packages'),
             cli: {
                 root: this.mCliRootPath,
-                enviroment: {
-                    packageBlueprints: path.resolve(this.mCliRootPath, 'enviroment', 'package_blueprints'),
-                    projectBlueprints: path.resolve(this.mCliRootPath, 'enviroment', 'project_blueprints'),
+                environment: {
+                    packageBlueprints: path.resolve(this.mCliRootPath, 'environment', 'package_blueprints'),
+                    projectBlueprints: path.resolve(this.mCliRootPath, 'environment', 'project_blueprints'),
                     commandBlueprints: {
-                        scratchpad: path.resolve(this.mCliRootPath, 'enviroment', 'command_blueprints', 'scratchpad')
+                        scratchpad: path.resolve(this.mCliRootPath, 'environment', 'command_blueprints', 'scratchpad')
                     }
                 },
                 files: {
-                    webpackConfig: path.resolve(this.mCliRootPath, 'enviroment', 'configuration', 'webpack.config.js'),
-                    mochaConfig: path.resolve(this.mCliRootPath, 'enviroment', 'configuration', 'mocha.config.js'),
-                    nycConfig: path.resolve(this.mCliRootPath, 'enviroment', 'configuration', 'nyc.config.json')
+                    webpackConfig: path.resolve(this.mCliRootPath, 'environment', 'configuration', 'webpack.config.js'),
+                    mochaConfig: path.resolve(this.mCliRootPath, 'environment', 'configuration', 'mocha.config.js'),
+                    nycConfig: path.resolve(this.mCliRootPath, 'environment', 'configuration', 'nyc.config.json')
                 }
             }
         };
@@ -267,7 +267,7 @@ export type RootPaths = {
     packages: string;
     cli: {
         root: string;
-        enviroment: {
+        environment: {
             packageBlueprints: string;
             projectBlueprints: string;
             commandBlueprints: {

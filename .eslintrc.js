@@ -1,7 +1,7 @@
 module.exports = {
     "root": true,
     "parserOptions": {
-        "project": "./tsconfig.json",
+        "project": "./packages/**/tsconfig.json",
         "tsconfigRootDir": __dirname
     },
     "parser": "@typescript-eslint/parser",
@@ -17,7 +17,6 @@ module.exports = {
         "node_modules/",
         "Library/",
         "Scratchpad/",
-        "Enviroment",
         "**/*.js",
         "**/*.mjs"
     ],

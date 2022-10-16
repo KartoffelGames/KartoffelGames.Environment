@@ -16,6 +16,8 @@ jobs:
         with:
           node-version: 16
       - run: npm ci --ignore-scripts
+      - run: npx @kartoffelgames/environment sync
+      - run: npm ci --ignore-scripts
       - run: npm run test
 
   publish-npm-packages:
@@ -35,7 +37,7 @@ jobs:
       - name: Npm install
         run: npm ci --ignore-scripts
       - name: Build
-        run: npm run build
+        run: npx turbo run build --force
       - name: Release
         run: npm publish --access public
 

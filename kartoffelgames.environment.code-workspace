@@ -1,7 +1,11 @@
 {
     "folders": [
         {
-            "name": "KartoffelGames.Enviroment",
+            "name": "KartoffelGames.Environment",
+            "path": "./packages/kartoffelgames.environment"
+        },
+        {
+            "name": "_ROOT",
             "path": "."
         }
     ],
