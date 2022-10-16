@@ -15,9 +15,15 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 16
-      - run: npm ci --ignore-scripts
-      - run: npx @kartoffelgames/environment sync
-      - run: npm ci --ignore-scripts
+      - name: Install inital
+        run: npm ci --ignore-scripts
+      - name: build
+        run: npx turbo run build --force
+      - name: Sync versions
+        run: npx @kartoffelgames/environment sync
+      - name: Install updated verions
+        run: npm ci --ignore-scripts
+      - name: Run tests
       - run: npm run test
 
   publish-npm-packages:
