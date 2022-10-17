@@ -45,6 +45,6 @@ jobs:
       - name: Build
         run: npx turbo run build --force
       - name: Release
-        run: npm publish --access public
+        run: npm publish -ws --access public
 
       
