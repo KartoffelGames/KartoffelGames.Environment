@@ -61,7 +61,7 @@ jobs:
           git commit -am "Bump package versions."
           git push --follow-tags --no-verify
       - name: Release to Github-Package
-        run: npm publish
+        run: npm publish -ws
 
   empty-job:
     runs-on: ubuntu-latest
