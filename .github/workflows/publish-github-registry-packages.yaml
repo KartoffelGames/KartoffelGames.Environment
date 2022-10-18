@@ -52,7 +52,7 @@ jobs:
 
       - name: Bump Package Version Numbers
         run: |
-          npm version --git-tag-version false patch
+          npm version -ws --git-tag-version false patch
 
       - name: Sync Package Versions
         run: npm run sync
