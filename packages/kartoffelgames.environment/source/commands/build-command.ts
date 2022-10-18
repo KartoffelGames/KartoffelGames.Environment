@@ -86,7 +86,7 @@ export class BuildCommand {
 
         // Copy scratchpad blueprint. No overrides.
         lConsole.writeLine('Initialize scratchpad files...');
-        FileUtil.copyDirectory(this.mWorkspaceHelper.paths.cli.enviroment.commandBlueprints.scratchpad, lPackagePaths.project.scratchpad, false, new Map<RegExp, string>(), []);
+        FileUtil.copyDirectory(this.mWorkspaceHelper.paths.cli.environment.commandBlueprints.scratchpad, lPackagePaths.project.scratchpad, false, new Map<RegExp, string>(), []);
 
         // Create shell command executor.
         const lShell: Shell = new Shell(lPackagePaths.project.root);

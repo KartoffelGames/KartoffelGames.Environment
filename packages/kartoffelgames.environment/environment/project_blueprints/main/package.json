@@ -1,5 +1,4 @@
 {
-    "name": "{{PROJECT_NAME}}",
     "version": "0.0.0",
     "license": "MIT",
     "scripts": {
@@ -16,7 +15,7 @@
         "@typescript-eslint/parser": "^5.36.1",
         "eslint": "^8.23.0",
         "turbo": "^1.0.28",
-        "@kartoffelgames/enviroment": "^0.0.1"
+        "@kartoffelgames/environment": "^0.0.1"
     },
     "packageManager": "npm@8.1.2",
     "kg.root": true

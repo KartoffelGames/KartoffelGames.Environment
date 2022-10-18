@@ -1,6 +1,7 @@
 name: Test All Packages
 
 on:
+  push:
   pull_request:
     branches:
       - 'development'
@@ -14,11 +15,15 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: 16
-      - run: npm ci --ignore-scripts
-      - run: npm run test
+          node-version: 18
+      
+      - name: NPM Install
+        run: npm ci --ignore-scripts
+
+      - name: Tests
+        run: npx turbo run test --force
 
 
 

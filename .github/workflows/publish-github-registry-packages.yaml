@@ -14,11 +14,15 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: 16
-      - run: npm ci --ignore-scripts
-      - run: npm run test
+          node-version: 18
+      
+      - name: NPM Install
+        run: npm ci --ignore-scripts
+
+      - name: Tests
+        run: npx turbo run test --force
 
   publish-github-packages:
     if: "!contains(github.event.head_commit.author.name, 'GITHUBACTION')"
@@ -30,34 +34,44 @@ jobs:
       - uses: actions/checkout@v3
         with:  
           token: ${{ secrets.CI_GITHUB_TOKEN }}
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: 18
           registry-url: 'https://npm.pkg.github.com'
           scope: '@kartoffelgames'
-      - name: Set up git for commits
+
+      - name: Setup Git For Commits
         run: |
           git config user.name "GITHUBACTION"
           git config user.email 'kartoffelgames@users.noreply.github.com'
-      - name: Bump version numbers
-        run: |
-          npm version --git-tag-version false patch
-      - name: Npm install
-        run: npm ci --ignore-scripts
+
       - name: Build
-        run: npm run build
+        run: |
+          npm ci --ignore-scripts
+          npx turbo run build --force
+
+      - name: Bump Package Version Numbers
+        run: |
+          npm version -ws --git-tag-version false patch
+
+      - name: Sync Package Versions
+        run: npm run sync
+
+
       - name: Push updated versions
         run: |         
           git commit -am "Bump package versions."
           git push --follow-tags --no-verify
-      - name: Release to Github-Package
-        run: npm publish
+
+      - name: Release Github-Package
+        run: npm publish -ws
 
   empty-job:
     runs-on: ubuntu-latest
     if: success()
     steps:
-      - name: Catch no job
+
+      - name: Catch Emty Job
         run: echo "Catch no job"
 
 
