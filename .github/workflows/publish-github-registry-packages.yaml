@@ -17,15 +17,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install inital
+      
+      - name: NPM Install
         run: npm ci --ignore-scripts
-      - name: build
-        run: npx turbo run build --force
-      - name: Sync versions
-        run: npm run sync
-      - name: Install updated versions
-        run: npm ci --ignore-scripts
-      - name: Run tests
+
+      - name: Tests
         run: npx turbo run test --force
 
   publish-github-packages:
@@ -43,31 +39,38 @@ jobs:
           node-version: 18
           registry-url: 'https://npm.pkg.github.com'
           scope: '@kartoffelgames'
-      - name: Set up git for commits
+
+      - name: Setup Git For Commits
         run: |
           git config user.name "GITHUBACTION"
           git config user.email 'kartoffelgames@users.noreply.github.com'
-      - name: Initial build
+
+      - name: Build
         run: |
           npm ci --ignore-scripts
           npx turbo run build --force
-      - name: Bump version numbers
+
+      - name: Bump Package Version Numbers
         run: |
           npm version --git-tag-version false patch
-      - name: Sync versions
+
+      - name: Sync Package Versions
         run: npm run sync
+
       - name: Push updated versions
         run: |         
           git commit -am "Bump package versions."
           git push --follow-tags --no-verify
-      - name: Release to Github-Package
+
+      - name: Release Github-Package
         run: npm publish -ws
 
   empty-job:
     runs-on: ubuntu-latest
     if: success()
     steps:
-      - name: Catch no job
+
+      - name: Catch Emty Job
         run: echo "Catch no job"
 
 
