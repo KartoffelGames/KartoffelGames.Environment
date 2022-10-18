@@ -17,15 +17,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install inital
+      
+      - name: NPM Install
         run: npm ci --ignore-scripts
-      - name: build
-        run: npx turbo run build --force
-      - name: Sync versions
-        run: npm run sync
-      - name: Install updated versions
-        run: npm ci --ignore-scripts
-      - name: Run tests
+
+      - name: Tests
         run: npx turbo run test --force
 
 
