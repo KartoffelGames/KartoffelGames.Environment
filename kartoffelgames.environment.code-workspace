@@ -5,6 +5,26 @@
             "path": "./packages/kartoffelgames.environment"
         },
         {
+            "name": "KartoffelGames.Environment.Cli",
+            "path": "./packages/kartoffelgames.environment.cli"
+        },
+        {
+            "name": "KartoffelGames.Environment.Core",
+            "path": "./packages/kartoffelgames.environment.core"
+        },
+        {
+            "name": "KartoffelGames.Environment.KG_Cli_Blueprint_Package",
+            "path": "./packages/kartoffelgames.environment.kg_cli_blueprint_package"
+        },
+        {
+            "name": "KartoffelGames.Environment.KG_Cli_Command_Create",
+            "path": "./packages/kartoffelgames.environment.kg_cli_command_create"
+        },
+        {
+            "name": "KartoffelGames.Environment.KG_Cli_Command_Help",
+            "path": "./packages/kartoffelgames.environment.kg_cli_command_help"
+        },
+        {
             "name": "_ROOT",
             "path": "."
         }

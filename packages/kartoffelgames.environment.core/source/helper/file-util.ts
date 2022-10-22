@@ -138,6 +138,7 @@ export class FileUtil {
         }
 
         const lResultList: Array<string> = new Array<string>();
+        
         for (const lChildItemName of filereader.readdirSync(lAbsoulteStartDestination)) {
             const lItemPath = path.join(lAbsoulteStartDestination, lChildItemName);
             const lItemStatus = filereader.statSync(lItemPath);

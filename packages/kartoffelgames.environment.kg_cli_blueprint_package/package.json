@@ -1,8 +1,8 @@
 {
-    "name": "@kartoffelgames/environment",
-    "projectName": "KartoffelGames.Environment",
+    "name": "@kartoffelgames/environment.kg-cli-blueprint-package",
+    "projectName": "KartoffelGames.Environment.KG_Cli_Blueprint_Package",
     "version": "0.0.1",
-    "description": "KartoffelGames.Environment",
+    "description": "KartoffelGames.Environment.KG_Cli_Blueprint_Package",
     "author": {
         "name": "KartoffelGames"
     },
@@ -11,13 +11,6 @@
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
-    "bin": {
-        "kartoffelgames-environment": "library/source/index.js"
-    },
-    "dependencies": {
-        "@kartoffelgames/environment.kg-cli-command-help": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-create": "^0.0.1"
-    },
     "devDependencies": {
         "@types/chai": "^4.2.21",
         "@types/mocha": "^5.2.7",
@@ -30,7 +23,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/KartoffelGames/KartoffelGames.Public.git",
-        "directory": "packages/kartoffelgames.environment"
+        "directory": "packages/kartoffelgames.environment.kg_cli_blueprint_package"
     },
     "bugs": {
         "url": "https://github.com/KartoffelGames/KartoffelGames.Public/issues"

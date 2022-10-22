@@ -85,31 +85,6 @@ export class Parameter {
             }
         });
     }
-
-    /**
-     * Check if parameter are on path.
-     * Pattern is case insensitive.
-     * Widcards are set with "*".
-     * 
-     * Exmpl: "create element *"
-     * @param pPathPattern - Pattern.
-     */
-    public isPath(pPathPattern: string): boolean {
-        const lPatternList: Array<string> = pPathPattern.split(' ');
-
-        for (let lIndex: number = 0; lIndex < lPatternList.length; lIndex++) {
-            const lPattern: string = <string>lPatternList[lIndex].toLowerCase();
-            const lPath: string = <string>this.mFullPath[lIndex].toLowerCase();
-
-            if (lPattern === '*' || lPattern === lPath) {
-                continue;
-            } else {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }
 
 type CommandParameter = {

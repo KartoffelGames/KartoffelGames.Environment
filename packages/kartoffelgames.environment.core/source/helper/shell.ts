@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 import { Console } from './console';
 
 export class Shell {
@@ -13,10 +13,10 @@ export class Shell {
     }
 
     /**
-     * Execute command.
+     * Execute command and output result and errors into console.
      * @param pCommand - Command.
      */
-    public async call(pCommand: string): Promise<void> {
+    public async console(pCommand: string): Promise<void> {
         const lConsole: Console = new Console();
 
         // Split command into parts.
@@ -50,6 +50,23 @@ export class Shell {
                     pResolve();
                 } else {
                     pReject('Error executing command: ' + lCommandPartList.join(' '));
+                }
+            });
+        });
+    }
+
+    /**
+     * Call command and return result.
+     * @param pCommand - Command.
+     */
+    public async result(pCommand: string): Promise<string> {
+        return new Promise<string>((pResolve, pReject) => {
+            // Call command.
+            exec(pCommand, (pError, pStdout) => {
+                if (pError) {
+                    pReject(pError);
+                } else {
+                    pResolve(pStdout);
                 }
             });
         });

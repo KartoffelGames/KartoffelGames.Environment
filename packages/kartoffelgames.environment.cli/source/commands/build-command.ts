@@ -1,6 +1,4 @@
-import { Console } from '../helper/console.js';
-import { FileUtil } from '../helper/file-util.js';
-import { Shell } from '../helper/shell.js';
+import { Console, FileUtil, Shell } from '@kartoffelgames/environment.core';
 import { Workspace, WorkspaceConfiguration } from '../helper/workspace.js';
 
 
@@ -41,7 +39,7 @@ export class BuildCommand {
 
         // Run tsc.
         lConsole.writeLine('Build typescript');
-        await lShell.call(`node ${lTypescriptCli} --project tsconfig.json --noemit false`);
+        await lShell.console(`node ${lTypescriptCli} --project tsconfig.json --noemit false`);
 
         // Copy external files.
         lConsole.writeLine('Copy external files');
@@ -51,7 +49,7 @@ export class BuildCommand {
         if (lConfiguration.config.pack) {
             lConsole.writeLine('Build Webpack');
             const lWebpackCommand: string = `node ${lWebpackCli} --config "${this.mWorkspaceHelper.paths.cli.files.webpackConfig}" --env=buildType=release`;
-            await lShell.call(lWebpackCommand);
+            await lShell.console(lWebpackCommand);
         }
 
         lConsole.writeLine('Build sucessful');
@@ -96,7 +94,7 @@ export class BuildCommand {
 
         // Build test webpack
         lConsole.writeLine('Starting Webserver...');
-        await lShell.call(`node ${lWebpackCli} serve --config "${this.mWorkspaceHelper.paths.cli.files.webpackConfig}" --env=buildType=scratchpad`);
+        await lShell.console(`node ${lWebpackCli} serve --config "${this.mWorkspaceHelper.paths.cli.files.webpackConfig}" --env=buildType=scratchpad`);
     }
 
     /**
@@ -127,7 +125,7 @@ export class BuildCommand {
 
         // Build test webpack
         lConsole.writeLine('Build Webpack');
-        await lShell.call(lWebpackCommand);
+        await lShell.console(lWebpackCommand);
 
         // Load mocha and nyc from local node-modules.
         const lMochaCli: string = require.resolve('mocha/bin/mocha');
@@ -148,7 +146,7 @@ export class BuildCommand {
 
         // Run test
         lConsole.writeLine('Run Test');
-        await lShell.call(lMochaCommand);
+        await lShell.console(lMochaCommand);
     }
 }
 

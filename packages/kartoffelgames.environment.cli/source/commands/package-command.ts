@@ -1,7 +1,6 @@
 // Load dependencies.
+import { Console, FileUtil } from '@kartoffelgames/environment.core';
 import * as path from 'path';
-import { Console } from '../helper/console.js';
-import { FileUtil } from '../helper/file-util.js';
 import { Workspace } from '../helper/workspace.js';
 
 export class PackageCommand {

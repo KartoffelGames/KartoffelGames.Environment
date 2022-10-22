@@ -1,5 +1,5 @@
+import { FileUtil } from '@kartoffelgames/environment.core';
 import * as path from 'path';
-import { FileUtil } from './file-util';
 
 export class Workspace {
     private readonly mCliRootPath: string;
