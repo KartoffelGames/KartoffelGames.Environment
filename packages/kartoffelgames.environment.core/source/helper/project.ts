@@ -83,39 +83,12 @@ export class Project {
      */
     public getPackageConfiguration(pName: string): WorkspaceConfiguration {
         // Construct paths.
-        const lPackageDirectory: string | null = this.findPackageDirectoryByName(pName);
+        const lPackageDirectory: ProjectInformation | null = this.findPackageByName(pName);
         if (lPackageDirectory === null) {
             throw `Package "${pName}" not found.`;
         }
 
-        // Read and parse package.json
-        const lFile: string = FileUtil.read(path.resolve(lPackageDirectory, 'package.json'));
-        const lJson: any = JSON.parse(lFile);
-
-        // Read project config.
-        const lConfiguration: WorkspaceConfiguration = lJson['kg'];
-
-        // Create configuration default.
-        const lDefaultConfiguration: WorkspaceConfiguration = {
-            projectRoot: false,
-            config: {
-                blueprint: 'undefined',
-                pack: false,
-                target: 'node',
-                test: []
-            }
-        };
-
-        // Fill config defaults.
-        return {
-            projectRoot: lConfiguration.projectRoot ?? lDefaultConfiguration.projectRoot,
-            config: {
-                blueprint: lConfiguration.config.blueprint ?? lDefaultConfiguration.config.blueprint,
-                pack: lConfiguration.config.pack ?? lDefaultConfiguration.config.pack,
-                target: lConfiguration.config.target ?? lDefaultConfiguration.config.target,
-                test: lConfiguration.config.test ?? lDefaultConfiguration.config.test
-            }
-        };
+        return lPackageDirectory.workspaceConfiguration;
     }
 
     /**
@@ -123,8 +96,61 @@ export class Project {
      * @param pPackageName - Package name.
      */
     public packageExists(pPackageName: string): boolean {
-        const lPackageDirectory: string | null = this.findPackageDirectoryByName(pPackageName);
+        const lPackageDirectory: ProjectInformation | null = this.findPackageByName(pPackageName);
         return lPackageDirectory !== null;
+    }
+
+    /**
+     * Read all projects of package.
+     */
+    public readAllProject(): Array<ProjectInformation> {
+        // Search all package.json files of root workspaces. Exclude node_modules.
+        const lAllFiles: Array<string> = FileUtil.findFiles(this.mRootPath, {
+            include: { fileNames: ['package.json'] },
+            exclude: { directories: ['node_modules'] }
+        });
+
+        // Create package list.
+        const lPackageList: Array<ProjectInformation> = new Array<ProjectInformation>();
+
+        // Search all files.
+        for (const lFile of lAllFiles) {
+            const lFileContent: string = FileUtil.read(lFile);
+
+            try {
+                const lPackageJson: any = JSON.parse(lFileContent);
+
+                // Ony KG workspaces.
+                if ('kg' in lPackageJson) {
+                    // Read project config.
+                    const lConfiguration: WorkspaceConfiguration = lPackageJson['kg'];
+
+                    // Create configuration default.
+                    const lDefaultConfiguration: WorkspaceConfiguration = {
+                        projectRoot: lConfiguration.projectRoot ?? false,
+                        config: {
+                            blueprint: lConfiguration.config.blueprint ?? 'undefined',
+                            pack: lConfiguration.config.pack ?? false,
+                            target: lConfiguration.config.target ?? 'node',
+                            test: lConfiguration.config.test ?? []
+                        }
+                    };
+
+                    lPackageList.push({
+                        packageName: lPackageJson['name'],
+                        projectName: lPackageJson['projectName'],
+                        version: lPackageJson['version'],
+                        directory: path.dirname(lFile),
+                        workspaceConfiguration: lDefaultConfiguration
+                    });
+                }
+            } catch (_pError) {
+                // eslint-disable-next-line no-console
+                console.warn(`Error parsing ${lFile}`);
+            }
+        }
+
+        return lPackageList;
     }
 
     /**
@@ -134,13 +160,13 @@ export class Project {
      */
     public updateProjectConfiguration(pName: string, pConfig: WorkspaceConfiguration): void {
         // Construct paths.
-        const lPackageDirectory: string | null = this.findPackageDirectoryByName(pName);
-        if (lPackageDirectory === null) {
+        const lPackageInformation: ProjectInformation | null = this.findPackageByName(pName);
+        if (lPackageInformation === null) {
             throw `Package "${pName}" not found.`;
         }
 
         // Read and parse package.json
-        const lPackageJsonPath: string = path.resolve(lPackageDirectory, 'package.json');
+        const lPackageJsonPath: string = path.resolve(lPackageInformation.directory, 'package.json');
         const lFile: string = FileUtil.read(lPackageJsonPath);
         const lJson: any = JSON.parse(lFile);
 
@@ -155,32 +181,11 @@ export class Project {
      * Find root path to project name. 
      * @param pProjectName - Project name. Can be a package name too.
      */
-    private findPackageDirectoryByName(pProjectName: string): string | null {
+    private findPackageByName(pProjectName: string): ProjectInformation | null {
         const lPackageName: string = this.convertToPackageName(pProjectName);
+        const lProjectInformation = this.readAllProject().find(pProject => pProject.packageName.toLowerCase() === lPackageName.toLowerCase());
 
-        // Search all package.json files of root workspaces. Exclude node_modules.
-        const lAllFiles: Array<string> = FileUtil.findFiles(this.mRootPath, {
-            include: { fileNames: ['package.json'] },
-            exclude: { directories: ['node_modules'] }
-        });
-
-        // Search all files.
-        for (const lFile of lAllFiles) {
-            const lFileContent: string = FileUtil.read(lFile);
-
-            try {
-                const lFileJson: any = JSON.parse(lFileContent);
-
-                // Check for package name.
-                if (lFileJson['name'] === lPackageName) {
-                    return path.dirname(lFile);
-                }
-            } catch (_pError) {
-                throw `JSON Error in ${lFile}`;
-            }
-        }
-
-        return null;
+        return lProjectInformation ?? null;
     }
 
     /**
@@ -205,6 +210,14 @@ export class Project {
         return pCurrentPath;
     }
 }
+
+export type ProjectInformation = {
+    packageName: string;
+    projectName: string;
+    version: string;
+    directory: string;
+    workspaceConfiguration: WorkspaceConfiguration;
+};
 
 export type WorkspaceConfiguration = {
     projectRoot: boolean,

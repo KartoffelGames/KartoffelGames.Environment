@@ -1,5 +1,5 @@
 import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console, FileUtil, Project } from '@kartoffelgames/environment.core';
+import { Console, FileUtil, Project, ProjectInformation } from '@kartoffelgames/environment.core';
 import * as path from 'path';
 
 export class KgCliCommand implements IKgCliCommand {
@@ -20,30 +20,51 @@ export class KgCliCommand implements IKgCliCommand {
      */
     public async run(_pParameter: CliParameter, _pCliPackages: Record<string, Array<string>>): Promise<void> {
         const lConsole = new Console();
-        const lCurrentWorkingDirectory: string = process.cwd();
-        const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
+        const lProjectHandler = new Project(process.cwd());
 
-        // Output heading.
+        // Find all packages.
+        const lPackageList: Array<ProjectInformation> = lProjectHandler.readAllProject();
+
+        // Sync package versions.
         lConsole.writeLine('Sync package version numbers...');
+        this.updatePackageVersions(lPackageList);
 
-        // Get all package.json files.
-        const lPackageFileList = FileUtil.findFiles(lProjectHandler.projectRootDirectory, {
-            include: { fileNames: ['package.json'] },
-            exclude: { directories: ['node_modules'] }
-        });
+        // Update package kg configuration.
+        lConsole.writeLine('Sync package configuration...');
+        this.updatePackageVersion(lPackageList, lProjectHandler);
 
+        lConsole.writeLine('Sync completed');
+    }
+
+    /**
+     * Update kg project configuration to updated structure.
+     * @param pProjectList - Local project list.
+     * @param pProjectHander - Project handler.
+     */
+    private updatePackageVersion(pProjectList: Array<ProjectInformation>, pProjectHander: Project): void {
+        for (const lProject of pProjectList) {
+            pProjectHander.updateProjectConfiguration(lProject.packageName, lProject.workspaceConfiguration);
+        }
+    }
+
+    /**
+     * Update local package dependencies with current project versions.
+     * @param pProjectList - Local project list.
+     */
+    private updatePackageVersions(pProjectList: Array<ProjectInformation>): void {
         // Map each package.json with its path.
         const lPackageInformations: Map<string, PackageChangeInformation> = new Map<string, PackageChangeInformation>();
-        for (const lPackageFilePath of lPackageFileList) {
-            const lFileText = FileUtil.read(lPackageFilePath);
+        for (const lProject of pProjectList) {
+            const lFileText = FileUtil.read(path.resolve(lProject.directory, 'package.json'));
             const lPackageJson = JSON.parse(lFileText);
 
             // Map package information.
             lPackageInformations.set(lPackageJson['name'], {
-                name: lPackageJson['name'],
-                path: path.dirname(lPackageFilePath),
+                packageName: lProject.packageName,
+                path: lProject.directory,
                 json: lPackageJson,
-                changed: false
+                changed: false,
+                version: lProject.version
             });
         }
 
@@ -60,7 +81,7 @@ export class KgCliCommand implements IKgCliCommand {
                         // On local package exists.
                         if (lPackageInformations.has(lDependencyName)) {
                             const lOldDependency = lCurrentPackageJson[lDependencyType][lDependencyName];
-                            const lNewDependency = `^${(<PackageChangeInformation>lPackageInformations.get(lDependencyName)).json['version']}`;
+                            const lNewDependency = `^${(<PackageChangeInformation>lPackageInformations.get(lDependencyName)).version}`;
 
                             // Check for possible changes before applying.
                             if (lNewDependency !== null && lNewDependency !== lOldDependency) {
@@ -83,14 +104,13 @@ export class KgCliCommand implements IKgCliCommand {
                 FileUtil.write(lPackageFilePath, lPackageJsonText);
             }
         }
-
-        lConsole.writeLine('Sync completed');
     }
 }
 
 type PackageChangeInformation = {
-    name: string;
+    packageName: string;
     path: string;
     json: any;
     changed: boolean;
+    version: string;
 };
