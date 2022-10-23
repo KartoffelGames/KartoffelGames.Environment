@@ -42,13 +42,31 @@ export class CliCommand {
             throw 'Command not found';
         }
 
-        // Transfer command parameter path.
+        // Create cli parameter.
         const lCliParameter: CliParameter = new CliParameter();
-        lCliParameter.path.push(...pParameter.path);
 
         // Transfer command parameters.
         for (const lParameter of pParameter.parameter.values()) {
             lCliParameter.parameter.set(lParameter.name, lParameter.value);
+        }
+
+        // Read path parameter from command.
+        const lCommandPatternParts: Array<string> = lCommand.information.commandPattern.split(' ');
+        for (let lPartIndex: number = 0; lPartIndex < lCommandPatternParts.length; lPartIndex++) {
+            const lPatternPart: string = lCommandPatternParts[lPartIndex];
+            const lCommandPart: string | null = pParameter.path[lPartIndex] ?? null;
+
+            if (lPatternPart.startsWith('<') || lPatternPart.startsWith('[')) {
+                // Read optional or static parameter name and value.
+                const lParameterName: string = lPatternPart.slice(1, lPatternPart.length - 1);
+                lCliParameter.parameter.set(lParameterName, lCommandPart);
+            } else if (lPatternPart.startsWith('--')) {
+                // Optional parameters reached.
+                break;
+            } else {
+                // Static path.
+                continue;
+            }
         }
 
         await lCommand.run(lCliParameter, this.mCliPackages);
@@ -67,13 +85,14 @@ export class CliCommand {
             // Check command pattern with path.
             let lCommandFound: boolean = true;
             for (let lIndex: number = 0; lIndex < lCommandPatternParts.length; lIndex++) {
-                const lCommandPart: string = pParameter.fullPath[lIndex] ?? '';
+                const lCommandPart: string = pParameter.path[lIndex] ?? '';
                 const lPatternPart: string = lCommandPatternParts[lIndex];
 
-                if (lPatternPart.startsWith('<') && !lCommandPart.startsWith('--')) { // Required none parameter.
+                if (lPatternPart.startsWith('<')) { // Required parameter.
                     continue;
-                } else if (lPatternPart.startsWith('[')) { // Optional any.
-                    continue;
+                } else if (lPatternPart.startsWith('[') || lCommandPart.startsWith('--')) { // Optional any.
+                    // Optional part has begun. Ignore path.
+                    break;
                 } else if (lPatternPart.toLowerCase() === lCommandPart.toLowerCase()) { // Required fixed.
                     continue;
                 } else {

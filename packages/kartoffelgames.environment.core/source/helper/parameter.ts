@@ -43,7 +43,7 @@ export class Parameter {
         let lCommandStarted: boolean = false;
         let lCommandParameterStarted: boolean = false;
         process.argv.forEach((pValue: string) => {
-            // Process command only when starting command has reached.
+            // Process command only when starting command is reached.
             if (!lCommandStarted) {
                 // Check if path started.
                 if (pValue.toLowerCase().includes(pStartingCommand.toLowerCase())) {

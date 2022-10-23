@@ -11,7 +11,7 @@ export class KgCliCommand implements IKgCliCommand {
     public get information(): KgCliCommandDescription {
         return {
             description: 'Create new package.',
-            commandPattern: 'create <blueprint_name> [project_name] [--list]'
+            commandPattern: 'create <blueprint_name> [project_name] --list'
         };
     }
 
@@ -24,9 +24,6 @@ export class KgCliCommand implements IKgCliCommand {
         const lConsole = new Console();
         const lCurrentWorkingDirectory: string = process.cwd();
         const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
-
-        // Output heading.
-        lConsole.writeLine('Create Package');
 
         // Read required parameter.
         const lBlueprintName: string = <string>pParameter.parameter.get('blueprint_name')?.toLowerCase();
@@ -49,10 +46,13 @@ export class KgCliCommand implements IKgCliCommand {
             return;
         }
 
+        // Output heading.
+        lConsole.writeLine('Create Package');
+
         // Find blueprint by name.
         const lBlueprint: IKgCliPackageBlueprint | undefined = lBlueprintList.find(pBlueprint => pBlueprint.information.name.toLowerCase() === lBlueprintName);
         if (!lBlueprint) {
-            throw `Package blueprint "${lBlueprintName}" not found.`;
+            throw `Blueprint "${lBlueprintName}" not found.`;
         }
 
         // Find name. Get from command parameter on promt user.
