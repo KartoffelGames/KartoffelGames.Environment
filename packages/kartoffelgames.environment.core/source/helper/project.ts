@@ -16,7 +16,23 @@ export class Project {
      * @param pCurrentPath - Project root path.
      */
     public constructor(pCurrentPath: string) {
-        this.mRootPath = this.findWorkspaceRootPath(pCurrentPath);
+        this.mRootPath = (() => {
+            const lAllFiles: Array<string> = FileUtil.findFiles(pCurrentPath, {
+                direction: 'insideOut',
+                include: { fileNames: ['package.json'] }
+            });
+
+            for (const lFile of lAllFiles) {
+                const lFileContent: string = FileUtil.read(lFile);
+                const lFileJson: any = JSON.parse(lFileContent);
+
+                if (lFileJson['kg']?.['projectRoot']) {
+                    return path.dirname(lFile);
+                }
+            }
+
+            return pCurrentPath;
+        })();
     }
 
     /**
@@ -186,22 +202,6 @@ export class Project {
         const lProjectInformation = this.readAllProject().find(pProject => pProject.packageName.toLowerCase() === lPackageName.toLowerCase());
 
         return lProjectInformation ?? null;
-    }
-
-    /**
-     * Find workspace root path.
-     * @param pCurrentPath - Current path.
-     */
-    private findWorkspaceRootPath(pCurrentPath: string): string {
-        const lProjectList: Array<ProjectInformation> = this.readAllProject();
-
-        for (const lProject of lProjectList) {
-            if (lProject.workspaceConfiguration.projectRoot) {
-                return lProject.directory;
-            }
-        }
-
-        return pCurrentPath;
     }
 }
 
