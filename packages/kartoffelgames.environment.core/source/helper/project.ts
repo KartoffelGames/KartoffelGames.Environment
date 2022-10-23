@@ -153,9 +153,9 @@ export class Project {
                     };
 
                     lPackageList.push({
-                        packageName: lPackageJson['name'],
-                        projectName: lPackageJson['projectName'],
-                        version: lPackageJson['version'],
+                        packageName: lPackageJson['name'] ?? 'UNSET',
+                        projectName: lPackageJson['projectName'] ?? 'UNSET',
+                        version: lPackageJson['version'] ?? 'UNSET',
                         directory: path.dirname(lFile),
                         workspaceConfiguration: lDefaultConfiguration
                     });
