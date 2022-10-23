@@ -26,7 +26,9 @@ export class Project {
                 const lFileContent: string = FileUtil.read(lFile);
                 const lFileJson: any = JSON.parse(lFileContent);
 
-                if (lFileJson['kg']?.['projectRoot']) {
+                const lWorkspaceConfig: Partial<ProjectInformation['workspace']> = lFileJson['kg'];
+
+                if (lWorkspaceConfig?.root) {
                     return path.dirname(lFile);
                 }
             }
@@ -97,14 +99,14 @@ export class Project {
      * Read project configuration.
      * @param pName - Project name.
      */
-    public getPackageConfiguration(pName: string): WorkspaceConfiguration {
+    public getPackageConfiguration(pName: string): ProjectInformation {
         // Construct paths.
         const lPackageDirectory: ProjectInformation | null = this.findPackageByName(pName);
         if (lPackageDirectory === null) {
             throw `Package "${pName}" not found.`;
         }
 
-        return lPackageDirectory.workspaceConfiguration;
+        return lPackageDirectory;
     }
 
     /**
@@ -134,29 +136,16 @@ export class Project {
             const lFileContent: string = FileUtil.read(lFile);
 
             try {
+                // Parse json and read project information.
                 const lPackageJson: any = JSON.parse(lFileContent);
-
-                // Read project config.
-                const lConfiguration: WorkspaceConfiguration | undefined = lPackageJson['kg'];
-
-                // Create configuration default.
-                const lDefaultConfiguration: WorkspaceConfiguration = {
-                    projectRoot: lConfiguration?.projectRoot ?? false,
-                    config: {
-                        blueprint: lConfiguration?.config?.blueprint ?? 'undefined',
-                        pack: lConfiguration?.config?.pack ?? false,
-                        target: lConfiguration?.config?.target ?? 'node',
-                        test: lConfiguration?.config?.test ?? []
-                    }
-                };
-
-                lPackageList.push({
-                    packageName: lPackageJson['name'] ?? 'UNSET',
-                    projectName: lPackageJson['projectName'] ?? 'UNSET',
-                    version: lPackageJson['version'] ?? 'UNSET',
+                const lFilledProjectInformation: ProjectInformation = this.setProjectDefaults({
+                    packageName: lPackageJson['name'],
+                    version: lPackageJson['version'],
                     directory: path.dirname(lFile),
-                    workspaceConfiguration: lDefaultConfiguration
+                    workspace: lPackageJson['kg']
                 });
+
+                lPackageList.push(lFilledProjectInformation);
             } catch (_pError) {
                 // eslint-disable-next-line no-console
                 console.warn(`Error parsing ${lFile}`);
@@ -169,9 +158,9 @@ export class Project {
     /**
      * Update project kg information.
      * @param pName - Name of project.
-     * @param pConfig - Project kg information.
+     * @param pConfigInformation - Project information.
      */
-    public updateProjectConfiguration(pName: string, pConfig: WorkspaceConfiguration): void {
+    public updateProjectConfiguration(pName: string, pConfigInformation: Partial<ProjectInformation>): void {
         // Construct paths.
         const lPackageInformation: ProjectInformation | null = this.findPackageByName(pName);
         if (lPackageInformation === null) {
@@ -183,8 +172,13 @@ export class Project {
         const lFile: string = FileUtil.read(lPackageJsonPath);
         const lJson: any = JSON.parse(lFile);
 
+        // Fill in unset project settings.
+        const lFilledProjectInformation: Partial<ProjectInformation> = this.setProjectDefaults(pConfigInformation);
+
         // Read project config.
-        lJson['kg'] = pConfig;
+        lJson['name'] = lFilledProjectInformation.packageName;
+        lJson['version'] = lFilledProjectInformation.version;
+        lJson['kg'] = lFilledProjectInformation.workspace;
 
         // Save packag.json.
         FileUtil.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));
@@ -200,23 +194,45 @@ export class Project {
 
         return lProjectInformation ?? null;
     }
+
+    /**
+     * Default all unset project informations.
+     * @param pProjectInformation - Partial project information.
+     */
+    private setProjectDefaults(pProjectInformation: Partial<ProjectInformation>): ProjectInformation {
+        const lProjectName: string = pProjectInformation.workspace?.name ?? 'UNSET.PROJECT';
+
+        return {
+            packageName: this.convertToPackageName(lProjectName),
+            version: pProjectInformation.version ?? '0.0.0',
+            directory: pProjectInformation.directory ?? path.resolve(this.mRootPath, 'packages', lProjectName.toLowerCase()),
+            workspace: {
+                name: lProjectName,
+                root: pProjectInformation.workspace?.root ?? false,
+                config: {
+                    blueprint: pProjectInformation.workspace?.config?.blueprint ?? 'undefined',
+                    pack: pProjectInformation.workspace?.config?.pack ?? false,
+                    target: pProjectInformation.workspace?.config?.target ?? 'node',
+                    test: pProjectInformation.workspace?.config?.test ?? []
+                }
+            }
+        };
+    }
 }
 
 export type ProjectInformation = {
     packageName: string;
-    projectName: string;
     version: string;
     directory: string;
-    workspaceConfiguration: WorkspaceConfiguration;
-};
-
-export type WorkspaceConfiguration = {
-    projectRoot?: boolean,
-    config?: {
-        blueprint?: string;
-        pack?: boolean;
-        target?: 'web' | 'node';
-        test?: Array<TestMode>;
+    workspace: {
+        name: string;
+        root: boolean,
+        config: {
+            blueprint: string;
+            pack: boolean;
+            target: 'web' | 'node';
+            test: Array<TestMode>;
+        };
     };
 };
 

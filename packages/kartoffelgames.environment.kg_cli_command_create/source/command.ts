@@ -71,12 +71,15 @@ export class KgCliCommand implements IKgCliCommand {
         // Add package information to package.json.
         lConsole.writeLine('Set project configuration...');
         lProjectHandler.updateProjectConfiguration(lNewProjectName, {
-            projectRoot: false,
-            config: {
-                blueprint: lBlueprint.information.name,
-                pack: false,
-                target: 'node',
-                test: ['unit']
+            workspace: {
+                name: lNewProjectName,
+                root: false,
+                config: {
+                    blueprint: lBlueprint.information.name,
+                    pack: false,
+                    target: 'node',
+                    test: ['unit']
+                }
             }
         });
 

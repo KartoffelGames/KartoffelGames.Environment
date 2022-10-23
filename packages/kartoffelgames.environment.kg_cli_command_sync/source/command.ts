@@ -43,7 +43,7 @@ export class KgCliCommand implements IKgCliCommand {
      */
     private updatePackageVersion(pProjectList: Array<ProjectInformation>, pProjectHander: Project): void {
         for (const lProject of pProjectList) {
-            pProjectHander.updateProjectConfiguration(lProject.packageName, lProject.workspaceConfiguration);
+            pProjectHander.updateProjectConfiguration(lProject.packageName, lProject);
         }
     }
 
