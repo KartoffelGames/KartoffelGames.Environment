@@ -62,7 +62,7 @@ export class KgCliCommand implements IKgCliCommand {
         }
 
         // Create blueprint.
-        const lNewPackageDirectory: string = this.createBlueprint(lNewProjectName, lBlueprint, pParameter);
+        const lNewPackageDirectory: string = await this.createBlueprint(lNewProjectName, lBlueprint, pParameter);
 
         // Update vs code workspaces.
         lProjectHandler.addWorkspace(lNewProjectName, lNewPackageDirectory);
@@ -94,7 +94,7 @@ export class KgCliCommand implements IKgCliCommand {
      * @param pCommandParameter - Command parameter.
      * @returns 
      */
-    private createBlueprint(pProjectName: string, pBlueprint: IKgCliPackageBlueprint, pCommandParameter: CliParameter): string {
+    private async createBlueprint(pProjectName: string, pBlueprint: IKgCliPackageBlueprint, pCommandParameter: CliParameter): Promise<string> {
         const lConsole = new Console();
         const lCurrentWorkingDirectory: string = process.cwd();
         const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
@@ -129,7 +129,7 @@ export class KgCliCommand implements IKgCliCommand {
 
             // Execute blueprint after copy handler.
             lConsole.writeLine('Execute blueprint handler...');
-            pBlueprint.afterCopy(lTargetPath, lPackageParameter);
+            await pBlueprint.afterCopy(lTargetPath, lPackageParameter);
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
 
