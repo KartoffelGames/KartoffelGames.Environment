@@ -41,7 +41,7 @@ export class KgCliCommand implements IKgCliCommand {
             // Output all commands.
             lConsole.writeLine('Available blueprints:');
             for (const lBlueprint of lBlueprintList) {
-                lConsole.writeLine(`kg ${lBlueprint.information.name.padEnd(lMaxLength, ' ')} - ${lBlueprint.information.description}`);
+                lConsole.writeLine(`${lBlueprint.information.name.padEnd(lMaxLength, ' ')} - ${lBlueprint.information.description}`);
             }
             return;
         }
