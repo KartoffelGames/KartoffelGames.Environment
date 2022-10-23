@@ -129,10 +129,10 @@ export class Project {
                     const lDefaultConfiguration: WorkspaceConfiguration = {
                         projectRoot: lConfiguration.projectRoot ?? false,
                         config: {
-                            blueprint: lConfiguration.config.blueprint ?? 'undefined',
-                            pack: lConfiguration.config.pack ?? false,
-                            target: lConfiguration.config.target ?? 'node',
-                            test: lConfiguration.config.test ?? []
+                            blueprint: lConfiguration.config?.blueprint ?? 'undefined',
+                            pack: lConfiguration.config?.pack ?? false,
+                            target: lConfiguration.config?.target ?? 'node',
+                            test: lConfiguration.config?.test ?? []
                         }
                     };
 
@@ -193,17 +193,11 @@ export class Project {
      * @param pCurrentPath - Current path.
      */
     private findWorkspaceRootPath(pCurrentPath: string): string {
-        const lAllFiles: Array<string> = FileUtil.findFiles(pCurrentPath, {
-            direction: 'insideOut',
-            include: { fileNames: ['package.json'] }
-        });
+        const lProjectList: Array<ProjectInformation> = this.readAllProject();
 
-        for (const lFile of lAllFiles) {
-            const lFileContent: string = FileUtil.read(lFile);
-            const lFileJson: any = JSON.parse(lFileContent);
-
-            if (lFileJson['kg']?.['projectRoot']) {
-                return path.dirname(lFile);
+        for (const lProject of lProjectList) {
+            if (lProject.workspaceConfiguration.projectRoot) {
+                return lProject.directory;
             }
         }
 
@@ -220,12 +214,12 @@ export type ProjectInformation = {
 };
 
 export type WorkspaceConfiguration = {
-    projectRoot: boolean,
-    config: {
-        blueprint: string;
-        pack: boolean;
-        target: 'web' | 'node';
-        test: Array<TestMode>;
+    projectRoot?: boolean,
+    config?: {
+        blueprint?: string;
+        pack?: boolean;
+        target?: 'web' | 'node';
+        test?: Array<TestMode>;
     };
 };
 
