@@ -56,9 +56,14 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
     "kg": {
+        "projectRoot": false,
         "config": {
             "blueprint": "package",
-            "pack": false
+            "pack": false,
+            "target": "node",
+            "test": [
+                "unit"
+            ]
         }
     }
 }

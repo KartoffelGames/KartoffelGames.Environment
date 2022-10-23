@@ -197,7 +197,7 @@ export class Project {
             const lFileContent: string = FileUtil.read(lFile);
             const lFileJson: any = JSON.parse(lFileContent);
 
-            if (lFileJson['kg']?.['root']) {
+            if (lFileJson['kg']?.['projectRoot']) {
                 return path.dirname(lFile);
             }
         }

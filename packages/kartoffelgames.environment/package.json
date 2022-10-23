@@ -38,9 +38,14 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
     "kg": {
+        "projectRoot": false,
         "config": {
             "blueprint": "package",
-            "pack": false
+            "pack": false,
+            "target": "node",
+            "test": [
+                "unit"
+            ]
         }
     }
 }

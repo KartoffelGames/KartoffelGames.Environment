@@ -19,5 +19,13 @@
         "@kartoffelgames/environment": "^0.0.1"
     },
     "packageManager": "npm@8.1.2",
-    "kg.root": true
+    "kg": {
+        "projectRoot": true,
+        "config": {
+            "blueprint": "project",
+            "pack": false,
+            "target": "node",
+            "test": []
+        }
+    }
 }
