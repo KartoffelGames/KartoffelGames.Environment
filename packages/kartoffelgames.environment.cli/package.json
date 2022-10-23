@@ -1,6 +1,5 @@
 {
     "name": "@kartoffelgames/environment.cli",
-    "projectName": "KartoffelGames.Environment.Cli",
     "version": "0.0.1",
     "description": "KartoffelGames.Environment.Cli",
     "author": {
@@ -56,7 +55,8 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
     "kg": {
-        "projectRoot": false,
+        "name": "KartoffelGames.Environment.Cli",
+        "root": false,
         "config": {
             "blueprint": "package",
             "pack": false,

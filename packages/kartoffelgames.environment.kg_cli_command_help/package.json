@@ -1,6 +1,5 @@
 {
     "name": "@kartoffelgames/environment.kg-cli-command-help",
-    "projectName": "KartoffelGames.Environment.KG_Cli_Command_Help",
     "version": "0.0.1",
     "description": "KartoffelGames.Environment.KG_Cli_Command_Help",
     "author": {
@@ -34,7 +33,8 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
     "kg": {
-        "projectRoot": false,
+        "name": "KartoffelGames.Environment.KG_Cli_Command_Help",
+        "root": false,
         "config": {
             "blueprint": "package",
             "pack": false,

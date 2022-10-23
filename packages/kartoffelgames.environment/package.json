@@ -1,6 +1,5 @@
 {
     "name": "@kartoffelgames/environment",
-    "projectName": "KartoffelGames.Environment",
     "version": "0.0.1",
     "description": "KartoffelGames.Environment",
     "author": {
@@ -39,7 +38,8 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
     "kg": {
-        "projectRoot": false,
+        "name": "KartoffelGames.Environment",
+        "root": false,
         "config": {
             "blueprint": "package",
             "pack": false,
