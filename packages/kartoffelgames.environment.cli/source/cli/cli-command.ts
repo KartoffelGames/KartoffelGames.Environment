@@ -51,7 +51,7 @@ export class CliCommand {
             lCliParameter.parameter.set(lParameter.name, lParameter.value);
         }
 
-        lCommand.run(lCliParameter, this.mCliPackages);
+        await lCommand.run(lCliParameter, this.mCliPackages);
     }
 
     /**
