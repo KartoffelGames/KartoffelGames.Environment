@@ -7,10 +7,15 @@
         "name": "KartoffelGames"
     },
     "files": [
-        "library/source/**/*"
+        "library/source/**/*",
+        "blueprint/**/*"
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
+    "dependencies": {
+        "@kartoffelgames/environment.core": "^0.0.1",
+        "@kartoffelgames/environment.kg-cli-command-create": "^0.0.1"
+    },
     "devDependencies": {
         "@types/chai": "^4.2.21",
         "@types/mocha": "^5.2.7",

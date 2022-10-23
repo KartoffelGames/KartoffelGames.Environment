@@ -1,20 +1,20 @@
 export class PackageParameter {
-    private readonly mParameters: Map<string, string | null>;
     private readonly mPackageName: string;
+    private readonly mParameters: Map<string, string | null>;
     private readonly mProjectName: string;
-
-    /**
-     * Get parameters.
-     */
-    public get parameter(): Map<string, string | null> {
-        return this.mParameters;
-    }
 
     /**
      * Get package name.
      */
     public get packageName(): string {
         return this.mPackageName;
+    }
+
+    /**
+     * Get parameters.
+     */
+    public get parameter(): Map<string, string | null> {
+        return this.mParameters;
     }
 
     /**

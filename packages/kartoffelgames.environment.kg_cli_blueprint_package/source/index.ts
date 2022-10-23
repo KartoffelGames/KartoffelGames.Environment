@@ -1,24 +1,45 @@
-/*
-                // Read file text.
-                const lFileText = filereader.readFileSync(lDestinationItem, { encoding: 'utf8' });
+import { FileUtil } from '@kartoffelgames/environment.core';
+import { IKgCliPackageBlueprint } from '@kartoffelgames/environment.kg-cli-command-create';
+import { KgCliBlueprintDescription } from '@kartoffelgames/environment.kg-cli-command-create/library/source/interfaces/i-kg-cli-package-blueprint';
+import { PackageParameter } from '@kartoffelgames/environment.kg-cli-command-create/library/source/package/package-parameter';
+import * as path from 'path';
 
-                // Replace each replacement pattern.
-                let lAlteredFileText = lFileText;
-                for (const [lReplacementRegex, lReplacementValue] of pReplacementMap) {
-                    lAlteredFileText = lAlteredFileText.replace(lReplacementRegex, lReplacementValue);
-                }
+export class KgCliPackageBlueprint implements IKgCliPackageBlueprint {
+    /**
+     * Package information.
+     */
+    public get information(): KgCliBlueprintDescription {
+        return {
+            name: 'package',
+            blueprintDirectory: path.resolve(__dirname, '..', 'blueprint'),
+            description: 'Default npm package'
+        };
+    }
 
-                // Update file with altered file text.
-                filereader.writeFileSync(lDestinationItem, lAlteredFileText, { encoding: 'utf8' });
+    /**
+     * Replace placeholder in files.
+     * @param pPackageDirectory - Package directory.
+     * @param pParameter - Package parameter.
+     */
+    public async afterCopy(pPackageDirectory: string, pParameter: PackageParameter): Promise<void> {
+        // Read all files.
+        const lPackageFileList: Array<string> = FileUtil.findFiles(pPackageDirectory);
 
+        // Get only folder name of directory.
+        const lPackageFolderName = path.parse(pPackageDirectory).name;
 
+        // Check all files.
+        for (const lFilePath of lPackageFileList) {
+            let lFileContent: string = FileUtil.read(lFilePath);
 
+            // Replace placeholder inside file content.
+            lFileContent = lFileContent
+                .replaceAll('{{PROJECT_NAME}}', pParameter.projectName)
+                .replaceAll('{{PACKAGE_NAME}}', pParameter.packageName)
+                .replaceAll('{{PROJECT_FOLDER}}', lPackageFolderName);
 
-
-                // Copy all files from blueprint folder.
-        const lReplacementMap: Map<RegExp, string> = new Map<RegExp, string>();
-        lReplacementMap.set(/{{PROJECT_NAME}}/g, lProjectName);
-        lReplacementMap.set(/{{PACKAGE_NAME}}/g, lPackageName);
-        lReplacementMap.set(/{{PROJECT_FOLDER}}/g, lProjectFolder);
-        FileUtil.copyDirectory(lBlueprintPath, lPackagePath, false, lReplacementMap, []);
-         */
+            // Write changed content.
+            FileUtil.write(lFilePath, lFileContent);
+        }
+    }
+}

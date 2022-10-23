@@ -16,7 +16,8 @@
     },
     "dependencies": {
         "@kartoffelgames/environment.kg-cli-command-help": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-create": "^0.0.1"
+        "@kartoffelgames/environment.kg-cli-command-create": "^0.0.1",
+        "@kartoffelgames/environment.kg-cli-blueprint-package": "^0.0.1"
     },
     "devDependencies": {
         "@types/chai": "^4.2.21",
