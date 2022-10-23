@@ -25,6 +25,10 @@
             "path": "./packages/kartoffelgames.environment.kg_cli_command_help"
         },
         {
+            "name": "KartoffelGames.Environment.KG_Cli_Command_Sync",
+            "path": "packages\\kartoffelgames.environment.kg_cli_command_sync"
+        },
+        {
             "name": "_ROOT",
             "path": "."
         }

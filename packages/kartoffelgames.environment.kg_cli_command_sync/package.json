@@ -1,8 +1,8 @@
 {
-    "name": "@kartoffelgames/environment",
-    "projectName": "KartoffelGames.Environment",
+    "name": "@kartoffelgames/environment.kg-cli-command-sync",
+    "projectName": "KartoffelGames.Environment.KG_Cli_Command_Sync",
     "version": "0.0.1",
-    "description": "KartoffelGames.Environment",
+    "description": "KartoffelGames.Environment.KG_Cli_Command_Sync",
     "author": {
         "name": "KartoffelGames"
     },
@@ -11,14 +11,9 @@
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
-    "bin": {
-        "kartoffelgames-environment": "library/source/index.js"
-    },
     "dependencies": {
-        "@kartoffelgames/environment.kg-cli-command-help": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-create": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-blueprint-package": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-sync": "^0.0.1"
+        "@kartoffelgames/environment.cli": "^0.0.1",
+        "@kartoffelgames/environment.core": "^0.0.1"
     },
     "devDependencies": {
         "@types/chai": "^4.2.21",

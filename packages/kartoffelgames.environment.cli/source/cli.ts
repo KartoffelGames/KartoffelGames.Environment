@@ -50,10 +50,6 @@ import { CliPackages } from './cli/cli-packages';
             await new PackageCommand(lWorkspace).init(lBlueprintType, process.cwd());
         }, 'Initialize new project in current directory.');
     
-        lCommandMap.add('sync', async (_pData: CommandData) => {
-            await new PackageCommand(lWorkspace).sync();
-        }, 'Sync all local dependency versions.');
-    
         lCommandMap.add('build <project_name>', async (pData: CommandData) => {
             const lPackageName: string = pData.pathData['project_name'];
             await new BuildCommand(lWorkspace).build(lPackageName);
