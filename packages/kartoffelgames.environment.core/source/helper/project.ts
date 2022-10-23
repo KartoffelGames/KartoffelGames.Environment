@@ -200,7 +200,20 @@ export class Project {
      * @param pProjectInformation - Partial project information.
      */
     private setProjectDefaults(pProjectInformation: Partial<ProjectInformation>): ProjectInformation {
-        const lProjectName: string = pProjectInformation.workspace?.name ?? 'UNSET.PROJECT';
+        let lProjectName: string | undefined = pProjectInformation.workspace?.name;
+        if (!lProjectName) {
+            // Try to find unique and traceable project name.
+
+            // Find from directory.
+            if (pProjectInformation.directory) {
+                lProjectName = path.parse(pProjectInformation.directory).name;
+            }
+        }
+
+        // Exit with error message.
+        if (!lProjectName) {
+            throw `Project name couldn't be found or created. At least "kg.name" must be set. \n Tried to update: ${JSON.stringify(pProjectInformation)}`;
+        }
 
         return {
             packageName: this.convertToPackageName(lProjectName),

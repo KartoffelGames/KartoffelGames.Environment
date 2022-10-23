@@ -20,7 +20,7 @@
     },
     "packageManager": "npm@8.1.2",
     "kg": {
-        "projectRoot": true,
+        "root": true,
         "config": {
             "blueprint": "project",
             "pack": false,
