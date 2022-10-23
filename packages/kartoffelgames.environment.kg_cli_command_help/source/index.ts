@@ -31,7 +31,7 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Find max length of commands.
         const lMaxLength: number = lCommandList.reduce((pCurrent: number, pNext: IKgCliCommand) => {
-            return pNext.information.description.length > pCurrent ? pNext.information.description.length : pCurrent;
+            return pNext.information.commandPattern.length > pCurrent ? pNext.information.commandPattern.length : pCurrent;
         }, 0);
 
         // Output all commands.

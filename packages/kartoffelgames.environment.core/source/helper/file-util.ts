@@ -3,8 +3,7 @@ import * as filereader from 'fs';
 
 export class FileUtil {
     /**
-     * Copy directory with all files into destination
-     * and replace text in files.
+     * Copy directory with all files into destination.
      * @param pSource - The path to the thing to copy.
      * @param pDestination - The path to the new copy.
      * @param pOverride - If existing files should be overriden.

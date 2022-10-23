@@ -1,5 +1,5 @@
 import { Parameter } from '@kartoffelgames/environment.core';
-import { IKgCliCommand } from '../blueprint/i-kg-cli-command';
+import { IKgCliCommand } from '../interfaces/i-kg-cli-command';
 import { CliParameter } from './cli-parameter';
 
 export class CliCommand {
@@ -16,11 +16,18 @@ export class CliCommand {
 
         // Create each command package.
         for (const lPackage of (pCliPackages['command'] ?? [])) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const lCommandConstructor: KgCliCommandConstructor = require(lPackage).KgCliCommand;
+            // Catch any create errors for malfunctioning packages.
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const lCommandConstructor: KgCliCommandConstructor = require(lPackage).KgCliCommand;
 
-            // Add command class to list.
-            this.mCommandList.push(new lCommandConstructor());
+                // Add command class to list.
+                this.mCommandList.push(new lCommandConstructor());
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.warn(`Can't initialize command ${lPackage}.`);
+            }
+
         }
     }
 
