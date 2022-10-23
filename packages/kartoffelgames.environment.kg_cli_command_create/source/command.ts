@@ -65,9 +65,11 @@ export class KgCliCommand implements IKgCliCommand {
         const lNewPackageDirectory: string = await this.createBlueprint(lNewProjectName, lBlueprint, pParameter);
 
         // Update vs code workspaces.
+        lConsole.writeLine('Add VsCode Workspace...');
         lProjectHandler.addWorkspace(lNewProjectName, lNewPackageDirectory);
 
         // Add package information to package.json.
+        lConsole.writeLine('Set project configuration...');
         lProjectHandler.updateProjectConfiguration(lNewProjectName, {
             projectRoot: false,
             config: {
@@ -79,6 +81,7 @@ export class KgCliCommand implements IKgCliCommand {
         });
 
         // Call npm install.
+        lConsole.writeLine('Install packages...');
         const lShell: Shell = new Shell(lCurrentWorkingDirectory);
         lShell.console('npm install');
 

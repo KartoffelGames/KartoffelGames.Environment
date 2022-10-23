@@ -167,11 +167,16 @@ export class Project {
         // Search all files.
         for (const lFile of lAllFiles) {
             const lFileContent: string = FileUtil.read(lFile);
-            const lFileJson: any = JSON.parse(lFileContent);
 
-            // Check for package name.
-            if (lFileJson['name'] === lPackageName) {
-                return path.dirname(lFile);
+            try {
+                const lFileJson: any = JSON.parse(lFileContent);
+
+                // Check for package name.
+                if (lFileJson['name'] === lPackageName) {
+                    return path.dirname(lFile);
+                }
+            } catch (_pError) {
+                throw `JSON Error in ${lFile}`;
             }
         }
 

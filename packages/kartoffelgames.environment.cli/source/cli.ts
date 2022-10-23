@@ -31,6 +31,12 @@ import { CliPackages } from './cli/cli-packages';
         await lCliCommandHandler.execute(lParameter);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
+
+        // Include error stack when command has --stack parameter. 
+        if (lParameter.parameter.has('stack')) {
+            lConsole.writeLine((<Error>e)?.stack ?? '', 'red');
+        }
+
         process.exit(1);
     }
 
@@ -38,33 +44,33 @@ import { CliPackages } from './cli/cli-packages';
 
 
 
-/*
-    lCommandMap.add('init <blueprint_name>', async (pData: CommandData) => {
-        const lBlueprintType: string = pData.pathData['blueprint_name'];
-        await new PackageCommand(lWorkspace).init(lBlueprintType, process.cwd());
-    }, 'Initialize new project in current directory.');
-
-    lCommandMap.add('sync', async (_pData: CommandData) => {
-        await new PackageCommand(lWorkspace).sync();
-    }, 'Sync all local dependency versions.');
-
-    lCommandMap.add('build <project_name>', async (pData: CommandData) => {
-        const lPackageName: string = pData.pathData['project_name'];
-        await new BuildCommand(lWorkspace).build(lPackageName);
-    }, 'Build package.');
-
-    lCommandMap.add('test <project_name> [--coverage] [--no-timeout]', async (pData: CommandData) => {
-        const lPackageName: string = pData.pathData['project_name'];
-        await new BuildCommand(lWorkspace).test(lPackageName, {
-            coverage: pData.command.parameter.has('coverage'),
-            noTimeout: pData.command.parameter.has('no-timeout'),
-        });
-    }, 'Test project.');
-
-    lCommandMap.add('scratchpad <project_name>', async (pData: CommandData) => {
-        const lPackageName: string = pData.pathData['project_name'];
-        await new BuildCommand(lWorkspace).scratchpad(lPackageName);
-    }, 'Serve scratchpad files over local http server.');
-
-*/
+    /*
+        lCommandMap.add('init <blueprint_name>', async (pData: CommandData) => {
+            const lBlueprintType: string = pData.pathData['blueprint_name'];
+            await new PackageCommand(lWorkspace).init(lBlueprintType, process.cwd());
+        }, 'Initialize new project in current directory.');
+    
+        lCommandMap.add('sync', async (_pData: CommandData) => {
+            await new PackageCommand(lWorkspace).sync();
+        }, 'Sync all local dependency versions.');
+    
+        lCommandMap.add('build <project_name>', async (pData: CommandData) => {
+            const lPackageName: string = pData.pathData['project_name'];
+            await new BuildCommand(lWorkspace).build(lPackageName);
+        }, 'Build package.');
+    
+        lCommandMap.add('test <project_name> [--coverage] [--no-timeout]', async (pData: CommandData) => {
+            const lPackageName: string = pData.pathData['project_name'];
+            await new BuildCommand(lWorkspace).test(lPackageName, {
+                coverage: pData.command.parameter.has('coverage'),
+                noTimeout: pData.command.parameter.has('no-timeout'),
+            });
+        }, 'Test project.');
+    
+        lCommandMap.add('scratchpad <project_name>', async (pData: CommandData) => {
+            const lPackageName: string = pData.pathData['project_name'];
+            await new BuildCommand(lWorkspace).scratchpad(lPackageName);
+        }, 'Serve scratchpad files over local http server.');
+    
+    */
 })();

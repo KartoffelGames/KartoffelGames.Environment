@@ -109,6 +109,8 @@ export class FileUtil {
 
             // Directory handling.
             if (lItemStatus.isDirectory()) {
+                const lNextDirectoryName = path.parse(lItemPath).name;
+
                 // Only search in child directory on outside in search.
                 if (lSearchDirection !== 'outsideIn') {
                     continue;
@@ -120,17 +122,16 @@ export class FileUtil {
                 }
 
                 // Check directory inclusion.
-                if (lIncludeDirectoryList.length > 0 && !lIncludeDirectoryList.includes(lItemPath)) {
+                if (lIncludeDirectoryList.length > 0 && !lIncludeDirectoryList.includes(lNextDirectoryName)) {
                     continue;
                 }
 
                 // Check directory exclusion.
-                if (lExcludeDirectoryList.length > 0 && lExcludeDirectoryList.includes(lItemPath)) {
+                if (lExcludeDirectoryList.length > 0 && lExcludeDirectoryList.includes(lNextDirectoryName)) {
                     continue;
                 }
 
                 lResultList.push(...this.findFiles(lItemPath, lNextSearchOptions));
-
             } else {
                 const lFileExtension: string = lChildItemName.split('.').pop() ?? '';
 
@@ -153,6 +154,9 @@ export class FileUtil {
                 if (lExcludeExtensionsList.length > 0 && lExcludeExtensionsList.includes(lFileExtension)) {
                     continue;
                 }
+
+                // Add file to results.
+                lResultList.push(lItemPath);
             }
         }
 
