@@ -136,30 +136,27 @@ export class Project {
             try {
                 const lPackageJson: any = JSON.parse(lFileContent);
 
-                // Ony KG workspaces.
-                if ('kg' in lPackageJson) {
-                    // Read project config.
-                    const lConfiguration: WorkspaceConfiguration = lPackageJson['kg'];
+                // Read project config.
+                const lConfiguration: WorkspaceConfiguration | undefined = lPackageJson['kg'];
 
-                    // Create configuration default.
-                    const lDefaultConfiguration: WorkspaceConfiguration = {
-                        projectRoot: lConfiguration.projectRoot ?? false,
-                        config: {
-                            blueprint: lConfiguration.config?.blueprint ?? 'undefined',
-                            pack: lConfiguration.config?.pack ?? false,
-                            target: lConfiguration.config?.target ?? 'node',
-                            test: lConfiguration.config?.test ?? []
-                        }
-                    };
+                // Create configuration default.
+                const lDefaultConfiguration: WorkspaceConfiguration = {
+                    projectRoot: lConfiguration?.projectRoot ?? false,
+                    config: {
+                        blueprint: lConfiguration?.config?.blueprint ?? 'undefined',
+                        pack: lConfiguration?.config?.pack ?? false,
+                        target: lConfiguration?.config?.target ?? 'node',
+                        test: lConfiguration?.config?.test ?? []
+                    }
+                };
 
-                    lPackageList.push({
-                        packageName: lPackageJson['name'] ?? 'UNSET',
-                        projectName: lPackageJson['projectName'] ?? 'UNSET',
-                        version: lPackageJson['version'] ?? 'UNSET',
-                        directory: path.dirname(lFile),
-                        workspaceConfiguration: lDefaultConfiguration
-                    });
-                }
+                lPackageList.push({
+                    packageName: lPackageJson['name'] ?? 'UNSET',
+                    projectName: lPackageJson['projectName'] ?? 'UNSET',
+                    version: lPackageJson['version'] ?? 'UNSET',
+                    directory: path.dirname(lFile),
+                    workspaceConfiguration: lDefaultConfiguration
+                });
             } catch (_pError) {
                 // eslint-disable-next-line no-console
                 console.warn(`Error parsing ${lFile}`);
