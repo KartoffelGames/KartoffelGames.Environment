@@ -135,21 +135,24 @@ export class Project {
         for (const lFile of lAllFiles) {
             const lFileContent: string = FileUtil.read(lFile);
 
+            let lPackageJson: any;
             try {
                 // Parse json and read project information.
-                const lPackageJson: any = JSON.parse(lFileContent);
-                const lFilledProjectInformation: ProjectInformation = this.setProjectDefaults({
-                    packageName: lPackageJson['name'],
-                    version: lPackageJson['version'],
-                    directory: path.dirname(lFile),
-                    workspace: lPackageJson['kg']
-                });
-
-                lPackageList.push(lFilledProjectInformation);
+                lPackageJson = JSON.parse(lFileContent);
             } catch (_pError) {
                 // eslint-disable-next-line no-console
                 console.warn(`Error parsing ${lFile}`);
+                continue;
             }
+
+            const lFilledProjectInformation: ProjectInformation = this.setProjectDefaults({
+                packageName: lPackageJson['name'],
+                version: lPackageJson['version'],
+                directory: path.dirname(lFile),
+                workspace: lPackageJson['kg']
+            });
+
+            lPackageList.push(lFilledProjectInformation);
         }
 
         return lPackageList;
