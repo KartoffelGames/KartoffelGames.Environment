@@ -25,6 +25,9 @@ export class KgCliCommand implements IKgCliCommand {
         const lCurrentWorkingDirectory: string = process.cwd();
         const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
 
+        // Output heading.
+        lConsole.writeLine('Create Package');
+
         // Read required parameter.
         const lBlueprintName: string = <string>pParameter.parameter.get('blueprint_name')?.toLowerCase();
 
@@ -95,9 +98,6 @@ export class KgCliCommand implements IKgCliCommand {
         const lConsole = new Console();
         const lCurrentWorkingDirectory: string = process.cwd();
         const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
-
-        // Output heading.
-        lConsole.writeLine('Create Package');
 
         // Get source and target path of blueprint files.
         const lSourcePath: string = path.resolve(pBlueprint.information.blueprintDirectory);
