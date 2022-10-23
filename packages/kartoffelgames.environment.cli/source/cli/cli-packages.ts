@@ -20,8 +20,15 @@ export class CliPackages {
     public async getCommandPackages(): Promise<Record<string, Array<string>>> {
         // Read all dependencies.
         const lShell: Shell = new Shell(this.mCurrentWorkingDirectory);
-        const lPackageJson = await lShell.result('npm ls --json --all');
-        let lPackageObject = JSON.parse(lPackageJson);
+        const lPackageJson = await lShell.result('npm ls --json --all', true);
+
+        // Parse dependency json.
+        let lPackageObject: any | null = null;
+        try {
+            lPackageObject = JSON.parse(lPackageJson);
+        } catch (_pError) {
+            throw `Package dependencies couldn't not be loaded.`;
+        }
 
         // List own CLI dependencies on empty dependency list. 
         if (Object.keys(lPackageObject).length === 0) {

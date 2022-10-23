@@ -16,18 +16,18 @@ import { CliPackages } from './cli/cli-packages';
     const lCurrentWorkingDirectoryPath: string = process.cwd();
     const lCliRootPath: string = path.resolve(__dirname, '..', '..');
 
-    // Init command indexing.
-    const lCliPackagesHandler: CliPackages = new CliPackages(lCurrentWorkingDirectoryPath, lCliRootPath);
-    const lCliPackages: Record<string, Array<string>> = await lCliPackagesHandler.getCommandPackages();
-
-    // Init commands.
-    const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages);
-
     // Read command parameter.
     const lParameter: Parameter = new Parameter('cli.js');
 
     // Execute command.
     try {
+        // Init command indexing.
+        const lCliPackagesHandler: CliPackages = new CliPackages(lCurrentWorkingDirectoryPath, lCliRootPath);
+        const lCliPackages: Record<string, Array<string>> = await lCliPackagesHandler.getCommandPackages();
+
+        // Init commands.
+        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages);
+
         await lCliCommandHandler.execute(lParameter);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');

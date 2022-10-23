@@ -67,11 +67,11 @@ export class Shell {
      * Call command and return result.
      * @param pCommand - Command.
      */
-    public async result(pCommand: string): Promise<string> {
+    public async result(pCommand: string, pIgnoreError: boolean = false): Promise<string> {
         return new Promise<string>((pResolve, pReject) => {
             // Call command.
             exec(pCommand, (pError, pStdout) => {
-                if (pError) {
+                if (pError && !pIgnoreError) {
                     pReject(pError);
                 } else {
                     pResolve(pStdout);
