@@ -1,4 +1,4 @@
-import { spawn, exec } from 'child_process';
+import { spawn, exec, execSync } from 'child_process';
 import { Console } from './console';
 
 export class Shell {
@@ -10,6 +10,14 @@ export class Shell {
      */
     public constructor(pWorkingDirectory: string) {
         this.mWorkingDirectory = pWorkingDirectory;
+    }
+
+    /**
+     * Call command on background. Write output in stdio.
+     * @param pCommand - Command.
+     */
+    public async background(pCommand: string): Promise<void> {
+        execSync(pCommand, { stdio: [0, 1, 2] });
     }
 
     /**

@@ -83,7 +83,7 @@ export class KgCliCommand implements IKgCliCommand {
         // Call npm install.
         lConsole.writeLine('Install packages...');
         const lShell: Shell = new Shell(lCurrentWorkingDirectory);
-        await lShell.console('npm install');
+        await lShell.background('npm install');
 
         // Display init information.
         lConsole.writeLine('Project successfully created.');
