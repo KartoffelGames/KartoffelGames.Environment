@@ -13,19 +13,19 @@
             "path": "./packages/kartoffelgames.environment.core"
         },
         {
-            "name": "KartoffelGames.Environment.KG_Cli_Blueprint_Package",
+            "name": "KartoffelGames.Environment.Kg_Cli_Blueprint_Package",
             "path": "./packages/kartoffelgames.environment.kg_cli_blueprint_package"
         },
         {
-            "name": "KartoffelGames.Environment.KG_Cli_Command_Create",
+            "name": "KartoffelGames.Environment.Kg_Cli_Command_Create",
             "path": "./packages/kartoffelgames.environment.kg_cli_command_create"
         },
         {
-            "name": "KartoffelGames.Environment.KG_Cli_Command_Help",
+            "name": "KartoffelGames.Environment.Kg_Cli_Command_Help",
             "path": "./packages/kartoffelgames.environment.kg_cli_command_help"
         },
         {
-            "name": "KartoffelGames.Environment.KG_Cli_Command_Sync",
+            "name": "KartoffelGames.Environment.Kg_Cli_Command_Sync",
             "path": "packages\\kartoffelgames.environment.kg_cli_command_sync"
         },
         {

@@ -19,21 +19,24 @@ export class Project {
         this.mRootPath = (() => {
             const lAllFiles: Array<string> = FileUtil.findFiles(pCurrentPath, {
                 direction: 'insideOut',
-                include: { fileNames: ['package.json'] }
+                include: { extensions: ['code-workspace'] }
             });
 
+            // Find longest directory.
+            let lLongestDirectoryName: string = '';
             for (const lFile of lAllFiles) {
-                const lFileContent: string = FileUtil.read(lFile);
-                const lFileJson: any = JSON.parse(lFileContent);
-
-                const lWorkspaceConfig: Partial<ProjectInformation['workspace']> = lFileJson['kg'];
-
-                if (lWorkspaceConfig?.root) {
-                    return path.dirname(lFile);
+                const lDirectoryName: string = path.dirname(lFile);
+                if (lDirectoryName.length > lLongestDirectoryName.length) {
+                    lLongestDirectoryName = lDirectoryName;
                 }
             }
 
-            return pCurrentPath;
+            // Return current directory if no root was found.
+            if (lLongestDirectoryName.length !== null) {
+                return lLongestDirectoryName;
+            } else {
+                return pCurrentPath;
+            }
         })();
     }
 
@@ -44,7 +47,7 @@ export class Project {
      */
     public addWorkspace(pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
-        const lWorkspaceFilePath: string = FileUtil.findFiles(this.mRootPath, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
+        const lWorkspaceFilePath: string = FileUtil.findFiles(this.projectRootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
         const lFileText = FileUtil.read(lWorkspaceFilePath);
         const lPackageJson = JSON.parse(lFileText);
 
@@ -52,7 +55,7 @@ export class Project {
         const lWorkspaceDirectory: string = path.relative(this.projectRootDirectory, pPackageDirectory);
         const lFolderList: Array<{ name: string, path: string; }> = lPackageJson['folders'];
         lFolderList.push({
-            name: pPackageName,
+            name: this.convertToProjectName(pPackageName),
             path: lWorkspaceDirectory
         });
 
@@ -69,30 +72,36 @@ export class Project {
     }
 
     /**
-     * Get package name.
-     * @param pProjectName - Package name of project name.
+     * Convert package name to project name.
+     * @param pPackageName - Package name.
      */
-    public convertToPackageName(pProjectName: string): string {
-        const lPackageRegex: RegExp = /^@[a-zA-Z0-9]+\/[a-zA-Z0-9.-]+$/;
+    public convertToProjectName(pPackageName: string): string {
+        let lConvertedPackageName: string = pPackageName;
 
-        // Check if name is already the package name.
-        if (lPackageRegex.test(pProjectName)) {
-            return pProjectName.toLowerCase();
-        }
+        // Replace every symbol with ''
+        lConvertedPackageName = lConvertedPackageName.replaceAll(/[^\w.-]/g, '');
 
-        const lPartList: Array<string> = pProjectName.split('.');
+        // Replace '-' with '_'.
+        lConvertedPackageName = lConvertedPackageName.replaceAll('-', '_');
 
-        // Try to parse name.
-        let lPackageName: string = `@${lPartList[0]}/${lPartList.slice(1).join('.')}`;
-        lPackageName = lPackageName.replace(/_/g, '-');
-        lPackageName = lPackageName.toLowerCase();
+        // Lowercase everything.
+        lConvertedPackageName = lConvertedPackageName.toLowerCase();
 
-        // Validate parsed name.
-        if (!lPackageRegex.test(lPackageName)) {
-            throw `Project name "${pProjectName}" cant be parsed to a package name.`;
-        }
+        // Upercase every starting word.
+        // Split '.' and join again with '.' but uppercase every parts starting character.
+        // Slice wrong added starting '.' after joining with reduce.
+        lConvertedPackageName = lConvertedPackageName.split('.').reduce((pCurrentValue: string, pNextValue: string) => {
+            return `${pCurrentValue}.${pNextValue.charAt(0).toUpperCase() + pNextValue.slice(1)}`;
+        }, '').slice(1);
 
-        return lPackageName;
+        // Upercase every starting word.
+        // Split '_' and join again with '_' but uppercase every parts starting character.
+        // Slice wrong added starting '_' after joining with reduce.
+        lConvertedPackageName = lConvertedPackageName.split('_').reduce((pCurrentValue: string, pNextValue: string) => {
+            return `${pCurrentValue}_${pNextValue.charAt(0).toUpperCase() + pNextValue.slice(1)}`;
+        }, '').slice(1);
+
+        return lConvertedPackageName;
     }
 
     /**
@@ -111,10 +120,10 @@ export class Project {
 
     /**
      * Check if package exists.
-     * @param pPackageName - Package name.
+     * @param pName - Package or project name name.
      */
-    public packageExists(pPackageName: string): boolean {
-        const lPackageDirectory: ProjectInformation | null = this.findPackageByName(pPackageName);
+    public packageExists(pName: string): boolean {
+        const lPackageDirectory: ProjectInformation | null = this.findPackageByName(pName);
         return lPackageDirectory !== null;
     }
 
@@ -123,7 +132,7 @@ export class Project {
      */
     public readAllProject(): Array<ProjectInformation> {
         // Search all package.json files of root workspaces. Exclude node_modules.
-        const lAllFiles: Array<string> = FileUtil.findFiles(this.mRootPath, {
+        const lAllFiles: Array<string> = FileUtil.findFiles(this.projectRootDirectory, {
             include: { fileNames: ['package.json'] },
             exclude: { directories: ['node_modules'] }
         });
@@ -145,6 +154,11 @@ export class Project {
                 continue;
             }
 
+            // Ignore unnamed packages.
+            if (typeof lPackageJson['name'] !== 'string') {
+                continue;
+            }
+
             const lFilledProjectInformation: ProjectInformation = this.setProjectDefaults({
                 packageName: lPackageJson['name'],
                 version: lPackageJson['version'],
@@ -163,7 +177,7 @@ export class Project {
      * @param pName - Name of project.
      * @param pConfigInformation - Project information.
      */
-    public updateProjectConfiguration(pName: string, pConfigInformation: Partial<ProjectInformation>): void {
+    public updateProjectConfiguration(pName: string, pConfigInformation: DeepPartial<ProjectInformation>): void {
         // Construct paths.
         const lPackageInformation: ProjectInformation | null = this.findPackageByName(pName);
         if (lPackageInformation === null) {
@@ -189,11 +203,11 @@ export class Project {
 
     /**
      * Find root path to project name. 
-     * @param pProjectName - Project name. Can be a package name too.
+     * @param pName - Project name. Can be a package name too.
      */
-    private findPackageByName(pProjectName: string): ProjectInformation | null {
-        const lPackageName: string = this.convertToPackageName(pProjectName);
-        const lProjectInformation = this.readAllProject().find(pProject => pProject.packageName.toLowerCase() === lPackageName.toLowerCase());
+    private findPackageByName(pName: string): ProjectInformation | null {
+        const lProjectName: string = this.convertToProjectName(pName);
+        const lProjectInformation = this.readAllProject().find(pProject => pProject.workspace.name === lProjectName);
 
         return lProjectInformation ?? null;
     }
@@ -202,34 +216,31 @@ export class Project {
      * Default all unset project informations.
      * @param pProjectInformation - Partial project information.
      */
-    private setProjectDefaults(pProjectInformation: Partial<ProjectInformation>): ProjectInformation {
-        let lProjectName: string | undefined = pProjectInformation.workspace?.name;
-        if (!lProjectName) {
-            // Try to find unique and traceable project name.
-
-            // Find from directory.
-            if (pProjectInformation.directory) {
-                lProjectName = path.parse(pProjectInformation.directory).name;
-            }
-        }
-
+    private setProjectDefaults(pProjectInformation: DeepPartial<ProjectInformation>): ProjectInformation {
+        const lPackageName: string | null = pProjectInformation.packageName ?? null;
         // Exit with error message.
-        if (!lProjectName) {
-            throw `Project name couldn't be found or created. At least "kg.name" must be set. \n Tried to update: ${JSON.stringify(pProjectInformation)}`;
+        if (!lPackageName) {
+            throw `Package name couldn't be found. At least "name" must be set to package.json. \n Tried to update: ${JSON.stringify(pProjectInformation)}`;
         }
+
+        // Convert package name.
+        const lProjectName: string = this.convertToProjectName(lPackageName);
+
+        // Find or parse directory
+        const lProjectDirectory: string = pProjectInformation.directory ?? path.resolve(this.projectRootDirectory, 'packages', lPackageName.toLowerCase());
 
         return {
-            packageName: this.convertToPackageName(lProjectName),
+            packageName: lPackageName,
             version: pProjectInformation.version ?? '0.0.0',
-            directory: pProjectInformation.directory ?? path.resolve(this.mRootPath, 'packages', lProjectName.toLowerCase()),
+            directory: lProjectDirectory,
             workspace: {
                 name: lProjectName,
-                root: pProjectInformation.workspace?.root ?? false,
+                root: lProjectDirectory === this.projectRootDirectory,
                 config: {
                     blueprint: pProjectInformation.workspace?.config?.blueprint ?? 'undefined',
                     pack: pProjectInformation.workspace?.config?.pack ?? false,
                     target: pProjectInformation.workspace?.config?.target ?? 'node',
-                    test: pProjectInformation.workspace?.config?.test ?? []
+                    test: (<Array<TestMode>>pProjectInformation.workspace?.config?.test) ?? []
                 }
             }
         };
@@ -253,3 +264,7 @@ export type ProjectInformation = {
 };
 
 export type TestMode = 'unit' | 'integration' | 'ui';
+
+type DeepPartial<T> = T extends object ? {
+    [P in keyof T]?: DeepPartial<T[P]>;
+} : T;

@@ -11,7 +11,7 @@ export class KgCliCommand implements IKgCliCommand {
     public get information(): KgCliCommandDescription {
         return {
             description: 'Create new package.',
-            commandPattern: 'create <blueprint_name> [project_name] --list'
+            commandPattern: 'create <blueprint_name> [package_name] --list'
         };
     }
 
@@ -56,23 +56,22 @@ export class KgCliCommand implements IKgCliCommand {
         }
 
         // Find name. Get from command parameter on promt user.
-        let lNewProjectName: string = pParameter.parameter.get('project_name') ?? '';
-        if (lNewProjectName === '') {
-            lNewProjectName = await lConsole.promt('Project Name: ', /^[a-zA-Z]+\.[a-zA-Z_.]+$/);
+        let lNewPackageName: string = pParameter.parameter.get('package_name') ?? '';
+        if (lNewPackageName === '') {
+            lNewPackageName = await lConsole.promt('Package Name: ', /^(@[a-z0-9]+\/)?[a-z0-9.-]+$/);
         }
 
         // Create blueprint.
-        const lNewPackageDirectory: string = await this.createBlueprint(lNewProjectName, lBlueprint, pParameter);
+        const lNewPackageDirectory: string = await this.createBlueprint(lNewPackageName, lBlueprint, pParameter);
 
         // Update vs code workspaces.
         lConsole.writeLine('Add VsCode Workspace...');
-        lProjectHandler.addWorkspace(lNewProjectName, lNewPackageDirectory);
+        lProjectHandler.addWorkspace(lNewPackageName, lNewPackageDirectory);
 
         // Add package information to package.json.
         lConsole.writeLine('Set project configuration...');
-        lProjectHandler.updateProjectConfiguration(lNewProjectName, {
+        lProjectHandler.updateProjectConfiguration(lNewPackageName, {
             workspace: {
-                name: lNewProjectName,
                 root: false,
                 config: {
                     blueprint: lBlueprint.information.name,
@@ -94,23 +93,24 @@ export class KgCliCommand implements IKgCliCommand {
 
     /**
      * Create blueprint files.
-     * @param pProjectName - Project name.
+     * @param pPackageName - Project name.
      * @param pBlueprint - Blueprint name.
      * @param pCommandParameter - Command parameter.
      * @returns 
      */
-    private async createBlueprint(pProjectName: string, pBlueprint: IKgCliPackageBlueprint, pCommandParameter: CliParameter): Promise<string> {
+    private async createBlueprint(pPackageName: string, pBlueprint: IKgCliPackageBlueprint, pCommandParameter: CliParameter): Promise<string> {
         const lConsole = new Console();
         const lCurrentWorkingDirectory: string = process.cwd();
         const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
 
         // Get source and target path of blueprint files.
+        const lProjectName: string = lProjectHandler.convertToProjectName(pPackageName);
         const lSourcePath: string = path.resolve(pBlueprint.information.blueprintDirectory);
-        const lTargetPath: string = path.resolve(lProjectHandler.projectRootDirectory, 'packages', pProjectName.toLowerCase());
+        const lTargetPath: string = path.resolve(lProjectHandler.projectRootDirectory, 'packages', lProjectName.toLowerCase());
 
         // Check if package already exists.
-        if (lProjectHandler.packageExists(pProjectName)) {
-            throw `Package "${pProjectName}" already exists.`;
+        if (lProjectHandler.packageExists(pPackageName)) {
+            throw `Package "${pPackageName}" already exists.`;
         }
 
         // Check existing target directory.
@@ -126,8 +126,7 @@ export class KgCliCommand implements IKgCliCommand {
             FileUtil.copyDirectory(lSourcePath, lTargetPath, true);
 
             // Create package parameter.
-            const lPackageName: string = lProjectHandler.convertToPackageName(pProjectName);
-            const lPackageParameter: PackageParameter = new PackageParameter(lPackageName, pProjectName);
+            const lPackageParameter: PackageParameter = new PackageParameter(pPackageName, lProjectName);
             for (const [lParameterName, lParameterValue] of pCommandParameter.parameter.entries()) {
                 lPackageParameter.parameter.set(lParameterName, lParameterValue);
             }
