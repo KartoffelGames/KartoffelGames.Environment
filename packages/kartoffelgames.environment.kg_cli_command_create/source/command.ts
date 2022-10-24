@@ -63,7 +63,7 @@ export class KgCliCommand implements IKgCliCommand {
         }
 
         // Validate packag name again or for the first time.
-        if (lPackageNameValidation.test(lNewPackageName)) {
+        if (!lPackageNameValidation.test(lNewPackageName)) {
             throw 'Package name does not match NPM package name convention';
         }
 
