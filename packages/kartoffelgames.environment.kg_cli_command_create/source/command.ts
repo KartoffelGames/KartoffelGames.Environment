@@ -56,9 +56,15 @@ export class KgCliCommand implements IKgCliCommand {
         }
 
         // Find name. Get from command parameter on promt user.
+        const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
         let lNewPackageName: string = pParameter.parameter.get('package_name') ?? '';
         if (lNewPackageName === '') {
-            lNewPackageName = await lConsole.promt('Package Name: ', /^(@[a-z0-9]+\/)?[a-z0-9.-]+$/);
+            lNewPackageName = await lConsole.promt('Package Name: ', lPackageNameValidation);
+        }
+
+        // Validate packag name again or for the first time.
+        if (lPackageNameValidation.test(lNewPackageName)) {
+            throw 'Package name does not match NPM package name convention';
         }
 
         // Create blueprint.
