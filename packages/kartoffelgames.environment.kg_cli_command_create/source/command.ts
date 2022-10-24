@@ -75,7 +75,7 @@ export class KgCliCommand implements IKgCliCommand {
         lProjectHandler.addWorkspace(lNewPackageName, lNewPackageDirectory);
 
         // Add package information to package.json.
-        lConsole.writeLine('Set project configuration...');
+        lConsole.writeLine('Set package configuration...');
         lProjectHandler.updateProjectConfiguration(lNewPackageName, {
             workspace: {
                 root: false,
@@ -94,12 +94,12 @@ export class KgCliCommand implements IKgCliCommand {
         await lShell.background('npm install');
 
         // Display init information.
-        lConsole.writeLine('Project successfully created.');
+        lConsole.writeLine('Package successfully created.');
     }
 
     /**
      * Create blueprint files.
-     * @param pPackageName - Project name.
+     * @param pPackageName - Package name.
      * @param pBlueprint - Blueprint name.
      * @param pCommandParameter - Command parameter.
      * @returns 
