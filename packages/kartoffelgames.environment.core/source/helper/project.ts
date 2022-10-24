@@ -78,6 +78,9 @@ export class Project {
     public convertToProjectName(pPackageName: string): string {
         let lConvertedPackageName: string = pPackageName;
 
+        // Replace '/' with '.'.
+        lConvertedPackageName = lConvertedPackageName.replaceAll('/', '.');
+
         // Replace every symbol with ''
         lConvertedPackageName = lConvertedPackageName.replaceAll(/[^\w.-]/g, '');
 
