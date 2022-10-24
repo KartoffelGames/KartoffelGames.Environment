@@ -192,6 +192,9 @@ export class Project {
         const lFile: string = FileUtil.read(lPackageJsonPath);
         const lJson: any = JSON.parse(lFile);
 
+        // Set al least name.
+        pConfigInformation.packageName = lPackageInformation.packageName;
+
         // Fill in unset project settings.
         const lFilledProjectInformation: Partial<ProjectInformation> = this.setProjectDefaults(pConfigInformation);
 
