@@ -33,7 +33,7 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
     "kg": {
-        "name": "KartoffelGames.Environment.KG_Cli_Command_Sync",
+        "name": "Kartoffelgames.Environment.Kg_Cli_Command_Sync",
         "root": false,
         "config": {
             "blueprint": "package",

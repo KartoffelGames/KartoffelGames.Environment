@@ -33,7 +33,7 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
     "kg": {
-        "name": "KartoffelGames.Environment.KG_Cli_Command_Create",
+        "name": "Kartoffelgames.Environment.Kg_Cli_Command_Create",
         "root": false,
         "config": {
             "blueprint": "package",

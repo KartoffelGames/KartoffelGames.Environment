@@ -38,7 +38,7 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
     "kg": {
-        "name": "KartoffelGames.Environment",
+        "name": "Kartoffelgames.Environment",
         "root": false,
         "config": {
             "blueprint": "package",

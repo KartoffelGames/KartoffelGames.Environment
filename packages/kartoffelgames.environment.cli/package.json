@@ -55,7 +55,7 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
     "kg": {
-        "name": "KartoffelGames.Environment.Cli",
+        "name": "Kartoffelgames.Environment.Cli",
         "root": false,
         "config": {
             "blueprint": "package",
