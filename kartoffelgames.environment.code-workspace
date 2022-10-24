@@ -25,6 +25,10 @@
             "path": "./packages/kartoffelgames.environment.kg_cli_command_help"
         },
         {
+            "name": "Kartoffelgames.Environment.Kg_Cli_Command_Init",
+            "path": "packages\\kartoffelgames.environment.kg_cli_command_init"
+        },
+        {
             "name": "Kartoffelgames.Environment.Kg_Cli_Command_Sync",
             "path": "packages\\kartoffelgames.environment.kg_cli_command_sync"
         },
