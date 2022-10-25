@@ -58,12 +58,7 @@
         "name": "Kartoffelgames.Environment.Cli",
         "root": false,
         "config": {
-            "blueprint": "package",
-            "pack": false,
-            "target": "node",
-            "test": [
-                "unit"
-            ]
+            "package_blueprint": "kg-main"
         }
     }
 }

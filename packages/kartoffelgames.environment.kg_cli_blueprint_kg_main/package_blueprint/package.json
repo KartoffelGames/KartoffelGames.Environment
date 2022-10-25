@@ -28,15 +28,5 @@
     "bugs": {
         "url": "https://github.com/KartoffelGames/KartoffelGames.Public/issues"
     },
-    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
-    "kg": {
-        "name": "Package_Name",
-        "root": false,
-        "config": {
-            "blueprint": "undefined",
-            "pack": false,
-            "target": "node",
-            "test": []
-        }
-    }
+    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme"
 }

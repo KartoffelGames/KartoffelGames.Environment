@@ -36,12 +36,7 @@
         "name": "Kartoffelgames.Environment.Kg_Cli_Command_Sync",
         "root": false,
         "config": {
-            "blueprint": "package",
-            "pack": false,
-            "target": "node",
-            "test": [
-                "unit"
-            ]
+            "package_blueprint": "kg-main"
         }
     }
 }
