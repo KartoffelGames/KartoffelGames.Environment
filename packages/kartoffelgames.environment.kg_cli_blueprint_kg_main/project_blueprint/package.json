@@ -14,8 +14,7 @@
         "@typescript-eslint/eslint-plugin": "^5.36.1",
         "@typescript-eslint/parser": "^5.36.1",
         "eslint": "^8.23.0",
-        "turbo": "^1.0.28",
-        "@kartoffelgames/environment": "^0.0.1"
+        "turbo": "^1.0.28"
     },
     "packageManager": "npm@8.1.2"
 }
