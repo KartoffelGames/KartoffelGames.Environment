@@ -15,9 +15,9 @@
         "kg": "library/source/cli.js"
     },
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^5.36.1",
-        "@typescript-eslint/parser": "^5.36.1",
-        "eslint": "^8.23.0"
+        "@types/chai": "^4.2.21",
+        "@types/mocha": "^5.2.7",
+        "typescript": "^4.4.2"
     },
     "dependencies": {
         "@types/chai": "^4.2.21",
