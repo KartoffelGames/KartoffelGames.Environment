@@ -13,8 +13,8 @@
             "path": "./packages/kartoffelgames.environment.core"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Cli_Blueprint_Package",
-            "path": "./packages/kartoffelgames.environment.kg_cli_blueprint_package"
+            "name": "Kartoffelgames.Environment.Kg_Cli_Blueprint_Kg_Main",
+            "path": "./packages/kartoffelgames.environment.kg_cli_blueprint_kg_main"
         },
         {
             "name": "Kartoffelgames.Environment.Kg_Cli_Command_Create",
