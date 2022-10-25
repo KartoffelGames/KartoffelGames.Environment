@@ -4,11 +4,11 @@ import * as path from 'path';
 import { IKgCliProjectBlueprint } from './interfaces/i-kg-cli-project-blueprint';
 import { ProjectParameter } from './package/project-parameter';
 
-export class KgCliCommand implements IKgCliCommand<string> {
+export class KgCliCommand implements IKgCliCommand<string | undefined> {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription<string> {
+    public get information(): KgCliCommandDescription<string | undefined> {
         return {
             command: {
                 description: 'Initialize new monorepo project.',
@@ -17,7 +17,7 @@ export class KgCliCommand implements IKgCliCommand<string> {
             resourceGroup: 'blueprint',
             configuration: {
                 name: 'project-blueprint',
-                default: 'undefined'
+                default: undefined
             }
         };
     }

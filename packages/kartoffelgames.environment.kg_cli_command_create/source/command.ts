@@ -4,11 +4,11 @@ import * as path from 'path';
 import { IKgCliPackageBlueprint } from './interfaces/i-kg-cli-package-blueprint';
 import { PackageParameter } from './package/package-parameter';
 
-export class KgCliCommand implements IKgCliCommand<string> {
+export class KgCliCommand implements IKgCliCommand<string | undefined> {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription<string> {
+    public get information(): KgCliCommandDescription<string | undefined> {
         return {
             command: {
                 pattern: 'create <blueprint_name> [package_name] --list',
@@ -17,7 +17,7 @@ export class KgCliCommand implements IKgCliCommand<string> {
             resourceGroup: 'blueprint',
             configuration: {
                 name: 'package-blueprint',
-                default: 'undefined',
+                default: undefined,
             }
         };
     }
