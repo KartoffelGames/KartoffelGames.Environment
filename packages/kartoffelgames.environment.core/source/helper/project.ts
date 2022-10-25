@@ -2,8 +2,9 @@ import * as path from 'path';
 import { FileUtil } from './file-util';
 
 export class Project {
+    private readonly mDefaultConfiguration: Record<string, any>;
     private readonly mRootPath: string;
-
+    
     /**
      * Project root path.
      */
@@ -15,7 +16,8 @@ export class Project {
      * Constructor.
      * @param pCurrentPath - Project root path.
      */
-    public constructor(pCurrentPath: string) {
+    public constructor(pCurrentPath: string, pDefaultConfiguration: Record<string, any>) {
+        this.mDefaultConfiguration = pDefaultConfiguration;
         this.mRootPath = (() => {
             const lAllFiles: Array<string> = FileUtil.findFiles(pCurrentPath, {
                 direction: 'insideOut',
@@ -235,6 +237,30 @@ export class Project {
         // Find or parse directory
         const lProjectDirectory: string = pProjectInformation.directory ?? path.resolve(this.projectRootDirectory, 'packages', lPackageName.toLowerCase());
 
+        const lIsObject = (pValue: any) => {
+            return typeof pValue === 'object' && pValue !== null;
+        };
+
+        const lFillDefaults = (pCurrent: Record<string, any>, pDefault: Record<string, any>): Record<string, any> => {
+            for (const lKey of Object.keys(pDefault)) {
+                const lCurrentValue: any = pCurrent?.[lKey];
+                const lDefaultValue: any = pDefault[lKey];
+
+                if (lIsObject(lDefaultValue) && lIsObject(lCurrentValue)) {
+                    // Rekursion fill in inner objects.
+                    lFillDefaults(lCurrentValue, lDefaultValue);
+                } else if (typeof lCurrentValue === 'undefined') {
+                    // Fill in value.
+                    pCurrent[lKey] = lDefaultValue;
+                } else if (lIsObject(lDefaultValue) !== lIsObject(lCurrentValue)) {
+                    // Values differ. Update value.
+                    pCurrent[lKey] = lDefaultValue;
+                }
+            }
+
+            return pCurrent;
+        };
+
         return {
             packageName: lPackageName,
             version: pProjectInformation.version ?? '0.0.0',
@@ -242,12 +268,7 @@ export class Project {
             workspace: {
                 name: lProjectName,
                 root: lProjectDirectory === this.projectRootDirectory,
-                config: {
-                    blueprint: pProjectInformation.workspace?.config?.blueprint ?? 'undefined',
-                    pack: pProjectInformation.workspace?.config?.pack ?? false,
-                    target: pProjectInformation.workspace?.config?.target ?? 'node',
-                    test: (<Array<TestMode>>pProjectInformation.workspace?.config?.test) ?? []
-                }
+                config: lFillDefaults(pProjectInformation.workspace?.config ?? {}, this.mDefaultConfiguration)
             }
         };
     }
@@ -260,12 +281,7 @@ export type ProjectInformation = {
     workspace: {
         name: string;
         root: boolean,
-        config: {
-            blueprint: string;
-            pack: boolean;
-            target: 'web' | 'node';
-            test: Array<TestMode>;
-        };
+        config: Record<string, any>;
     };
 };
 

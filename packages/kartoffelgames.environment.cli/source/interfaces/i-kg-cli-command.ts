@@ -1,20 +1,28 @@
+import { Project } from '@kartoffelgames/environment.core';
 import { CliParameter } from '../cli/cli-parameter';
 
-export interface IKgCliCommand {
+export interface IKgCliCommand<TConfiguration = any> {
     /**
      * Command description.
      */
-    information: KgCliCommandDescription;
+    information: KgCliCommandDescription<TConfiguration>;
 
     /**
      * Run command.
      * @param pParameter - Command parameter.
-     * @param pCliPackages - All cli packages grouped by type.
+     * @param pGroupPackages - All cli packages cli group.
      */
-    run(pParameter: CliParameter, pCliPackages: Record<string, Array<string>>): Promise<void>;
+    run(pParameter: CliParameter, pGroupPackages: Array<string>, pPackageHandler: Project): Promise<void>;
 }
 
-export type KgCliCommandDescription = {
-    commandPattern: string;
-    description: string;
+export type KgCliCommandDescription<TConfiguration = any> = {
+    command: {
+        pattern: string;
+        description: string;
+    };
+    resourceGroup?: string;
+    configuration?: {
+        name: string,
+        default: TConfiguration;
+    };
 };

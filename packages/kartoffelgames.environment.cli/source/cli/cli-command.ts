@@ -1,10 +1,17 @@
-import { Parameter } from '@kartoffelgames/environment.core';
+import { Parameter, Project } from '@kartoffelgames/environment.core';
 import { IKgCliCommand } from '../interfaces/i-kg-cli-command';
 import { CliParameter } from './cli-parameter';
 
 export class CliCommand {
     private readonly mCliPackages: Record<string, Array<string>>;
     private readonly mCommandList: Array<IKgCliCommand>;
+
+    /**
+     * Command list.
+     */
+    public get commands(): Array<IKgCliCommand> {
+        return this.mCommandList;
+    }
 
     /**
      * Constructor.
@@ -35,7 +42,7 @@ export class CliCommand {
      * Execute command.
      * @param pParameter - Command parameter.
      */
-    public async execute(pParameter: Parameter): Promise<void> {
+    public async execute(pParameter: Parameter, pProject: Project): Promise<void> {
         // Find command.
         const lCommand: IKgCliCommand | null = this.findCommandByParameter(pParameter);
         if (lCommand === null) {
@@ -51,7 +58,7 @@ export class CliCommand {
         }
 
         // Read path parameter from command.
-        const lCommandPatternParts: Array<string> = lCommand.information.commandPattern.split(' ');
+        const lCommandPatternParts: Array<string> = lCommand.information.command.pattern.split(' ');
         for (let lPartIndex: number = 0; lPartIndex < lCommandPatternParts.length; lPartIndex++) {
             const lPatternPart: string = lCommandPatternParts[lPartIndex];
             const lCommandPart: string | null = pParameter.path[lPartIndex] ?? null;
@@ -69,7 +76,12 @@ export class CliCommand {
             }
         }
 
-        await lCommand.run(lCliParameter, this.mCliPackages);
+        // Get package group.
+        const lPackageGroupName: string | null = lCommand.information.resourceGroup ?? null;
+        const lPackageGroup: Array<string> = this.mCliPackages[<string>lPackageGroupName] ?? [];
+
+        // Build project handler.
+        await lCommand.run(lCliParameter, lPackageGroup, pProject);
     }
 
     /**
@@ -79,7 +91,7 @@ export class CliCommand {
     private findCommandByParameter(pParameter: Parameter): IKgCliCommand | null {
         for (const lCommand of this.mCommandList) {
             // Split command pattern by spaces. Remove emty parts.
-            let lCommandPatternParts: Array<string> = lCommand.information.commandPattern.split(' ');
+            let lCommandPatternParts: Array<string> = lCommand.information.command.pattern.split(' ');
             lCommandPatternParts = lCommandPatternParts.filter(pPart => pPart !== '');
 
             // Check command pattern with path.

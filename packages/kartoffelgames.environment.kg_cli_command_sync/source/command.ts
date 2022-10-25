@@ -8,8 +8,10 @@ export class KgCliCommand implements IKgCliCommand {
      */
     public get information(): KgCliCommandDescription {
         return {
-            description: 'Sync local package versions into all package.json files.',
-            commandPattern: 'sync'
+            command: {
+                description: 'Sync local package versions into all package.json files.',
+                pattern: 'sync'
+            }
         };
     }
 
@@ -18,12 +20,11 @@ export class KgCliCommand implements IKgCliCommand {
      * @param _pParameter - Command parameter.
      * @param _pCliPackages - All cli packages grouped by type.
      */
-    public async run(_pParameter: CliParameter, _pCliPackages: Record<string, Array<string>>): Promise<void> {
+    public async run(_pParameter: CliParameter, _pCliPackages: Array<string>, pProjectHandler: Project): Promise<void> {
         const lConsole = new Console();
-        const lProjectHandler = new Project(process.cwd());
 
         // Find all packages.
-        const lPackageList: Array<ProjectInformation> = lProjectHandler.readAllProject();
+        const lPackageList: Array<ProjectInformation> = pProjectHandler.readAllProject();
 
         // Sync package versions.
         lConsole.writeLine('Sync package version numbers...');
@@ -31,7 +32,7 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Update package kg configuration.
         lConsole.writeLine('Sync package configuration...');
-        this.updatePackageVersion(lPackageList, lProjectHandler);
+        this.updatePackageVersion(lPackageList, pProjectHandler);
 
         lConsole.writeLine('Sync completed');
     }

@@ -4,32 +4,37 @@ import * as path from 'path';
 import { IKgCliPackageBlueprint } from './interfaces/i-kg-cli-package-blueprint';
 import { PackageParameter } from './package/package-parameter';
 
-export class KgCliCommand implements IKgCliCommand {
+export class KgCliCommand implements IKgCliCommand<string> {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription {
+    public get information(): KgCliCommandDescription<string> {
         return {
-            description: 'Create new package.',
-            commandPattern: 'create <blueprint_name> [package_name] --list'
+            command: {
+                pattern: 'create <blueprint_name> [package_name] --list',
+                description: 'Create new package.',
+            },
+            resourceGroup: 'blueprint',
+            configuration: {
+                name: 'package-blueprint',
+                default: 'undefined',
+            }
         };
     }
 
     /**
      * Execute command.
      * @param pParameter - Command parameter.
-     * @param pCliPackages - All cli packages grouped by type.
+     * @param pBlueprintPackages - All cli packages grouped by type.
      */
-    public async run(pParameter: CliParameter, pCliPackages: Record<string, Array<string>>): Promise<void> {
+    public async run(pParameter: CliParameter, pBlueprintPackages: Array<string>, pProjectHandler: Project): Promise<void> {
         const lConsole = new Console();
-        const lCurrentWorkingDirectory: string = process.cwd();
-        const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
 
         // Read required parameter.
         const lBlueprintName: string = <string>pParameter.parameter.get('blueprint_name')?.toLowerCase();
 
         // Read all KG_Cli_Blueprint packages informations.
-        const lBlueprintList: Array<IKgCliPackageBlueprint> = this.readBlueprintList(pCliPackages);
+        const lBlueprintList: Array<IKgCliPackageBlueprint> = this.readBlueprintList(pBlueprintPackages);
 
         // List blueprints on --list parameter and exit command.
         if (pParameter.parameter.has('list')) {
@@ -68,15 +73,15 @@ export class KgCliCommand implements IKgCliCommand {
         }
 
         // Create blueprint.
-        const lNewPackageDirectory: string = await this.createBlueprint(lNewPackageName, lBlueprint, pParameter);
+        const lNewPackageDirectory: string = await this.createBlueprint(lNewPackageName, lBlueprint, pParameter, pProjectHandler);
 
         // Update vs code workspaces.
         lConsole.writeLine('Add VsCode Workspace...');
-        lProjectHandler.addWorkspace(lNewPackageName, lNewPackageDirectory);
+        pProjectHandler.addWorkspace(lNewPackageName, lNewPackageDirectory);
 
         // Add package information to package.json.
         lConsole.writeLine('Set package configuration...');
-        lProjectHandler.updateProjectConfiguration(lNewPackageName, {
+        pProjectHandler.updateProjectConfiguration(lNewPackageName, {
             workspace: {
                 root: false,
                 config: {
@@ -90,7 +95,7 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Call npm install.
         lConsole.writeLine('Install packages...');
-        const lShell: Shell = new Shell(lCurrentWorkingDirectory);
+        const lShell: Shell = new Shell(pProjectHandler.projectRootDirectory);
         await lShell.background('npm install');
 
         // Display init information.
@@ -104,18 +109,16 @@ export class KgCliCommand implements IKgCliCommand {
      * @param pCommandParameter - Command parameter.
      * @returns 
      */
-    private async createBlueprint(pPackageName: string, pBlueprint: IKgCliPackageBlueprint, pCommandParameter: CliParameter): Promise<string> {
+    private async createBlueprint(pPackageName: string, pBlueprint: IKgCliPackageBlueprint, pCommandParameter: CliParameter, pProjectHandler: Project): Promise<string> {
         const lConsole = new Console();
-        const lCurrentWorkingDirectory: string = process.cwd();
-        const lProjectHandler: Project = new Project(lCurrentWorkingDirectory);
 
         // Get source and target path of blueprint files.
-        const lProjectName: string = lProjectHandler.convertToProjectName(pPackageName);
+        const lProjectName: string = pProjectHandler.convertToProjectName(pPackageName);
         const lSourcePath: string = path.resolve(pBlueprint.information.blueprintDirectory);
-        const lTargetPath: string = path.resolve(lProjectHandler.projectRootDirectory, 'packages', lProjectName.toLowerCase());
+        const lTargetPath: string = path.resolve(pProjectHandler.projectRootDirectory, 'packages', lProjectName.toLowerCase());
 
         // Check if package already exists.
-        if (lProjectHandler.packageExists(pPackageName)) {
+        if (pProjectHandler.packageExists(pPackageName)) {
             throw `Package "${pPackageName}" already exists.`;
         }
 
@@ -155,13 +158,13 @@ export class KgCliCommand implements IKgCliCommand {
 
     /**
      * Create all package blueprint definition class. 
-     * @param pCliPackages - Cli packages.
+     * @param pBlueprintPackages - Cli packages.
      */
-    private readBlueprintList(pCliPackages: Record<string, Array<string>>): Array<IKgCliPackageBlueprint> {
+    private readBlueprintList(pBlueprintPackages: Array<string>): Array<IKgCliPackageBlueprint> {
         const lBlueprintList: Array<IKgCliPackageBlueprint> = new Array<IKgCliPackageBlueprint>();
 
         // Create each package blueprint package.
-        for (const lPackage of (pCliPackages['blueprint'] ?? [])) {
+        for (const lPackage of pBlueprintPackages) {
             // Catch any create errors for malfunctioning packages.
             try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires

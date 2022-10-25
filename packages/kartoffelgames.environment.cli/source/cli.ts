@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-import { Console, Parameter } from '@kartoffelgames/environment.core';
+import { Console, Parameter, Project } from '@kartoffelgames/environment.core';
 import * as path from 'path';
 import { CliCommand } from './cli/cli-command';
 import { CliPackages } from './cli/cli-packages';
@@ -28,7 +28,19 @@ import { CliPackages } from './cli/cli-packages';
         // Init commands.
         const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages);
 
-        await lCliCommandHandler.execute(lParameter);
+        // Build package handler.
+        const lDefaultConfiguration: Record<string, any> = {};
+        for (const lCommand of lCliCommandHandler.commands) {
+            if (lCommand.information.configuration) {
+                lDefaultConfiguration[lCommand.information.configuration.name] = lCommand.information.configuration.default;
+            }
+        }
+
+        // Create package handler.
+        const lProject: Project = new Project(lCurrentWorkingDirectoryPath, lDefaultConfiguration);
+
+        // Execute command.
+        await lCliCommandHandler.execute(lParameter, lProject);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
 
@@ -44,12 +56,7 @@ import { CliPackages } from './cli/cli-packages';
 
 
 
-    /*
-        lCommandMap.add('init <blueprint_name>', async (pData: CommandData) => {
-            const lBlueprintType: string = pData.pathData['blueprint_name'];
-            await new PackageCommand(lWorkspace).init(lBlueprintType, process.cwd());
-        }, 'Initialize new project in current directory.');
-    
+    /*  
         lCommandMap.add('build <project_name>', async (pData: CommandData) => {
             const lPackageName: string = pData.pathData['project_name'];
             await new BuildCommand(lWorkspace).build(lPackageName);

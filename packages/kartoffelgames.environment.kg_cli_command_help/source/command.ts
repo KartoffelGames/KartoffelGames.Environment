@@ -7,21 +7,24 @@ export class KgCliCommand implements IKgCliCommand {
      */
     public get information(): KgCliCommandDescription {
         return {
-            description: 'Show command list',
-            commandPattern: 'help'
+            command: {
+                description: 'Show command list',
+                pattern: 'help'
+            },
+            resourceGroup: 'command'
         };
     }
 
     /**
      * Execute command.
      * @param _pParameter - Command parameter.
-     * @param pCliPackages - All cli packages grouped by type.
+     * @param pCommandPackages - All cli packages grouped by type.
      */
-    public async run(_pParameter: CliParameter, pCliPackages: Record<string, Array<string>>): Promise<void> {
+    public async run(_pParameter: CliParameter, pCommandPackages: Array<string>): Promise<void> {
         const lCommandList: Array<IKgCliCommand> = new Array<IKgCliCommand>();
 
         // Create each command package.
-        for (const lPackage of (pCliPackages['command'] ?? [])) {
+        for (const lPackage of pCommandPackages) {
             // eslint-disable-next-line @typescript-eslint/no-var-requires
             const lCommandConstructor: KgCliCommandConstructor = require(lPackage).KgCliCommand;
 
@@ -31,14 +34,14 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Find max length of commands.
         const lMaxLength: number = lCommandList.reduce((pCurrent: number, pNext: IKgCliCommand) => {
-            return pNext.information.commandPattern.length > pCurrent ? pNext.information.commandPattern.length : pCurrent;
+            return pNext.information.command.pattern.length > pCurrent ? pNext.information.command.pattern.length : pCurrent;
         }, 0);
 
         // Output all commands.
         const lConsole: Console = new Console();
         lConsole.writeLine('Available commands:');
         for (const lCommand of lCommandList) {
-            lConsole.writeLine(`kg ${lCommand.information.commandPattern.padEnd(lMaxLength, ' ')} - ${lCommand.information.description}`);
+            lConsole.writeLine(`kg ${lCommand.information.command.pattern.padEnd(lMaxLength, ' ')} - ${lCommand.information.command.description}`);
         }
     }
 }

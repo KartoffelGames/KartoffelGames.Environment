@@ -1,34 +1,40 @@
 import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console, FileUtil, Shell } from '@kartoffelgames/environment.core';
+import { Console, FileUtil, Project, Shell } from '@kartoffelgames/environment.core';
 import * as path from 'path';
 import { IKgCliProjectBlueprint } from './interfaces/i-kg-cli-project-blueprint';
 import { ProjectParameter } from './package/project-parameter';
 
-export class KgCliCommand implements IKgCliCommand {
+export class KgCliCommand implements IKgCliCommand<string> {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription {
+    public get information(): KgCliCommandDescription<string> {
         return {
-            description: 'Initialize new monorepo project.',
-            commandPattern: 'init <blueprint_name> [project_name] --list'
+            command: {
+                description: 'Initialize new monorepo project.',
+                pattern: 'init <blueprint_name> [project_name] --list'
+            },
+            resourceGroup: 'blueprint',
+            configuration: {
+                name: 'project-blueprint',
+                default: 'undefined'
+            }
         };
     }
 
     /**
      * Execute command.
      * @param pParameter - Command parameter.
-     * @param pCliPackages - All cli packages grouped by type.
+     * @param pBlueprintPackages - All cli packages grouped by type.
      */
-    public async run(pParameter: CliParameter, pCliPackages: Record<string, Array<string>>): Promise<void> {
+    public async run(pParameter: CliParameter, pBlueprintPackages: Array<string>, pProjectHandler: Project): Promise<void> {
         const lConsole = new Console();
-        const lCurrentWorkingDirectory: string = process.cwd();
 
         // Read required parameter.
         const lBlueprintName: string = <string>pParameter.parameter.get('blueprint_name')?.toLowerCase();
 
         // Read all KG_Cli_Blueprint packages informations.
-        const lBlueprintList: Array<IKgCliProjectBlueprint> = this.readBlueprintList(pCliPackages);
+        const lBlueprintList: Array<IKgCliProjectBlueprint> = this.readBlueprintList(pBlueprintPackages);
 
         // List blueprints on --list parameter and exit command.
         if (pParameter.parameter.has('list')) {
@@ -71,7 +77,7 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Call npm install.
         lConsole.writeLine('Install dependencies...');
-        const lShell: Shell = new Shell(lCurrentWorkingDirectory);
+        const lShell: Shell = new Shell(pProjectHandler.projectRootDirectory);
         await lShell.background('npm install');
 
         // Add environment project dependency.
@@ -134,11 +140,11 @@ export class KgCliCommand implements IKgCliCommand {
      * Create all package blueprint definition class. 
      * @param pCliPackages - Cli packages.
      */
-    private readBlueprintList(pCliPackages: Record<string, Array<string>>): Array<IKgCliProjectBlueprint> {
+    private readBlueprintList(pBlueprintPackages: Array<string>): Array<IKgCliProjectBlueprint> {
         const lBlueprintList: Array<IKgCliProjectBlueprint> = new Array<IKgCliProjectBlueprint>();
 
         // Create each project blueprint package.
-        for (const lPackage of (pCliPackages['blueprint'] ?? [])) {
+        for (const lPackage of pBlueprintPackages) {
             // Catch any create errors for malfunctioning packages.
             try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
