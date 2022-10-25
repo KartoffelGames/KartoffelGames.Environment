@@ -1,14 +1,6 @@
 export class ProjectParameter {
-    private readonly mPackageName: string;
     private readonly mParameters: Map<string, string | null>;
     private readonly mProjectName: string;
-
-    /**
-     * Get package name.
-     */
-    public get packageName(): string {
-        return this.mPackageName;
-    }
 
     /**
      * Get parameters.
@@ -28,8 +20,7 @@ export class ProjectParameter {
      * Constructor.
      * @param pPackageName - package name.
      */
-    public constructor(pPackageName: string, pProjectName: string) {
-        this.mPackageName = pPackageName;
+    public constructor(pProjectName: string) {
         this.mProjectName = pProjectName;
         this.mParameters = new Map<string, string | null>();
     }
