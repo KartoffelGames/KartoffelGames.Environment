@@ -14,9 +14,11 @@
         "kartoffelgames-environment": "library/source/index.js"
     },
     "dependencies": {
+        "@kartoffelgames/environment.cli": "^0.0.1",
+        "@kartoffelgames/environment.kg-cli-command-init": "^0.0.0",
         "@kartoffelgames/environment.kg-cli-command-help": "^0.0.1",
         "@kartoffelgames/environment.kg-cli-command-create": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-blueprint-package": "^0.0.1",
+        "@kartoffelgames/environment.kg-cli-blueprint-kg-main": "^0.0.1",
         "@kartoffelgames/environment.kg-cli-command-sync": "^0.0.1"
     },
     "devDependencies": {
