@@ -53,6 +53,17 @@ export class FileUtil {
     }
 
     /**
+     * Delete every file and directory inside set directory.
+     * @param pPath - Directory path.
+     */
+    public static emptyDirectory(pPath: string): void {
+        filereader.readdirSync(pPath).forEach(pFileName => {
+            const lFilePath: string = path.join(pPath, pFileName);
+            filereader.rmSync(lFilePath);
+        });
+    }
+
+    /**
      * Check path or file existance.
      * @param pPath - Path.
      */
@@ -190,6 +201,14 @@ export class FileUtil {
         }
 
         return lResultList;
+    }
+
+    /**
+     * Check if directory is empty.
+     * @param pPath - Directory.
+     */
+    public static isEmpty(pPath: string): boolean {
+        return filereader.readdirSync(pPath).length === 0;
     }
 
     /**
