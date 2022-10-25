@@ -11,7 +11,7 @@ export class KgCliPackageBlueprint implements IKgCliPackageBlueprint {
     public get information(): KgCliBlueprintDescription {
         return {
             name: 'package',
-            blueprintDirectory: path.resolve(__dirname, '..', '..', 'blueprint'), // called from library/source
+            blueprintDirectory: path.resolve(__dirname, '..', '..', 'package_blueprint'), // called from library/source
             description: 'Default npm package'
         };
     }
