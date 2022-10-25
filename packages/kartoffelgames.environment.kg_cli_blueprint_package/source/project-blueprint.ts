@@ -10,12 +10,12 @@ export class KgCliProjectBlueprint implements IKgCliProjectBlueprint {
         return {
             name: 'kg-main',
             blueprintDirectory: path.resolve(__dirname, '..', '..', 'project_blueprint'), // called from library/source
-            description: 'Default kartoffelgames project'
+            description: 'Default KartoffelGames project'
         };
     }
 
     /**
-     * Replace placeholder in files.
+     * Needs nothing.
      */
     public async afterCopy(): Promise<void> {
         // Needs nothing.

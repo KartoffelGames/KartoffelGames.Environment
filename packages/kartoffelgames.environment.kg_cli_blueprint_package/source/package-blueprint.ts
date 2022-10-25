@@ -10,9 +10,9 @@ export class KgCliPackageBlueprint implements IKgCliPackageBlueprint {
      */
     public get information(): KgCliBlueprintDescription {
         return {
-            name: 'package',
+            name: 'kg-main',
             blueprintDirectory: path.resolve(__dirname, '..', '..', 'package_blueprint'), // called from library/source
-            description: 'Default npm package'
+            description: 'Default KartoffelGames package'
         };
     }
 
