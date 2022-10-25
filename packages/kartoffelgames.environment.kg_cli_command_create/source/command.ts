@@ -85,10 +85,7 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
             workspace: {
                 root: false,
                 config: {
-                    blueprint: lBlueprint.information.name,
-                    pack: false,
-                    target: 'node',
-                    test: ['unit']
+                    'package-blueprint': lBlueprint.information.name
                 }
             }
         });
