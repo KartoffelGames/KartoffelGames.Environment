@@ -17,8 +17,8 @@
         "typescript": "^4.4.2"
     },
     "scripts": {
-        "build": "kg build Kartoffelgames.Environment.Kg_Workspace_Essentials",
-        "test": "kg test Kartoffelgames.Environment.Kg_Workspace_Essentials"
+        "build": "echo No build",
+        "test": "echo No test"
     },
     "repository": {
         "type": "git",
