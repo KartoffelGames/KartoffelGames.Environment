@@ -80,9 +80,6 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
         const lShell: Shell = new Shell(pProjectHandler.projectRootDirectory);
         await lShell.background('npm install');
 
-        // Add environment project dependency.
-        await lShell.background('npm install @kartoffelgames/environment@latest --save-dev');
-
         // Display init information.
         lConsole.writeLine('Project successfully created.');
     }
