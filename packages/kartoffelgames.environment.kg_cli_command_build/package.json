@@ -1,8 +1,8 @@
 {
-    "name": "{{PACKAGE_NAME}}",
-    "projectName": "{{PROJECT_NAME}}",
-    "version": "0.0.1",
-    "description": "{{PROJECT_NAME}}",
+    "name": "@kartoffelgames/environment.kg-cli-command-build",
+    "projectName": "Kartoffelgames.Environment.Kg_Cli_Command_Build",
+    "version": "0.0.0",
+    "description": "Kartoffelgames.Environment.Kg_Cli_Command_Build",
     "author": {
         "name": "KartoffelGames"
     },
@@ -16,22 +16,29 @@
         "@types/mocha": "^5.2.7",
         "typescript": "^4.4.2"
     },
+    "dependencies": {
+        "@kartoffelgames/environment.cli": "^0.0.1",
+        "@kartoffelgames/environment.core": "^0.0.1",
+        "@kartoffelgames/environment.kg-workspace-essentials": "^0.0.0"
+    },
     "scripts": {
-        "build": "kg build {{PROJECT_NAME}}",
-        "test": "kg test {{PROJECT_NAME}}"
+        "build": "tsc",
+        "test": "echo No test"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/KartoffelGames/KartoffelGames.Public.git",
-        "directory": "packages/{{PROJECT_FOLDER}}"
+        "directory": "packages/kartoffelgames.environment"
     },
     "bugs": {
         "url": "https://github.com/KartoffelGames/KartoffelGames.Public/issues"
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
     "kg": {
-        "name": "Package_Name",
+        "name": "Kartoffelgames.Environment.Kg_Cli_Command_Build",
         "root": false,
-        "config": {}
+        "config": {
+            "package-blueprint": "kg-main"
+        }
     }
 }
