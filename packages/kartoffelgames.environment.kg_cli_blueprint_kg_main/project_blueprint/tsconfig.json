@@ -44,7 +44,7 @@
       "Library"
     ],
     "files": [
-      "node_modules/@kartoffelgames/environment/environment/declaration/module-declaration.d.ts"
+      "node_modules/@kartoffelgames/environment.kg-workspace-essentials/environment/declaration/module-declaration.d.ts"
     ],
     "include": [
       "./**/*.ts"
