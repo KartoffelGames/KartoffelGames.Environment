@@ -4,7 +4,7 @@ export interface IKgCliPackageBlueprint {
     /**
      * Command description.
      */
-    information: KgCliBlueprintDescription;
+    information: KgCliPackageBlueprintDescription;
 
     /**
      * 
@@ -12,7 +12,7 @@ export interface IKgCliPackageBlueprint {
     afterCopy(pPackageDirectory: string, pParameter: PackageParameter): Promise<void>;
 }
 
-export type KgCliBlueprintDescription = {
+export type KgCliPackageBlueprintDescription = {
     name: string,
     blueprintDirectory: string;
     description: string;
