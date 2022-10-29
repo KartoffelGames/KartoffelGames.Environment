@@ -5,16 +5,12 @@
             "path": "./packages/kartoffelgames.environment"
         },
         {
-            "name": "Kartoffelgames.Environment.Cli",
-            "path": "./packages/kartoffelgames.environment.cli"
-        },
-        {
-            "name": "Kartoffelgames.Environment.Core",
-            "path": "./packages/kartoffelgames.environment.core"
-        },
-        {
             "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
             "path": "./packages/kartoffelgames.environment.blueprint_kg_main"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Cli",
+            "path": "./packages/kartoffelgames.environment.cli"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Build",
@@ -35,6 +31,14 @@
         {
             "name": "Kartoffelgames.Environment.Command_Sync",
             "path": "packages\\kartoffelgames.environment.command_sync"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Test",
+            "path": "packages\\kartoffelgames.environment.command_test"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Core",
+            "path": "./packages/kartoffelgames.environment.core"
         },
         {
             "name": "Kartoffelgames.Environment.Workspace_Essentials",
