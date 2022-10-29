@@ -8,12 +8,12 @@ export class FileUtil {
      * @param pDestination - The path to the new copy.
      * @param pOverride - If existing files should be overriden.
      */
-    public static copyDirectory(pSource: string, pDestination: string, pOverride: boolean): void {
+    public static copyDirectory(pSource: string, pDestination: string, pOverride?: boolean, pOptions?: FileSearchOptions): void {
         const lSourcePath: string = path.resolve(pSource);
         const lDestinationPath: string = path.resolve(pDestination);
 
         // Read all files.
-        const lSourceFileList: Array<string> = this.findFiles(pSource);
+        const lSourceFileList: Array<string> = this.findFiles(pSource, pOptions);
 
         for (const lSourceFile of lSourceFileList) {
             // Create relative item path. Trim leading slash.
