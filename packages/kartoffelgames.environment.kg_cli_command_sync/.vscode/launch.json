@@ -19,7 +19,7 @@
             ],
             "sourceMaps": true,
             "sourceMapPathOverrides": {
-                "webpack://@kartoffelgames/environment.kg-cli-command-sync/*": "${workspaceFolder}/*"
+                "webpack://@kartoffelgames/environment.command-sync/*": "${workspaceFolder}/*"
             }
         }
     ]

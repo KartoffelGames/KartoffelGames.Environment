@@ -19,7 +19,7 @@
             ],
             "sourceMaps": true,
             "sourceMapPathOverrides": {
-                "webpack://@kartoffelgames/environment.kg-cli-command-help/*": "${workspaceFolder}/*"
+                "webpack://@kartoffelgames/environment.command-help/*": "${workspaceFolder}/*"
             }
         }
     ]

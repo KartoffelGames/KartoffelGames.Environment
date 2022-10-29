@@ -22,13 +22,13 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/KartoffelGames/KartoffelGames.Public.git",
+        "url": "git+https://github.com/KartoffelGames/KartoffelGames.Environment.git",
         "directory": "packages/{{PROJECT_FOLDER}}"
     },
     "bugs": {
-        "url": "https://github.com/KartoffelGames/KartoffelGames.Public/issues"
+        "url": "https://github.com/KartoffelGames/KartoffelGames.Environment/issues"
     },
-    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
+    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
     "kg": {
         "name": "Package_Name",
         "root": false,

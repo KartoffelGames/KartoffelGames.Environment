@@ -15,13 +15,13 @@
     },
     "dependencies": {
         "@kartoffelgames/environment.cli": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-init": "^0.0.0",
-        "@kartoffelgames/environment.kg-cli-command-help": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-create": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-build": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-blueprint-kg-main": "^0.0.1",
-        "@kartoffelgames/environment.kg-cli-command-sync": "^0.0.1",
-        "@kartoffelgames/environment.kg-workspace-essentials": "^0.0.0"
+        "@kartoffelgames/environment.command-init": "^0.0.0",
+        "@kartoffelgames/environment.command-help": "^0.0.1",
+        "@kartoffelgames/environment.command-create": "^0.0.1",
+        "@kartoffelgames/environment.command-build": "^0.0.1",
+        "@kartoffelgames/environment.blueprint-kg-main": "^0.0.1",
+        "@kartoffelgames/environment.command-sync": "^0.0.1",
+        "@kartoffelgames/environment.workspace-essentials": "^0.0.0"
     },
     "devDependencies": {
         "@types/chai": "^4.2.21",
@@ -34,13 +34,13 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/KartoffelGames/KartoffelGames.Public.git",
+        "url": "git+https://github.com/KartoffelGames/KartoffelGames.Environment.git",
         "directory": "packages/kartoffelgames.environment"
     },
     "bugs": {
-        "url": "https://github.com/KartoffelGames/KartoffelGames.Public/issues"
+        "url": "https://github.com/KartoffelGames/KartoffelGames.Environment/issues"
     },
-    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Public#readme",
+    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
     "kg": {
         "name": "Kartoffelgames.Environment",
         "root": false,

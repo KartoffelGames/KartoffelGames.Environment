@@ -19,7 +19,7 @@
             ],
             "sourceMaps": true,
             "sourceMapPathOverrides": {
-                "webpack://@kartoffelgames/environment.kg-cli-blueprint-package/*": "${workspaceFolder}/*"
+                "webpack://@kartoffelgames/environment.blueprint-package/*": "${workspaceFolder}/*"
             }
         }
     ]
