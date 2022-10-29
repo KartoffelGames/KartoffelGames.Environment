@@ -37,8 +37,8 @@
             "path": "packages\\kartoffelgames.environment.kg_cli_command_sync"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Workspace_Essentials",
-            "path": "packages\\kartoffelgames.environment.kg_workspace_essentials"
+            "name": "Kartoffelgames.Environment.Workspace_Essentials",
+            "path": "packages\\kartoffelgames.environment.workspace_essentials"
         },
         {
             "name": "_ROOT",
