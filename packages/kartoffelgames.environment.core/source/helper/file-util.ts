@@ -59,7 +59,7 @@ export class FileUtil {
     public static emptyDirectory(pPath: string): void {
         filereader.readdirSync(pPath).forEach(pFileName => {
             const lFilePath: string = path.join(pPath, pFileName);
-            filereader.rmSync(lFilePath);
+            filereader.rmSync(lFilePath, { recursive: true, force: true });
         });
     }
 
