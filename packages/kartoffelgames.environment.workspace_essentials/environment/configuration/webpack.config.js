@@ -73,7 +73,11 @@ const gGetProjectName = () => {
     const lFileContent = gFilereader.readFileSync(lFilePath, 'utf8');
     const lFileJson = JSON.parse(lFileContent);
 
-    return lFileJson.projectName;
+    if (!lFileJson.kg || !lFileJson.kg.name || lFileJson.kg.name === '') {
+        throw `Project name required. Run "npx kg sync" to generate project names for every package.`;
+    }
+
+    return lFileJson.kg.name;
 };
 
 /**
@@ -85,7 +89,7 @@ module.exports = (pEnvironment) => {
 
     // Set variable configuration default values.
     const lBuildSettings = {
-        target: 'node',
+        target: pEnvironment.target,
         entryFile: '',
         buildMode: 'none',
         fileName: 'script.js',
@@ -95,7 +99,6 @@ module.exports = (pEnvironment) => {
 
     switch (pEnvironment.buildType) {
         case 'release':
-            lBuildSettings.target = 'web';
             lBuildSettings.entryFile = './source/index.ts';
             lBuildSettings.buildMode = 'production';
             lBuildSettings.fileName = `${lProjectName}.js`;
@@ -104,7 +107,6 @@ module.exports = (pEnvironment) => {
             break;
 
         case 'test':
-            lBuildSettings.target = 'node';
             lBuildSettings.entryFile = './test/index.ts';
             lBuildSettings.buildMode = 'development';
             lBuildSettings.fileName = `test-pack.js`;
@@ -113,7 +115,6 @@ module.exports = (pEnvironment) => {
             break;
 
         case 'test-coverage':
-            lBuildSettings.target = 'node';
             lBuildSettings.entryFile = './test/index.ts';
             lBuildSettings.buildMode = 'development';
             lBuildSettings.fileName = `test-pack.js`;
@@ -122,7 +123,6 @@ module.exports = (pEnvironment) => {
             break;
 
         case 'scratchpad':
-            lBuildSettings.target = 'web';
             lBuildSettings.entryFile = './scratchpad/source/index.ts';
             lBuildSettings.buildMode = 'development';
             lBuildSettings.fileName = 'scratchpad.js';
