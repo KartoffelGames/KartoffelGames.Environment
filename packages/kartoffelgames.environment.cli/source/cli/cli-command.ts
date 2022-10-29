@@ -102,7 +102,13 @@ export class CliCommand {
 
                 if (lPatternPart.startsWith('<')) { // Required parameter.
                     continue;
-                } else if (lPatternPart.startsWith('[') || lCommandPart.startsWith('--')) { // Optional any.
+                } else if (lPatternPart.startsWith('[')) { // Optional any.
+                    // Optional part has begun. Ignore path.
+                    break;
+                } else if (lPatternPart.startsWith('--') && lCommandPart.startsWith('--')) { // Optional any.
+                    // Optional part has begun. Ignore path.
+                    break;
+                } else if (lPatternPart.startsWith('--') && lCommandPart === '') { // Optional any.
                     // Optional part has begun. Ignore path.
                     break;
                 } else if (lPatternPart.toLowerCase() === lCommandPart.toLowerCase()) { // Required fixed.

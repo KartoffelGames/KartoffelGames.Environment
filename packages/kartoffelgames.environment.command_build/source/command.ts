@@ -63,14 +63,23 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         lConsole.writeLine('Copy external files');
         FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
 
+        // Set configuration.
+        const lPackPackage: boolean = pParameter.parameter.has('pack') || lBuildConfiguration.pack;
+        const lPackageTarget: string = pParameter.parameter.get('target') ?? lBuildConfiguration.target;
+
+        // Validate package target.
+        if (lPackageTarget !== 'node' && lPackageTarget !== 'web') {
+            throw `Invalid package target "${lPackPackage}". Valid targets are ["node", "web"]`;
+        }
+
         // Load essentials.
         const lWebpackConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/webpack.config.js');
 
         // Build typescript when configurated.
-        if (lBuildConfiguration.pack) {
+        if (lPackPackage) {
             lConsole.writeLine('Build Webpack');
 
-            await lShell.console(`node ${lWebpackCli} --config "${lWebpackConfigPath}" --env=buildType=release --env=target=${lBuildConfiguration.target}`);
+            await lShell.console(`node ${lWebpackCli} --config "${lWebpackConfigPath}" --env=buildType=release --env=target=${lPackageTarget}`);
         }
 
         lConsole.writeLine('Build sucessful');
