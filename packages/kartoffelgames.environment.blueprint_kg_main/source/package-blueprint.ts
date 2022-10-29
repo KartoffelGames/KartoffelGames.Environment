@@ -27,7 +27,7 @@ export class KgCliPackageBlueprint implements IKgCliPackageBlueprint {
         const lPackageFolderName = path.parse(pPackageDirectory).name;
 
         // Get root project directory name.
-        const lRootProjectName = path.parse(pProjectHandler.projectRootDirectory).name;
+        const lRootProjectName = path.parse(pProjectHandler.projectRootDirectory).base;
 
         // Check all files.
         for (const lFilePath of lPackageFileList) {
