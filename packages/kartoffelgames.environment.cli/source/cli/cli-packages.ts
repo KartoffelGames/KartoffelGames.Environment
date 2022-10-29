@@ -1,5 +1,4 @@
 import { FileUtil, Shell } from '@kartoffelgames/environment.core';
-import * as path from 'path';
 
 export class CliPackages {
     private readonly mCliRootPath: string;
@@ -101,7 +100,7 @@ export class CliPackages {
 
         // Wait for all file readings to finish.
         await Promise.all(lFileReadingList);
-        
+
         return lCliPackages;
     }
 }
