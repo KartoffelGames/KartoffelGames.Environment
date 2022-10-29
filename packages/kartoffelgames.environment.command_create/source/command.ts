@@ -139,7 +139,7 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
 
             // Execute blueprint after copy handler.
             lConsole.writeLine('Execute blueprint handler...');
-            await pBlueprint.afterCopy(lTargetPath, lPackageParameter);
+            await pBlueprint.afterCopy(lTargetPath, lPackageParameter, pProjectHandler);
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
 

@@ -1,3 +1,4 @@
+import { Project } from '@kartoffelgames/environment.core';
 import { PackageParameter } from '../package/package-parameter';
 
 export interface IKgCliPackageBlueprint {
@@ -9,7 +10,7 @@ export interface IKgCliPackageBlueprint {
     /**
      * 
      */
-    afterCopy(pPackageDirectory: string, pParameter: PackageParameter): Promise<void>;
+    afterCopy(pPackageDirectory: string, pParameter: PackageParameter, ProjectHandler: Project): Promise<void>;
 }
 
 export type KgCliPackageBlueprintDescription = {
