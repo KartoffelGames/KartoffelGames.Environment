@@ -24,7 +24,11 @@
         "name": "Kartoffelgames.__Root",
         "root": true,
         "config": {
-            "project_blueprint": "kg-main"
+            "project_blueprint": "kg-main",
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            }
         }
     }
 }

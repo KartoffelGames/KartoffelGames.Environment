@@ -26,7 +26,11 @@
         "name": "Kartoffelgames.Environment.Workspace_Essentials",
         "root": false,
         "config": {
-            "package-blueprint": "kg-main"
+            "package-blueprint": "kg-main",
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            }
         }
     }
 }

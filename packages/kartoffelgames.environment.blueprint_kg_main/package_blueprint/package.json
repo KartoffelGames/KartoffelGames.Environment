@@ -32,6 +32,11 @@
     "kg": {
         "name": "Package_Name",
         "root": false,
-        "config": {}
+        "config": {
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            }
+        }
     }
 }

@@ -32,7 +32,11 @@
         "name": "Kartoffelgames.Environment.Core",
         "root": false,
         "config": {
-            "package_blueprint": "kg-main"
+            "package_blueprint": "kg-main",
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            }
         }
     }
 }
