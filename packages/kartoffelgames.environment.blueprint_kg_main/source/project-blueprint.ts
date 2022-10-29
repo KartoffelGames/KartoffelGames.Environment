@@ -1,5 +1,5 @@
-import { KgCliBlueprintDescription } from '@kartoffelgames/environment.kg-cli-command-create/library/source/interfaces/i-kg-cli-package-blueprint';
-import { IKgCliProjectBlueprint } from '@kartoffelgames/environment.kg-cli-command-init';
+import { KgCliBlueprintDescription } from '@kartoffelgames/environment.kg-cli-command-create/kartoffelgames.environment.command_create/source/interfaces/i-kg-cli-package-blueprint';
+import { IKgCliProjectBlueprint } from '@kartoffelgames/environment.kg-cli-command-init/kartoffelgames.environment.command_init/source';
 import * as path from 'path';
 
 export class KgCliProjectBlueprint implements IKgCliProjectBlueprint {

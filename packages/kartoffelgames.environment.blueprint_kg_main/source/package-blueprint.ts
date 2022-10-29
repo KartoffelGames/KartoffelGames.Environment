@@ -1,7 +1,7 @@
 import { FileUtil } from '@kartoffelgames/environment.core';
-import { IKgCliPackageBlueprint } from '@kartoffelgames/environment.kg-cli-command-create';
-import { KgCliBlueprintDescription } from '@kartoffelgames/environment.kg-cli-command-create/library/source/interfaces/i-kg-cli-package-blueprint';
-import { PackageParameter } from '@kartoffelgames/environment.kg-cli-command-create/library/source/package/package-parameter';
+import { IKgCliPackageBlueprint } from '@kartoffelgames/environment.kg-cli-command-create/kartoffelgames.environment.command_create/source';
+import { KgCliBlueprintDescription } from '@kartoffelgames/environment.kg-cli-command-create/kartoffelgames.environment.command_create/source/interfaces/i-kg-cli-package-blueprint';
+import { PackageParameter } from '@kartoffelgames/environment.kg-cli-command-create/kartoffelgames.environment.command_create/source/package/package-parameter';
 import * as path from 'path';
 
 export class KgCliPackageBlueprint implements IKgCliPackageBlueprint {

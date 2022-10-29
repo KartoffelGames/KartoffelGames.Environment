@@ -13,28 +13,28 @@
             "path": "./packages/kartoffelgames.environment.core"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Cli_Blueprint_Kg_Main",
-            "path": "./packages/kartoffelgames.environment.kg_cli_blueprint_kg_main"
+            "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
+            "path": "./packages/kartoffelgames.environment.blueprint_kg_main"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Cli_Command_Build",
-            "path": "packages\\kartoffelgames.environment.kg_cli_command_build"
+            "name": "Kartoffelgames.Environment.Command_Build",
+            "path": "packages\\kartoffelgames.environment.command_build"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Cli_Command_Create",
-            "path": "./packages/kartoffelgames.environment.kg_cli_command_create"
+            "name": "Kartoffelgames.Environment.Command_Create",
+            "path": "./packages/kartoffelgames.environment.command_create"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Cli_Command_Help",
-            "path": "./packages/kartoffelgames.environment.kg_cli_command_help"
+            "name": "Kartoffelgames.Environment.Command_Help",
+            "path": "./packages/kartoffelgames.environment.command_help"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Cli_Command_Init",
-            "path": "packages\\kartoffelgames.environment.kg_cli_command_init"
+            "name": "Kartoffelgames.Environment.Command_Init",
+            "path": "packages\\kartoffelgames.environment.command_init"
         },
         {
-            "name": "Kartoffelgames.Environment.Kg_Cli_Command_Sync",
-            "path": "packages\\kartoffelgames.environment.kg_cli_command_sync"
+            "name": "Kartoffelgames.Environment.Command_Sync",
+            "path": "packages\\kartoffelgames.environment.command_sync"
         },
         {
             "name": "Kartoffelgames.Environment.Workspace_Essentials",
