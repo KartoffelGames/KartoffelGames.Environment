@@ -56,12 +56,7 @@ import { CliPackages } from './cli/cli-packages';
 
 
 
-    /*  
-        lCommandMap.add('build <project_name>', async (pData: CommandData) => {
-            const lPackageName: string = pData.pathData['project_name'];
-            await new BuildCommand(lWorkspace).build(lPackageName);
-        }, 'Build package.');
-    
+    /*   
         lCommandMap.add('test <project_name> [--coverage] [--no-timeout]', async (pData: CommandData) => {
             const lPackageName: string = pData.pathData['project_name'];
             await new BuildCommand(lWorkspace).test(lPackageName, {
