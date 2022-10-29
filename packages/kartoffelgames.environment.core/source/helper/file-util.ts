@@ -222,6 +222,22 @@ export class FileUtil {
     /**
      * Read file content.
      * @param pPath - Path to file.
+     */
+    public static async readAsync(pPath: string): Promise<string> {
+        return new Promise<string>((pResolve, pReject) => {
+            filereader.readFile(pPath, { encoding: 'utf8' }, (pError, pFileData) => {
+                if (pError) {
+                    pReject(pError);
+                    return;
+                }
+                pResolve(pFileData);
+            });
+        });
+    }
+
+    /**
+     * Read file content.
+     * @param pPath - Path to file.
      * @param pContent - File content.
      */
     public static write(pPath: string, pContent: string): void {

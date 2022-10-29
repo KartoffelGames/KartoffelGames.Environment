@@ -1,4 +1,5 @@
-import { Shell } from '@kartoffelgames/environment.core';
+import { FileUtil, Shell } from '@kartoffelgames/environment.core';
+import * as path from 'path';
 
 export class CliPackages {
     private readonly mCliRootPath: string;
@@ -59,25 +60,42 @@ export class CliPackages {
         // List all packages and distinct list.
         const lPackageList: Array<string> = [...new Set(lListPackages(lPackageObject))];
 
-        // Filter command packages. All package names that includes "KG_Cli".
+        // Filter packages for existsing cli config.
         const lCliPackages: Record<string, Array<string>> = {};
-        const lCliPackageRegex: RegExp = /(?:[^a-z]|^)(kg[-_]cli[^a-z])([a-zA-Z]+)/i;
+        const lFileReadingList: Array<Promise<void>> = new Array<Promise<void>>();
         for (const lPackage of lPackageList) {
-            // Check for correct package type.
-            const lRegexMatch: RegExpMatchArray | null = lPackage.match(lCliPackageRegex);
-            if (lRegexMatch !== null) {
-                const lTypeName = lRegexMatch[2].toLowerCase(); // Group 2 : type
+            const lPackagePath: string = require.resolve(lPackage);
+            const lCliConfigFilePath = path.join(lPackagePath, 'kg-cli.config.json');
 
-                // Init type list.
-                if (!(lTypeName in lCliPackages)) {
-                    lCliPackages[lTypeName] = new Array<string>();
-                }
+            // Check if cli config exists.
+            if (FileUtil.exists(lCliConfigFilePath)) {
+                // Read async and parse json.
+                const lFileReadyPromise = FileUtil.readAsync(lCliConfigFilePath).then((pData) => {
+                    const lJson: CliConfig = JSON.parse(pData);
 
-                // Add dependency to type list.
-                lCliPackages[lTypeName].push(lPackage);
+                    // Init type list.
+                    if (!(lJson.group in lCliPackages)) {
+                        lCliPackages[lJson.group] = new Array<string>();
+                    }
+
+                    // Add dependency to type list.
+                    lCliPackages[lJson.group].push(lPackage);
+                }).catch(() => {
+                    // eslint-disable-next-line no-console
+                    console.warn(`Error reading cli config "${lPackage}"`);
+                });
+
+                lFileReadingList.push(lFileReadyPromise);
             }
         }
+
+        // Wait for all file readings to finish.
+        Promise.all(lFileReadingList);
 
         return lCliPackages;
     }
 }
+
+type CliConfig = {
+    group: string;
+};
