@@ -7,15 +7,8 @@
         "name": "KartoffelGames"
     },
     "files": [
-        "library/source/**/*"
+        "environment/**/*"
     ],
-    "main": "library/source/index.js",
-    "types": "library/source/index.d.ts",
-    "devDependencies": {
-        "@types/chai": "^4.2.21",
-        "@types/mocha": "^5.2.7",
-        "typescript": "^4.4.2"
-    },
     "scripts": {
         "build": "echo No build",
         "test": "echo No test"

@@ -8,7 +8,8 @@
     "files": [
         "library/source/**/*",
         "package_blueprint/**/*",
-        "project_blueprint/**/*"
+        "project_blueprint/**/*",
+        "kg-cli-config.json"
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",

@@ -64,8 +64,18 @@ export class CliPackages {
         const lCliPackages: Record<string, Array<string>> = {};
         const lFileReadingList: Array<Promise<void>> = new Array<Promise<void>>();
         for (const lPackage of lPackageList) {
-            const lPackagePath: string = require.resolve(lPackage);
-            const lCliConfigFilePath = path.join(lPackagePath, 'kg-cli.config.json');
+            // Try to find cli config.
+            let lCliConfigFilePath: string | null = null;
+            try {
+                lCliConfigFilePath = require.resolve(`${lPackage}/kg-cli.config.json`);
+            } catch (_pError) {
+                // Nothing.
+            }
+
+            // Config not found.
+            if (lCliConfigFilePath === null) {
+                continue;
+            }
 
             // Check if cli config exists.
             if (FileUtil.exists(lCliConfigFilePath)) {
@@ -90,8 +100,8 @@ export class CliPackages {
         }
 
         // Wait for all file readings to finish.
-        Promise.all(lFileReadingList);
-
+        await Promise.all(lFileReadingList);
+        
         return lCliPackages;
     }
 }
