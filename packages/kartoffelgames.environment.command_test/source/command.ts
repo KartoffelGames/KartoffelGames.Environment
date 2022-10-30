@@ -46,7 +46,14 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
         // Run build command.
         const lBuildCommand: BuildCommand = new BuildCommand();
-        await lBuildCommand.build(pProjectHandler, lPackage.packageName, true, 'node', <any>lBuildType);
+        await lBuildCommand.build({
+            projectHandler: pProjectHandler,
+            packgeName: lPackage.packageName,
+            pack: true,
+            target: 'node',
+            buildType: <any>lBuildType,
+            serve: false
+        });
 
         // Run test information.
         lConsole.writeLine('Run Test');

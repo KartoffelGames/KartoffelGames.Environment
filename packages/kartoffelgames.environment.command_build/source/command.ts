@@ -24,18 +24,14 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
     /**
      * Build project.
-     * @param pProjectHandler - Project handler.
-     * @param pPackgeName - Package name.
-     * @param pPack - Pack release.
-     * @param pTarget - Build target.
-     * @param pBuildType - Build type.
+     * @param pOptions - Build options.
      */
-    public async build(pProjectHandler: Project, pPackgeName: string, pPack: boolean, pTarget: KgBuildConfiguration['target'], pBuildType: BuildType): Promise<void> {
+    public async build(pOptions: BuildOptions): Promise<void> {
         const lConsole = new Console();
 
         // Read package information and buld config. 
         // Configuration is filled up with default information.
-        const lPackage = pProjectHandler.getPackageConfiguration(pPackgeName);
+        const lPackage = pOptions.projectHandler.getPackageConfiguration(pOptions.packgeName);
 
         // Construct paths.
         const lPackagePath = lPackage.directory;
@@ -62,17 +58,23 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
 
         // Validate package target.
-        if (pTarget !== 'node' && pTarget !== 'web') {
-            throw `Invalid package target "${pTarget}". Valid targets are ["node", "web"]`;
+        if (pOptions.target !== 'node' && pOptions.target !== 'web') {
+            throw `Invalid package target "${pOptions.target}". Valid targets are ["node", "web"]`;
         }
 
         // Load essentials.
         const lWebpackConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/webpack.config.js');
 
+        // Start webpack server.
+        let lServeParameter: string = '';
+        if (pOptions.serve) {
+            lServeParameter = 'serve';
+        }
+
         // Build typescript when configurated.
-        if (pPack) {
+        if (pOptions.pack) {
             lConsole.writeLine('Build Webpack');
-            await lShell.console(`node ${lWebpackCli} --config "${lWebpackConfigPath}" --env=buildType=${pBuildType} --env=target=${pTarget}`);
+            await lShell.console(`node ${lWebpackCli} ${lServeParameter} --config "${lWebpackConfigPath}" --env=buildType=${pOptions.buildType} --env=target=${pOptions.target}`);
         }
 
         lConsole.writeLine('Build sucessful');
@@ -97,7 +99,14 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lPackPackage: boolean = (pParameter.parameter.has('pack') || lBuildConfiguration.pack) ?? false;
         const lPackageTarget: KgBuildConfiguration['target'] = <any>pParameter.parameter.get('target') ?? lBuildConfiguration.target ?? 'node';
 
-        await this.build(pProjectHandler, lPackageName, lPackPackage, lPackageTarget, 'release');
+        await this.build({
+            projectHandler: pProjectHandler,
+            packgeName: lPackageName,
+            pack: lPackPackage,
+            target: lPackageTarget,
+            buildType: 'release',
+            serve: false
+        });
     }
 }
 
@@ -107,3 +116,12 @@ type KgBuildConfiguration = {
 };
 
 type BuildType = 'release' | 'test' | 'test-coverage' | 'scratchpad';
+
+export type BuildOptions = {
+    projectHandler: Project;
+    packgeName: string;
+    pack: boolean;
+    target: KgBuildConfiguration['target'];
+    buildType: BuildType;
+    serve: boolean;
+};

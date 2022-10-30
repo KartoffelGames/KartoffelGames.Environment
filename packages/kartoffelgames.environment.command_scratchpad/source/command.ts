@@ -39,7 +39,13 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Run build command.
         const lBuildCommand: BuildCommand = new BuildCommand();
-        await lBuildCommand.build(pProjectHandler, lPackage.packageName, true, 'web', 'scratchpad');
+        await lBuildCommand.build({
+            projectHandler: pProjectHandler,
+            packgeName: lPackage.packageName,
+            pack: true,
+            target: 'web',
+            buildType: 'scratchpad',
+            serve: true
+        });
     }
-
 }
