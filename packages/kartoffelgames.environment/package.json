@@ -21,6 +21,7 @@
         "@kartoffelgames/environment.command-build": "^0.0.0",
         "@kartoffelgames/environment.command-test": "^0.0.0",
         "@kartoffelgames/environment.command-sync": "^0.0.1",
+        "@kartoffelgames/environment.command-scratchpad": "^0.0.0",
         "@kartoffelgames/environment.blueprint-kg-main": "^0.0.1",
         "@kartoffelgames/environment.workspace-essentials": "^0.0.0"
     },

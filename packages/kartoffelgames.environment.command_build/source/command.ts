@@ -106,4 +106,4 @@ type KgBuildConfiguration = {
     target: 'node' | 'web';
 };
 
-type BuildType = 'release' | 'test' | 'test-coverage';
+type BuildType = 'release' | 'test' | 'test-coverage' | 'scratchpad';

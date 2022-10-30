@@ -13,7 +13,8 @@
     "types": "library/source/index.d.ts",
     "dependencies": {
         "@kartoffelgames/environment.cli": "^0.0.1",
-        "@kartoffelgames/environment.core": "^0.0.1"
+        "@kartoffelgames/environment.core": "^0.0.1",
+        "@kartoffelgames/environment.command-build": "^0.0.0"
     },
     "devDependencies": {
         "@types/chai": "^4.2.21",
@@ -21,8 +22,8 @@
         "typescript": "^4.4.2"
     },
     "scripts": {
-        "build": "kg build Kartoffelgames.Environment.Command_Scratchpad",
-        "test": "kg test Kartoffelgames.Environment.Command_Scratchpad"
+        "build": "tsc",
+        "test": "echo No tests"
     },
     "repository": {
         "type": "git",
