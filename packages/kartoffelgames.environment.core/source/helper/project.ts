@@ -80,6 +80,11 @@ export class Project {
     public convertToProjectName(pPackageName: string): string {
         let lConvertedPackageName: string = pPackageName;
 
+        // Empty packae name.
+        if(!lConvertedPackageName) {
+            return '';
+        }
+
         // Replace '/' with '.'.
         lConvertedPackageName = lConvertedPackageName.replaceAll('/', '.');
 
