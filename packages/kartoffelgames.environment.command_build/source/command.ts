@@ -9,7 +9,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
     public get information(): KgCliCommandDescription<KgBuildConfiguration> {
         return {
             command: {
-                pattern: 'build <package_name> --pack --target',
+                pattern: 'build <package_name> --pack --target --type',
                 description: 'Build package',
             },
             configuration: {
@@ -66,6 +66,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Set configuration.
         const lPackPackage: boolean = pParameter.parameter.has('pack') || lBuildConfiguration.pack;
         const lPackageTarget: string = pParameter.parameter.get('target') ?? lBuildConfiguration.target;
+        const lPackageBuildType: string = pParameter.parameter.get('type') ?? 'release';
 
         // Validate package target.
         if (lPackageTarget !== 'node' && lPackageTarget !== 'web') {
@@ -79,7 +80,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         if (lPackPackage) {
             lConsole.writeLine('Build Webpack');
 
-            await lShell.console(`node ${lWebpackCli} --config "${lWebpackConfigPath}" --env=buildType=release --env=target=${lPackageTarget}`);
+            await lShell.console(`node ${lWebpackCli} --config "${lWebpackConfigPath}" --env=buildType=${lPackageBuildType} --env=target=${lPackageTarget}`);
         }
 
         lConsole.writeLine('Build sucessful');

@@ -129,6 +129,8 @@ module.exports = (pEnvironment) => {
             lBuildSettings.outputDirectory = 'dist';
             lBuildSettings.includeCoverage = false;
             break;
+        default:
+            throw `Build type "${pEnvironment.buildType}" not supported.`
     }
 
     return {
