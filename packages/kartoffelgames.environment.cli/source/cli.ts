@@ -56,15 +56,7 @@ import { CliPackages } from './cli/cli-packages';
 
 
 
-    /*   
-        lCommandMap.add('test <project_name> [--coverage] [--no-timeout]', async (pData: CommandData) => {
-            const lPackageName: string = pData.pathData['project_name'];
-            await new BuildCommand(lWorkspace).test(lPackageName, {
-                coverage: pData.command.parameter.has('coverage'),
-                noTimeout: pData.command.parameter.has('no-timeout'),
-            });
-        }, 'Test project.');
-    
+    /*       
         lCommandMap.add('scratchpad <project_name>', async (pData: CommandData) => {
             const lPackageName: string = pData.pathData['project_name'];
             await new BuildCommand(lWorkspace).scratchpad(lPackageName);
