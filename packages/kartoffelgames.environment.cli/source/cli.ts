@@ -53,14 +53,4 @@ import { CliPackages } from './cli/cli-packages';
     }
 
     process.exit(0);
-
-
-
-    /*       
-        lCommandMap.add('scratchpad <project_name>', async (pData: CommandData) => {
-            const lPackageName: string = pData.pathData['project_name'];
-            await new BuildCommand(lWorkspace).scratchpad(lPackageName);
-        }, 'Serve scratchpad files over local http server.');
-    
-    */
 })();
