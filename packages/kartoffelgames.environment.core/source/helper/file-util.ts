@@ -57,6 +57,11 @@ export class FileUtil {
      * @param pPath - Directory path.
      */
     public static emptyDirectory(pPath: string): void {
+        // Exit on non esisting directory.
+        if(!FileUtil.exists(pPath)){
+            return;
+        }
+
         filereader.readdirSync(pPath).forEach(pFileName => {
             const lFilePath: string = path.join(pPath, pFileName);
             filereader.rmSync(lFilePath, { recursive: true, force: true });
