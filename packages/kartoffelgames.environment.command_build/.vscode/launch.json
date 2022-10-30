@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Mocha Test",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "kg",
+                "test",
+                "${workspaceFolderBasename}",
+                "--no-timeout",
+            ],
+            "cwd": "${workspaceFolder}",
+            "skipFiles": [
+                "${workspaceFolder}/../../node_modules/**/*.js",
+                "<node_internals>/**/*.js"
+            ],
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack://@kartoffelgames/environment.command-build/*": "${workspaceFolder}/*"
+            }
+        }
+    ]
+}

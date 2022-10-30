@@ -1,0 +1,64 @@
+{
+    "name": "@kartoffelgames/environment.command-build",
+    "projectName": "Kartoffelgames.Environment.Command_Build",
+    "version": "0.0.0",
+    "description": "Kartoffelgames.Environment.Command_Build",
+    "author": {
+        "name": "KartoffelGames"
+    },
+    "files": [
+        "library/source/**/*",
+        "kg-cli-config.json"
+    ],
+    "main": "library/source/index.js",
+    "types": "library/source/index.d.ts",
+    "devDependencies": {
+        "@types/chai": "^4.2.21",
+        "@types/mocha": "^5.2.7",
+        "typescript": "^4.4.2"
+    },
+    "dependencies": {
+        "@kartoffelgames/environment.cli": "^0.0.1",
+        "@kartoffelgames/environment.core": "^0.0.1",
+        "@kartoffelgames/environment.workspace-essentials": "^0.0.0",
+        "@types/node": "^18.7.13",
+        "jsdom": "^19.0.0",
+        "jsdom-global": "^3.0.2",
+        "typescript": "^4.4.2",
+        "webpack": "^5.51.1",
+        "webpack-cli": "^4.8.0",
+        "url-loader": "^4.1.1",
+        "ts-loader": "^8.0.9",
+        "raw-loader": "^4.0.2",
+        "babel-loader": "^8.2.2",
+        "@babel/plugin-transform-async-to-generator": "^7.14.5",
+        "@babel/preset-env": "^7.15.6"
+    },
+    "scripts": {
+        "build": "tsc",
+        "test": "echo No test"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/KartoffelGames/KartoffelGames.Environment.git",
+        "directory": "packages/kartoffelgames.environment"
+    },
+    "bugs": {
+        "url": "https://github.com/KartoffelGames/KartoffelGames.Environment/issues"
+    },
+    "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Build",
+        "root": false,
+        "config": {
+            "package-blueprint": "kg-main",
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            },
+            "tests": [
+                "unit"
+            ]
+        }
+    }
+}

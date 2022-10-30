@@ -1,29 +1,22 @@
 {
-    "name": "@kartoffelgames/environment",
-    "version": "0.0.1",
-    "description": "KartoffelGames.Environment",
+    "name": "@kartoffelgames/environment.command-test",
+    "projectName": "Kartoffelgames.Environment.Command_Test",
+    "version": "0.0.0",
+    "description": "Kartoffelgames.Environment.Command_Test",
     "author": {
         "name": "KartoffelGames"
     },
     "files": [
-        "library/source/**/*"
+        "library/source/**/*",
+        "kg-cli-config.json"
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
-    "bin": {
-        "kartoffelgames-environment": "library/source/index.js"
-    },
     "dependencies": {
         "@kartoffelgames/environment.cli": "^0.0.1",
-        "@kartoffelgames/environment.command-init": "^0.0.0",
-        "@kartoffelgames/environment.command-help": "^0.0.1",
-        "@kartoffelgames/environment.command-create": "^0.0.1",
-        "@kartoffelgames/environment.command-build": "^0.0.0",
-        "@kartoffelgames/environment.command-test": "^0.0.0",
-        "@kartoffelgames/environment.command-sync": "^0.0.1",
-        "@kartoffelgames/environment.command-scratchpad": "^0.0.0",
-        "@kartoffelgames/environment.blueprint-kg-main": "^0.0.1",
-        "@kartoffelgames/environment.workspace-essentials": "^0.0.0"
+        "@kartoffelgames/environment.core": "^0.0.1",
+        "@kartoffelgames/environment.workspace-essentials": "^0.0.0",
+        "@kartoffelgames/environment.command-build": "^0.0.0"
     },
     "devDependencies": {
         "@types/chai": "^4.2.21",
@@ -32,7 +25,7 @@
     },
     "scripts": {
         "build": "tsc",
-        "test": "echo No tests"
+        "test": "echo No test"
     },
     "repository": {
         "type": "git",
@@ -44,10 +37,10 @@
     },
     "homepage": "https://github.com/KartoffelGames/KartoffelGames.Environment#readme",
     "kg": {
-        "name": "Kartoffelgames.Environment",
+        "name": "Kartoffelgames.Environment.Command_Test",
         "root": false,
         "config": {
-            "package_blueprint": "kg-main",
+            "package-blueprint": "kg-main",
             "build-configuration": {
                 "pack": false,
                 "target": "node"

@@ -1,4 +1,5 @@
 {
+    "name": "@kartoffelgames/--root",
     "version": "0.0.4",
     "license": "MIT",
     "scripts": {
@@ -16,8 +17,21 @@
         "@typescript-eslint/parser": "^5.36.1",
         "eslint": "^8.23.0",
         "turbo": "^1.0.28",
-        "@kartoffelgames/environment": "^0.0.6"
+        "@kartoffelgames/environment": "^0.0.1"
     },
     "packageManager": "npm@8.1.2",
-    "kg.root": true
+    "kg": {
+        "name": "Kartoffelgames.__Root",
+        "root": true,
+        "config": {
+            "project_blueprint": "kg-main",
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            },
+            "tests": [
+                "unit"
+            ]
+        }
+    }
 }

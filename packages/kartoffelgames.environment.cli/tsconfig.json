@@ -5,6 +5,9 @@
     "rootDir": "./",
     "outDir": "./library"
   },
+  "files": [
+    "environment/declaration/module-declaration.d.ts"
+  ],
   "include": [
     "./**/*.ts",
   ]
