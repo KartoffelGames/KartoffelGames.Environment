@@ -28,7 +28,10 @@
             "build-configuration": {
                 "pack": false,
                 "target": "node"
-            }
+            },
+            "tests": [
+                "unit"
+            ]
         }
     }
 }
