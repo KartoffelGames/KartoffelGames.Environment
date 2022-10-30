@@ -11,6 +11,11 @@
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
+    "dependencies": {
+        "@kartoffelgames/environment.cli": "^0.0.1",
+        "@kartoffelgames/environment.core": "^0.0.1",
+        "@kartoffelgames/environment.kg-workspace-essentials": "^0.0.0"
+    },
     "devDependencies": {
         "@types/chai": "^4.2.21",
         "@types/mocha": "^5.2.7",
@@ -37,7 +42,10 @@
             "build-configuration": {
                 "pack": false,
                 "target": "node"
-            }
+            },
+            "tests": [
+                "unit"
+            ]
         }
     }
 }
