@@ -44,16 +44,9 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Build test webpack information.
         lConsole.writeLine('Build Test');
 
-        // Build build cli parameter.
-        const lBuildParameter: CliParameter = new CliParameter();
-        lBuildParameter.parameter.set('package_name', lPackage.packageName);
-        lBuildParameter.parameter.set('pack', null);
-        lBuildParameter.parameter.set('target', 'node');
-        lBuildParameter.parameter.set('type', lBuildType);
-
         // Run build command.
         const lBuildCommand: BuildCommand = new BuildCommand();
-        await lBuildCommand.run(lBuildParameter, _pPackages, pProjectHandler);
+        await lBuildCommand.build(pProjectHandler, lPackage.packageName, true, 'node', <any>lBuildType);
 
         // Run test information.
         lConsole.writeLine('Run Test');

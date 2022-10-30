@@ -23,21 +23,19 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
     }
 
     /**
-     * Execute command.
-     * @param pParameter - Command parameter.
-     * @param _pPackages - All cli packages grouped by type.
-     * @param pProjectHandler - Project handling.
+     * Build project.
+     * @param pProjectHandler - Project handler.
+     * @param pPackgeName - Package name.
+     * @param pPack - Pack release.
+     * @param pTarget - Build target.
+     * @param pBuildType - Build type.
      */
-    public async run(pParameter: CliParameter, _pPackages: Array<string>, pProjectHandler: Project): Promise<void> {
+    public async build(pProjectHandler: Project, pPackgeName: string, pPack: boolean, pTarget: KgBuildConfiguration['target'], pBuildType: BuildType): Promise<void> {
         const lConsole = new Console();
-
-        // Cli parameter.
-        const lPackageName: string = <string>pParameter.parameter.get('package_name');
 
         // Read package information and buld config. 
         // Configuration is filled up with default information.
-        const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
-        const lBuildConfiguration: KgBuildConfiguration = lPackage.workspace.config['build-configuration'];
+        const lPackage = pProjectHandler.getPackageConfiguration(pPackgeName);
 
         // Construct paths.
         const lPackagePath = lPackage.directory;
@@ -63,27 +61,43 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         lConsole.writeLine('Copy external files');
         FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
 
-        // Set configuration.
-        const lPackPackage: boolean = pParameter.parameter.has('pack') || lBuildConfiguration.pack;
-        const lPackageTarget: string = pParameter.parameter.get('target') ?? lBuildConfiguration.target;
-        const lPackageBuildType: string = pParameter.parameter.get('type') ?? 'release';
-
         // Validate package target.
-        if (lPackageTarget !== 'node' && lPackageTarget !== 'web') {
-            throw `Invalid package target "${lPackPackage}". Valid targets are ["node", "web"]`;
+        if (pTarget !== 'node' && pTarget !== 'web') {
+            throw `Invalid package target "${pTarget}". Valid targets are ["node", "web"]`;
         }
 
         // Load essentials.
         const lWebpackConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/webpack.config.js');
 
         // Build typescript when configurated.
-        if (lPackPackage) {
+        if (pPack) {
             lConsole.writeLine('Build Webpack');
-
-            await lShell.console(`node ${lWebpackCli} --config "${lWebpackConfigPath}" --env=buildType=${lPackageBuildType} --env=target=${lPackageTarget}`);
+            await lShell.console(`node ${lWebpackCli} --config "${lWebpackConfigPath}" --env=buildType=${pBuildType} --env=target=${pTarget}`);
         }
 
         lConsole.writeLine('Build sucessful');
+    }
+
+    /**
+     * Execute command.
+     * @param pParameter - Command parameter.
+     * @param _pPackages - All cli packages grouped by type.
+     * @param pProjectHandler - Project handling.
+     */
+    public async run(pParameter: CliParameter, _pPackages: Array<string>, pProjectHandler: Project): Promise<void> {
+        // Cli parameter.
+        const lPackageName: string = <string>pParameter.parameter.get('package_name');
+
+        // Read package information and buld config. 
+        // Configuration is filled up with default information.
+        const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
+        const lBuildConfiguration: KgBuildConfiguration = lPackage.workspace.config['build-configuration'];
+
+        // Set configuration.
+        const lPackPackage: boolean = (pParameter.parameter.has('pack') || lBuildConfiguration.pack) ?? false;
+        const lPackageTarget: KgBuildConfiguration['target'] = <any>pParameter.parameter.get('target') ?? lBuildConfiguration.target ?? 'node';
+
+        await this.build(pProjectHandler, lPackageName, lPackPackage, lPackageTarget, 'release');
     }
 }
 
@@ -91,3 +105,5 @@ type KgBuildConfiguration = {
     pack: boolean;
     target: 'node' | 'web';
 };
+
+type BuildType = 'release' | 'test' | 'test-coverage';
