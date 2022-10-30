@@ -14,7 +14,8 @@
     "dependencies": {
         "@kartoffelgames/environment.cli": "^0.0.1",
         "@kartoffelgames/environment.core": "^0.0.1",
-        "@kartoffelgames/environment.kg-workspace-essentials": "^0.0.0"
+        "@kartoffelgames/environment.workspace-essentials": "^0.0.0",
+        "@kartoffelgames/environment.command-build": "^0.0.0"
     },
     "devDependencies": {
         "@types/chai": "^4.2.21",

@@ -1,5 +1,6 @@
 import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
 import { Console, Project, Shell } from '@kartoffelgames/environment.core';
+import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment.command-build';
 
 export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
     /**
@@ -34,18 +35,28 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
         const lPackagePath = lPackage.directory;
 
-        // Create shell command executor.
-        const lRootShell: Shell = new Shell(pProjectHandler.projectRootDirectory);
-
         // Construct webpack command.
         let lBuildType: string = 'test';
         if (pParameter.parameter.has('coverage')) {
-            lBuildType += 'test-coverage';
+            lBuildType = 'test-coverage';
         }
 
-        // Build test webpack
-        lConsole.writeLine('Build Webpack');
-        lRootShell.console(`npx kg build ${lPackageName} --target node --pack --type ${lBuildType}`);
+        // Build test webpack information.
+        lConsole.writeLine('Build Test');
+
+        // Build build cli parameter.
+        const lBuildParameter: CliParameter = new CliParameter();
+        lBuildParameter.parameter.set('package_name', lPackage.packageName);
+        lBuildParameter.parameter.set('pack', null);
+        lBuildParameter.parameter.set('target', 'node');
+        lBuildParameter.parameter.set('type', lBuildType);
+
+        // Run build command.
+        const lBuildCommand: BuildCommand = new BuildCommand();
+        await lBuildCommand.run(lBuildParameter, _pPackages, pProjectHandler);
+
+        // Run test information.
+        lConsole.writeLine('Run Test');
 
         // Load mocha and nyc from local node-modules.
         const lMochaCli: string = require.resolve('mocha/bin/mocha');
@@ -54,7 +65,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Load mocha and nyc configuration
         // Load essentials.
         const lMochaConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/mocha.config.js');
-        const lNycConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/nyc.config.js');
+        const lNycConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/nyc.config.json');
 
         // Create package shell command executor.
         const lPackageShell: Shell = new Shell(lPackagePath);
@@ -73,7 +84,6 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         }
 
         // Run test
-        lConsole.writeLine('Run Test');
         await lPackageShell.console(lMochaCommand);
     }
 }
