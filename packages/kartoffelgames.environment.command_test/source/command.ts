@@ -79,7 +79,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         }
 
         // Append no timout setting to mocha command.
-        if (pParameter.parameter.has('noTimeout')) {
+        if (pParameter.parameter.has('no-timeout')) {
             lMochaCommand += ' --no-timeouts';
         }
 
