@@ -22,7 +22,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Tests
-        run: npx turbo run test --force
+        run: npm run test
 
   publish-github-packages:
     if: "!contains(github.event.head_commit.author.name, 'GITHUBACTION')"
@@ -48,15 +48,14 @@ jobs:
       - name: Build
         run: |
           npm ci --ignore-scripts
-          npx turbo run build --force
+          npm run build
 
       - name: Bump Package Version Numbers
         run: |
-          npm version -ws --git-tag-version false patch
+          npm version patch -ws --git-tag-version false --commit-hooks false --workspaces-update false
 
       - name: Sync Package Versions
         run: npm run sync
-
 
       - name: Push updated versions
         run: |         
