@@ -18,12 +18,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kartoffelgames'
       
       - name: NPM Install
         run: npm ci --ignore-scripts
 
       - name: Tests
         run: npm run test
+
+      - name: Dry run publish
+        run: npm publish -ws -dry-run
 
 
 
