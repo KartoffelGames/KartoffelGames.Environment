@@ -8,7 +8,6 @@ on:
 jobs:
 
   test:
-    if: "!contains(github.event.head_commit.author.name, 'GITHUBACTION')"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,7 +23,7 @@ jobs:
       - name: Tests
         run: npm run test
 
-  publish-github-packages:
+  bump-version:
     if: "!contains(github.event.head_commit.author.name, 'GITHUBACTION')"
     needs: test
     runs-on: ubuntu-latest
@@ -37,8 +36,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@kartoffelgames'
 
       - name: Setup Git For Commits
         run: |
@@ -62,16 +59,29 @@ jobs:
           git commit -am "Bump package versions."
           git push --follow-tags --no-verify
 
+  publish-github-packages:
+    if: "contains(github.event.head_commit.author.name, 'GITHUBACTION')"
+    needs: bump-version
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:  
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kartoffelgames'
+
+      - name: Build
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
       - name: Release Github-Package
         run: npm publish -ws
-
-  empty-job:
-    runs-on: ubuntu-latest
-    if: success()
-    steps:
-
-      - name: Catch Emty Job
-        run: echo "Catch no job"
 
 
       
