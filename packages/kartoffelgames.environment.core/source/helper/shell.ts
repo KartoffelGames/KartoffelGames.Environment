@@ -17,7 +17,7 @@ export class Shell {
      * @param pCommand - Command.
      */
     public async background(pCommand: string): Promise<void> {
-        execSync(pCommand, { stdio: [0, 1, 2] });
+        execSync(pCommand, { stdio: [0, 1, 2], cwd: this.mWorkingDirectory });
     }
 
     /**
@@ -70,7 +70,7 @@ export class Shell {
     public async result(pCommand: string, pIgnoreError: boolean = false): Promise<string> {
         return new Promise<string>((pResolve, pReject) => {
             // Call command.
-            exec(pCommand, (pError, pStdout) => {
+            exec(pCommand, { cwd: this.mWorkingDirectory }, (pError, pStdout) => {
                 if (pError && !pIgnoreError) {
                     pReject(pError);
                 } else {
