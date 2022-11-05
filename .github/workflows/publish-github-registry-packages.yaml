@@ -54,7 +54,7 @@ jobs:
       - name: Sync Package Versions
         run: | 
           npm run sync
-          run: npm update
+          npm update
 
       - name: Push updated versions
         run: |         
