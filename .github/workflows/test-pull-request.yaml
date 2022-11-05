@@ -30,6 +30,9 @@ jobs:
       - name: Dry run publish
         run: npm publish -ws -dry-run
 
+      - name: Run Sync
+        run: npm run sync
+
 
 
       
