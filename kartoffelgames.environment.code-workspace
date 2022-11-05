@@ -1,8 +1,52 @@
 {
     "folders": [
         {
-            "name": "KartoffelGames.Environment",
+            "name": "Kartoffelgames.Environment",
             "path": "./packages/kartoffelgames.environment"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
+            "path": "./packages/kartoffelgames.environment.blueprint_kg_main"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Cli",
+            "path": "./packages/kartoffelgames.environment.cli"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Build",
+            "path": "packages\\kartoffelgames.environment.command_build"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Create",
+            "path": "./packages/kartoffelgames.environment.command_create"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Help",
+            "path": "./packages/kartoffelgames.environment.command_help"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Init",
+            "path": "packages\\kartoffelgames.environment.command_init"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Scratchpad",
+            "path": "packages\\kartoffelgames.environment.command_scratchpad"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Sync",
+            "path": "packages\\kartoffelgames.environment.command_sync"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Test",
+            "path": "packages\\kartoffelgames.environment.command_test"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Core",
+            "path": "./packages/kartoffelgames.environment.core"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Workspace_Essentials",
+            "path": "packages\\kartoffelgames.environment.workspace_essentials"
         },
         {
             "name": "_ROOT",

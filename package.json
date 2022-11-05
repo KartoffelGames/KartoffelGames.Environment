@@ -1,23 +1,39 @@
 {
+    "name": "@kartoffelgames/--root",
     "version": "0.0.4",
     "license": "MIT",
     "scripts": {
         "init-local-git": "git config pull.rebase true",
         "lint": "npx eslint \"./**/*.ts\" --config .eslintrc.js",
         "lint:fix": "npm run lint -- --fix",
-        "sync": "node packages/kartoffelgames.environment/library/source/index.js sync"
+        "sync": "node packages/kartoffelgames.environment.cli/library/source/cli.js sync",
+        "build": "npx turbo run build --force",
+        "test": "npx turbo run test --force"
     },
     "private": true,
     "workspaces": [
         "./packages/*"
     ],
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^5.36.1",
-        "@typescript-eslint/parser": "^5.36.1",
-        "eslint": "^8.23.0",
-        "turbo": "^1.0.28",
-        "@kartoffelgames/environment": "^0.0.6"
+        "@kartoffelgames/environment": "^0.0.7",
+        "@typescript-eslint/eslint-plugin": "^5.42.0",
+        "@typescript-eslint/parser": "^5.42.0",
+        "eslint": "^8.26.0",
+        "turbo": "^1.6.3"
     },
     "packageManager": "npm@8.1.2",
-    "kg.root": true
+    "kg": {
+        "name": "Kartoffelgames.__Root",
+        "root": true,
+        "config": {
+            "project_blueprint": "kg-main",
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            },
+            "tests": [
+                "unit"
+            ]
+        }
+    }
 }

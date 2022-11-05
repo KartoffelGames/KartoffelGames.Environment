@@ -1,0 +1,45 @@
+{
+    "name": "{{PACKAGE_NAME}}",
+    "projectName": "{{PROJECT_NAME}}",
+    "version": "0.0.1",
+    "description": "{{PROJECT_NAME}}",
+    "author": {
+        "name": "KartoffelGames"
+    },
+    "files": [
+        "library/source/**/*"
+    ],
+    "main": "library/source/index.js",
+    "types": "library/source/index.d.ts",
+    "devDependencies": {
+        "@types/chai": "^4.3.3",
+        "@types/mocha": "^5.2.7",
+        "typescript": "^4.8.4"
+    },
+    "scripts": {
+        "build": "kg build {{PROJECT_NAME}}",
+        "test": "kg test {{PROJECT_NAME}}"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/KartoffelGames/{{ROOT_PROJECT_FOLDER}}.git",
+        "directory": "packages/{{PROJECT_FOLDER}}"
+    },
+    "bugs": {
+        "url": "https://github.com/KartoffelGames/{{ROOT_PROJECT_FOLDER}}/issues"
+    },
+    "homepage": "https://github.com/KartoffelGames/{{ROOT_PROJECT_FOLDER}}#readme",
+    "kg": {
+        "name": "Package_Name",
+        "root": false,
+        "config": {
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            },
+            "tests": [
+                "unit"
+            ]
+        }
+    }
+}
