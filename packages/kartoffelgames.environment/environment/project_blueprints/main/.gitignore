@@ -1,0 +1,10 @@
+npm-debug.log
+.turbo
+.nyc_output
+**/*.tsbuildinfo
+coverage
+dist
+node_modules
+scratchpad
+debug.log
+/packages/**/library
