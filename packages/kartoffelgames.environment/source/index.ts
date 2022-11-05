@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 import { spawn } from 'child_process';
+import * as path from 'path';
 
 (() => {
     // Find kg cli path.
@@ -14,6 +15,10 @@ import { spawn } from 'child_process';
 
     // Array of only kg parameters.
     const lKgCommandParts: Array<string> = lCommandParameter.slice(lKgStartCommandIndex + 1);
+
+    // Add this package as command root.
+    const lPackageContainerPath: string = path.resolve(__dirname, '..', '..');
+    lKgCommandParts.push('--command-root-package', `"${lPackageContainerPath}"`);
 
     // Execute command.
     spawn('node', [lKgCliPath, ...lKgCommandParts], { stdio: 'inherit' });
