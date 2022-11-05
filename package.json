@@ -6,7 +6,7 @@
         "init-local-git": "git config pull.rebase true",
         "lint": "npx eslint \"./**/*.ts\" --config .eslintrc.js",
         "lint:fix": "npm run lint -- --fix",
-        "sync": "npx kg sync",
+        "sync": "node packages/kartoffelgames.environment.cli/library/source/cli.js sync",
         "build": "npx turbo run build --force",
         "test": "npx turbo run test --force"
     },
