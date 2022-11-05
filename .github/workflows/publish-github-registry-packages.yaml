@@ -63,7 +63,7 @@ jobs:
 
   publish-github-packages:
     if: "contains(github.event.head_commit.author.name, 'GITHUBACTION')"
-    needs: bump-version
+    needs: test
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
