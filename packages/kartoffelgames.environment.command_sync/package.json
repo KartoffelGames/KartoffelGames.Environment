@@ -16,9 +16,9 @@
         "@kartoffelgames/environment.core": "^0.0.1"
     },
     "devDependencies": {
-        "@types/chai": "^4.2.21",
+        "@types/chai": "^4.3.3",
         "@types/mocha": "^5.2.7",
-        "typescript": "^4.4.2"
+        "typescript": "^4.8.4"
     },
     "scripts": {
         "build": "tsc",
