@@ -67,8 +67,14 @@ export class Parameter {
                         value: null
                     });
                 } else if (lNextParameterIsValue) {
+                    // Slice optional ""
+                    let lParameterValue: string = pValue;
+                    if (pValue.startsWith('"') && pValue.endsWith('"')) {
+                        lParameterValue = lParameterValue.slice(1, lParameterValue.length - 1);
+                    }
+
                     // Process parameter value.
-                    (<CommandParameter>this.mParameters.get(lNextParameterName)).value = pValue;
+                    (<CommandParameter>this.mParameters.get(lNextParameterName)).value = lParameterValue;
 
                     // Reset parameter flags.
                     lNextParameterIsValue = false;
