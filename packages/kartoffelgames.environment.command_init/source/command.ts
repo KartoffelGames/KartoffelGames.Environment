@@ -27,7 +27,7 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
      * @param pParameter - Command parameter.
      * @param pBlueprintPackages - All cli packages grouped by type.
      */
-    public async run(pParameter: CliParameter, pBlueprintPackages: Array<string>, pProjectHandler: Project): Promise<void> {
+    public async run(pParameter: CliParameter, pBlueprintPackages: Array<string>, _pProjectHandler: Project): Promise<void> {
         const lConsole = new Console();
 
         // Read required parameter.
@@ -77,7 +77,7 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
 
         // Call npm install.
         lConsole.writeLine('Install dependencies...');
-        const lShell: Shell = new Shell(pProjectHandler.projectRootDirectory);
+        const lShell: Shell = new Shell(process.cwd());
         await lShell.console('npm install');
 
         // Display init information.
