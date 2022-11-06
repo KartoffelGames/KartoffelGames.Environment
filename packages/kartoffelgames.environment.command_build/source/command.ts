@@ -51,7 +51,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
         // Run tsc.
         lConsole.writeLine('Build typescript');
-        await lShell.console(`node ${lTypescriptCli} --project tsconfig.json --noemit false`);
+        await lShell.console(`node "${lTypescriptCli}" --project tsconfig.json --noemit false`);
 
         // Copy external files.
         lConsole.writeLine('Copy external files');
@@ -74,7 +74,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Build typescript when configurated.
         if (pOptions.pack) {
             lConsole.writeLine('Build Webpack');
-            await lShell.console(`node ${lWebpackCli} ${lServeParameter} --config "${lWebpackConfigPath}" --env=buildType=${pOptions.buildType} --env=target=${pOptions.target}`);
+            await lShell.console(`node "${lWebpackCli} ${lServeParameter}" --config "${lWebpackConfigPath}" --env=buildType=${pOptions.buildType} --env=target=${pOptions.target}`);
         }
 
         lConsole.writeLine('Build sucessful');
