@@ -7,7 +7,7 @@
     },
     "files": [
         "library/source/**/*",
-        "kg-cli-config.json"
+        "kg-cli.config.json"
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
