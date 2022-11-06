@@ -1,17 +1,14 @@
 import { FileUtil, Shell } from '@kartoffelgames/environment.core';
 
 export class CliPackages {
-    private readonly mCliRootPath: string;
-    private readonly mCurrentWorkingDirectory: string;
+    private readonly mCommandRootPackageDirectory: string;
 
     /**
      * Constructor.
-     * @param pCurrentWorkingDirectory - Current working directory.
-     * @param pCliRootPath - This cli root path.
+     * @param pCommandRootDirectory - Root package that contains all needed command packages.
      */
-    public constructor(pCurrentWorkingDirectory: string, pCliRootPath: string) {
-        this.mCurrentWorkingDirectory = pCurrentWorkingDirectory;
-        this.mCliRootPath = pCliRootPath;
+    public constructor(pCommandRootDirectory: string,) {
+        this.mCommandRootPackageDirectory = pCommandRootDirectory;
     }
 
     /**
@@ -19,8 +16,14 @@ export class CliPackages {
      */
     public async getCommandPackages(): Promise<Record<string, Array<string>>> {
         // Read all dependencies.
-        const lShell: Shell = new Shell(this.mCurrentWorkingDirectory);
+        const lShell: Shell = new Shell(this.mCommandRootPackageDirectory);
         const lPackageJson = await lShell.result('npm ls --json --all', true);
+
+        console.log("waaaaaa", await lShell.result('cd'))
+        console.log('Back')
+        await lShell.console('cd')
+        
+        // console.log(lPackageJson)
 
         // Parse dependency json.
         let lPackageObject: any | null = null;
@@ -28,14 +31,6 @@ export class CliPackages {
             lPackageObject = JSON.parse(lPackageJson);
         } catch (_pError) {
             throw `Package dependencies couldn't not be loaded.`;
-        }
-
-        // List own CLI dependencies on empty dependency list. 
-        if (Object.keys(lPackageObject).length === 0) {
-            // Read dependencies of this package.
-            const lShell: Shell = new Shell(this.mCliRootPath);
-            const lPackageJson = await lShell.result('npm ls --json --all');
-            lPackageObject = JSON.parse(lPackageJson);
         }
 
         // Recursive dependency object search.
