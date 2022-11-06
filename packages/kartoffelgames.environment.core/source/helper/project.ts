@@ -34,7 +34,7 @@ export class Project {
             }
 
             // Return current directory if no root was found.
-            if (lLongestDirectoryName.length !== null) {
+            if (lLongestDirectoryName.length !== 0) {
                 return lLongestDirectoryName;
             } else {
                 return pCurrentPath;
