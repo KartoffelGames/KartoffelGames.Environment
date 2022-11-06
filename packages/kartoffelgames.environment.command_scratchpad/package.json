@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment.command-scratchpad",
     "projectName": "Kartoffelgames.Environment.Command_Scratchpad",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "description": "Kartoffelgames.Environment.Command_Scratchpad",
     "author": {
         "name": "KartoffelGames"
@@ -12,9 +12,9 @@
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^0.0.10",
-        "@kartoffelgames/environment.command-build": "^0.0.9",
-        "@kartoffelgames/environment.core": "^0.0.10"
+        "@kartoffelgames/environment.cli": "^0.0.11",
+        "@kartoffelgames/environment.command-build": "^0.0.10",
+        "@kartoffelgames/environment.core": "^0.0.11"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",
