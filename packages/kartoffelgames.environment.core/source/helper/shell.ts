@@ -1,5 +1,4 @@
-import { spawn, exec, execSync } from 'child_process';
-import { Console } from './console';
+import { exec, execSync } from 'child_process';
 
 export class Shell {
     private readonly mWorkingDirectory: string;
