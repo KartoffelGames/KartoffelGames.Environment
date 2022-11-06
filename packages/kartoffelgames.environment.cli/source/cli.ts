@@ -1,7 +1,6 @@
 #! /usr/bin/env node
 
 import { Console, Parameter, Project } from '@kartoffelgames/environment.core';
-import * as path from 'path';
 import { CliCommand } from './cli/cli-command';
 import { CliPackages } from './cli/cli-packages';
 
@@ -10,19 +9,27 @@ import { CliPackages } from './cli/cli-packages';
 
     // Output main banner.
     lConsole.banner('KG ENVIRONMENT');
-    lConsole.write('Search command...\n\n');
-
+    
     // Construct paths.
     const lCurrentWorkingDirectoryPath: string = process.cwd();
-    const lCliRootPath: string = path.resolve(__dirname, '..', '..');
 
     // Read command parameter.
     const lParameter: Parameter = new Parameter('cli.js');
 
     // Execute command.
     try {
+        // Check for changed command root package.
+        let lCommandRootPackagePath: string = lCurrentWorkingDirectoryPath;
+        const lCommandRootParameter = lParameter.parameter.get('command-root-package');
+        if (lCommandRootParameter?.value) {
+            lCommandRootPackagePath = lCommandRootParameter.value;
+            lConsole.write(`Changed command root: "${lCommandRootPackagePath}"\n`);
+        }
+
+        lConsole.write('Search command...\n\n');
+
         // Init command indexing.
-        const lCliPackagesHandler: CliPackages = new CliPackages(lCurrentWorkingDirectoryPath, lCliRootPath);
+        const lCliPackagesHandler: CliPackages = new CliPackages(lCommandRootPackagePath);
         const lCliPackages: Record<string, Array<string>> = await lCliPackagesHandler.getCommandPackages();
 
         // Init commands.
