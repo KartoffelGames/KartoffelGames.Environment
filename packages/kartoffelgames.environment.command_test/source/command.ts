@@ -73,9 +73,9 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Construct mocha command.
         let lMochaCommand: string = '';
         if (pParameter.parameter.has('coverage')) {
-            lMochaCommand = `node ${lNycCli} --nycrc-path "${lNycConfigPath}" mocha --config "${lMochaConfigPath}"`;
+            lMochaCommand = `node "${lNycCli}" --nycrc-path "${lNycConfigPath}" mocha --config "${lMochaConfigPath}"`;
         } else {
-            lMochaCommand = `node ${lMochaCli} --config "${lMochaConfigPath}" `;
+            lMochaCommand = `node "${lMochaCli}" --config "${lMochaConfigPath}" `;
         }
 
         // Append no timout setting to mocha command.
