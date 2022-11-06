@@ -19,12 +19,6 @@ export class CliPackages {
         const lShell: Shell = new Shell(this.mCommandRootPackageDirectory);
         const lPackageJson = await lShell.result('npm ls --json --all', true);
 
-        console.log("waaaaaa", await lShell.result('cd'))
-        console.log('Back')
-        await lShell.console('cd')
-        
-        // console.log(lPackageJson)
-
         // Parse dependency json.
         let lPackageObject: any | null = null;
         try {
