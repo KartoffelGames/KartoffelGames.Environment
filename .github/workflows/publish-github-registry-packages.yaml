@@ -21,7 +21,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Tests
-        run: npm run test
+        run: npm run test -- --force
 
   bump-version:
     if: "!contains(github.event.head_commit.author.name, 'GITHUBACTION')"
@@ -45,7 +45,7 @@ jobs:
       - name: Build
         run: |
           npm ci --ignore-scripts
-          npm run build
+          npm run build -- --force
 
       - name: Bump Package Version Numbers
         run: |
@@ -80,7 +80,7 @@ jobs:
       - name: Build
         run: |
           npm ci --ignore-scripts
-          npm run build
+          npm run build -- --force
 
       - name: Release Github-Package
         run: npm publish -ws

@@ -20,7 +20,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Tests
-        run: npm run test
+        run: npm run test -- --force
 
   publish-npm-packages:
     needs: test
@@ -41,7 +41,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build
-        run: npm run build
+        run: npm run build -- --force
 
       - name: Release
         run: npm publish -ws --access public
