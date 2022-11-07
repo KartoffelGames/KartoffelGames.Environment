@@ -19,14 +19,13 @@ import { CliPackages } from './cli/cli-packages';
     // Execute command.
     try {
         // Check for changed command root package.
-        let lCommandRootPackagePath: string = lCurrentWorkingDirectoryPath;
+        let lCommandRootPackagePath: string;
         const lCommandRootParameter = lParameter.parameter.get('command-root-package');
         if (lCommandRootParameter?.value) {
             lCommandRootPackagePath = lCommandRootParameter.value;
-            lConsole.write(`Changed command root: "${lCommandRootPackagePath}"\n`);
+        } else {
+            lCommandRootPackagePath = Project.findRoot(lCurrentWorkingDirectoryPath);
         }
-
-        lConsole.write('Search command...\n\n');
 
         // Init command indexing.
         const lCliPackagesHandler: CliPackages = new CliPackages(lCommandRootPackagePath);
@@ -46,13 +45,32 @@ import { CliPackages } from './cli/cli-packages';
         // Create package handler.
         const lProject: Project = new Project(lCurrentWorkingDirectoryPath, lDefaultConfiguration);
 
+        // Print debug information.
+        if(lParameter.parameter.has('debug')){
+            lConsole.writeLine(`Project root: ${lProject.projectRootDirectory}`, 'green');
+
+            // Print all packages.
+            lConsole.writeLine(`CLI-Packages:`, 'green');
+            for(const lGroupName of Object.keys(lCliPackages)){
+                lConsole.writeLine(`    ${lGroupName}:`, 'green');
+
+                const lPackages = lCliPackages[lGroupName];
+                for(const lPackage of lPackages) {
+                    lConsole.writeLine(`        ${lPackage}:`, 'green');
+                }
+            }
+            
+        }
+
+        lConsole.write('Search command...\n');
+
         // Execute command.
         await lCliCommandHandler.execute(lParameter, lProject);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
 
         // Include error stack when command has --stack parameter. 
-        if (lParameter.parameter.has('stack')) {
+        if (lParameter.parameter.has('debug')) {
             lConsole.writeLine((<Error>e)?.stack ?? '', 'red');
         }
 
