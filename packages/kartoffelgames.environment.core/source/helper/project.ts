@@ -2,9 +2,36 @@ import * as path from 'path';
 import { FileUtil } from './file-util';
 
 export class Project {
+    /**
+     * 
+     * @param pCurrentPath - Current path.
+     */
+    public static findRoot(pCurrentPath: string): string {
+        const lAllFiles: Array<string> = FileUtil.findFiles(pCurrentPath, {
+            direction: 'insideOut',
+            include: { extensions: ['code-workspace'] }
+        });
+
+        // Find longest directory.
+        let lLongestDirectoryName: string = '';
+        for (const lFile of lAllFiles) {
+            const lDirectoryName: string = path.dirname(lFile);
+            if (lDirectoryName.length > lLongestDirectoryName.length) {
+                lLongestDirectoryName = lDirectoryName;
+            }
+        }
+
+        // Return current directory if no root was found.
+        if (lLongestDirectoryName.length !== 0) {
+            return lLongestDirectoryName;
+        } else {
+            return pCurrentPath;
+        }
+    }
+
     private readonly mDefaultConfiguration: Record<string, any>;
     private readonly mRootPath: string;
-    
+
     /**
      * Project root path.
      */
@@ -18,28 +45,7 @@ export class Project {
      */
     public constructor(pCurrentPath: string, pDefaultConfiguration: Record<string, any>) {
         this.mDefaultConfiguration = pDefaultConfiguration;
-        this.mRootPath = (() => {
-            const lAllFiles: Array<string> = FileUtil.findFiles(pCurrentPath, {
-                direction: 'insideOut',
-                include: { extensions: ['code-workspace'] }
-            });
-
-            // Find longest directory.
-            let lLongestDirectoryName: string = '';
-            for (const lFile of lAllFiles) {
-                const lDirectoryName: string = path.dirname(lFile);
-                if (lDirectoryName.length > lLongestDirectoryName.length) {
-                    lLongestDirectoryName = lDirectoryName;
-                }
-            }
-
-            // Return current directory if no root was found.
-            if (lLongestDirectoryName.length !== 0) {
-                return lLongestDirectoryName;
-            } else {
-                return pCurrentPath;
-            }
-        })();
+        this.mRootPath = Project.findRoot(pCurrentPath);
     }
 
     /**
@@ -81,7 +87,7 @@ export class Project {
         let lConvertedPackageName: string = pPackageName;
 
         // Empty packae name.
-        if(!lConvertedPackageName) {
+        if (!lConvertedPackageName) {
             return '';
         }
 
