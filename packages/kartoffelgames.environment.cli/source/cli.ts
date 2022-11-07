@@ -6,9 +6,6 @@ import { CliPackages } from './cli/cli-packages';
 
 (async () => {
     const lConsole: Console = new Console();
-
-    // Output main banner.
-    lConsole.banner('KG ENVIRONMENT');
     
     // Construct paths.
     const lCurrentWorkingDirectoryPath: string = process.cwd();
