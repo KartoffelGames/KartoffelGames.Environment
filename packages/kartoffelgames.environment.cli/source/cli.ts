@@ -6,7 +6,7 @@ import { CliPackages } from './cli/cli-packages';
 
 (async () => {
     const lConsole: Console = new Console();
-    
+
     // Construct paths.
     const lCurrentWorkingDirectoryPath: string = process.cwd();
 
@@ -43,21 +43,26 @@ import { CliPackages } from './cli/cli-packages';
         const lProject: Project = new Project(lCurrentWorkingDirectoryPath, lDefaultConfiguration);
 
         // Print debug information.
-        if(lParameter.parameter.has('debug')){
+        if (lParameter.parameter.has('debug')) {
             lConsole.writeLine(`Project root: ${lProject.projectRootDirectory}`, 'green');
 
             // Print all packages.
             lConsole.writeLine(`CLI-Packages:`, 'green');
-            for(const lGroupName of Object.keys(lCliPackages)){
+            for (const lGroupName of Object.keys(lCliPackages)) {
                 lConsole.writeLine(`    ${lGroupName}:`, 'green');
 
                 const lPackages = lCliPackages[lGroupName];
-                for(const lPackage of lPackages) {
+                for (const lPackage of lPackages) {
                     lConsole.writeLine(`        ${lPackage}:`, 'green');
                 }
             }
-            
-        } 
+
+            // Print all projects.
+            lConsole.writeLine(`Project-Packages:`, 'green');
+            for (const lProjectInformation of lProject.readAllProject()) {
+                lConsole.writeLine(`    ${lProjectInformation.packageName} -- ${lProjectInformation.version}`, 'green');
+            }
+        }
 
         // Execute command.
         lConsole.write('Execute command...\n');
