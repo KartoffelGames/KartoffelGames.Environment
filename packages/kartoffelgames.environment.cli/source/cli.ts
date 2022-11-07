@@ -57,11 +57,10 @@ import { CliPackages } from './cli/cli-packages';
                 }
             }
             
-        }
-
-        lConsole.write('Search command...\n');
+        } 
 
         // Execute command.
+        lConsole.write('Execute command...\n');
         await lCliCommandHandler.execute(lParameter, lProject);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
