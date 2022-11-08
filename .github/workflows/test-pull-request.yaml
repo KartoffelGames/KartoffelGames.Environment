@@ -9,17 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    
     steps:
+      # Checkout needed for local composite file.
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      
-      - name: NPM Install
-        run: npm ci --ignore-scripts
-
-      - name: Tests
-        run: npm run test -- --force
+      # Run local composite test.
+      - name: 'Test Packages'
+        uses: ./.github/actions/npm-test
 
 
 

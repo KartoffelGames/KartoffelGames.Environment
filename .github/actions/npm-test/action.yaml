@@ -1,0 +1,16 @@
+name: 'Test Packages'
+description: 'Test Packages'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    # Clean Install NPM 
+    - name: NPM Install
+      run: npm ci --ignore-scripts
+    # Run NPM Test
+    - name: Tests
+      run: npm run test -- --force

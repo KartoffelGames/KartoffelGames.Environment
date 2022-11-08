@@ -12,16 +12,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      # Checkout needed for local composite file.
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      
-      - name: NPM Install
-        run: npm ci --ignore-scripts
-
-      - name: Tests
-        run: npm run test -- --force
+      # Run local composite test.
+      - name: 'Test Packages'
+        uses: ./.github/actions/npm-test
 
   bump-version:
     if: "!contains(github.event.head_commit.author.name, 'GITHUBACTION')"
@@ -65,24 +60,15 @@ jobs:
     if: "contains(github.event.head_commit.author.name, 'GITHUBACTION')"
     needs: test
     runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      # Checkout needed for local composite file.
       - uses: actions/checkout@v3
-        with:  
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
-      - uses: actions/setup-node@v3
+      # Run local composite package release.
+      - name: 'Test Packages'
+        uses: ./.github/actions/release-packages
         with:
-          node-version: 18
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@kartoffelgames'
-
-      - name: Build
-        run: |
-          npm ci --ignore-scripts
-          npm run build -- --force
-
-      - name: Release Github-Package
-        run: npm publish -ws
+          registry-scope: '@kartoffelgames'
 
       
