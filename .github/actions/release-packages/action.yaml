@@ -24,13 +24,16 @@ runs:
         node-version: 18
         registry-url: ${{ inputs.registry-url }}
         scope: ${{ inputs.registry-scope }}
-        
+
     # Clean NPM Install
     - name: NPM install
       run: npm ci --ignore-scripts
+      shell: bash
     # Build
     - name: Build
       run: npm run build -- --force
+      shell: bash
     # Release Public Packages
     - name: Release
       run: npm publish -ws --access public
+      shell: bash

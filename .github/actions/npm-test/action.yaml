@@ -11,6 +11,8 @@ runs:
     # Clean Install NPM 
     - name: NPM Install
       run: npm ci --ignore-scripts
+      shell: bash
     # Run NPM Test
     - name: Tests
       run: npm run test -- --force
+      shell: bash
