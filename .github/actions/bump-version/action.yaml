@@ -26,33 +26,39 @@ runs:
     - uses: actions/setup-node@v3
       with:
         node-version: 18
-        
+
     # Setup git config
     - name: Setup Git For Commits
       run: |
         git config user.name "BUMP-ACTION"
         git config user.email 'kartoffelgames@users.noreply.github.com'
+      shell: bash
     # Build for side effects
     - name: Build
       run: |
         npm ci --ignore-scripts
         npm run build -- --force
+      shell: bash
     # Bump all child package versions
     - name: Bump Child Package Version Numbers
       run: npm version ${{ inputs.version-type }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
+      shell: bash
     # Bump root package
     - name: Bump Root Package Version Numbers
       id: root-version-bump
       run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false)" >> $GITHUB_OUTPUT
+      shell: bash
     # Sync versions between packages.
     - name: Sync Package Versions
       run: | 
         npm run sync
         npm update
+      shell: bash
     # Push updated version with new version number as commit message
     - name: Push updated versions
       run: |         
         git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.random-id }}"
         git push --follow-tags --no-verify
+      shell: bash
 
 
