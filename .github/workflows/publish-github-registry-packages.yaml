@@ -3,7 +3,7 @@ name: Github Package Release
 on:
   push:
     branches:
-      - 'development'
+      - 'master'
 
 jobs:
 
