@@ -15,7 +15,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    env:
+    - env:
       NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
 
     - uses: actions/checkout@v3
