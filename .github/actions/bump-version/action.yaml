@@ -1,0 +1,58 @@
+name: 'Bump Package Version'
+description: 'Bump Package version and'
+
+inputs:
+  version-type:
+    required: true
+    description: 'Type of NPM version to update.'
+  github-token:
+    required: true
+    description: 'Github Auth-Token'
+
+outputs:
+  new-version:
+    description: "New Root package version"
+    value: ${{ steps.root-version-bump.outputs.random-id }}
+
+runs:
+  using: "composite"
+  steps: 
+    - env:
+      NODE_AUTH_TOKEN: ${{ inputs.github-token }}
+
+    - uses: actions/checkout@v3
+      with:  
+        token: ${{ inputs.github-token }}
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        
+    # Setup git config
+    - name: Setup Git For Commits
+      run: |
+        git config user.name "BUMP-ACTION"
+        git config user.email 'kartoffelgames@users.noreply.github.com'
+    # Build for side effects
+    - name: Build
+      run: |
+        npm ci --ignore-scripts
+        npm run build -- --force
+    # Bump all child package versions
+    - name: Bump Child Package Version Numbers
+      run: npm version ${{ inputs.version-type }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
+    # Bump root package
+    - name: Bump Root Package Version Numbers
+      id: root-version-bump
+      run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false)" >> $GITHUB_OUTPUT
+    # Sync versions between packages.
+    - name: Sync Package Versions
+      run: | 
+        npm run sync
+        npm update
+    # Push updated version with new version number as commit message
+    - name: Push updated versions
+      run: |         
+        git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.random-id }}"
+        git push --follow-tags --no-verify
+
+
