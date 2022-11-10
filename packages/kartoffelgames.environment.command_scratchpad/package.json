@@ -8,6 +8,7 @@
     },
     "files": [
         "library/source/**/*",
+        "scratchpad-files/**/*",
         "kg-cli.config.json"
     ],
     "main": "library/source/index.js",
