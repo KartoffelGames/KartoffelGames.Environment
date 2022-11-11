@@ -11,6 +11,10 @@ inputs:
   registry-scope:
     required: true
     description: 'Package scope'
+  dry-run:
+    required: false
+    description: 'Dry run release'
+    default: false
 
 runs:
   using: 'composite'
@@ -35,5 +39,11 @@ runs:
       shell: bash
     # Release Public Packages
     - name: Release
+      if: ${{ inputs.dry-run == false }}
       run: npm publish -ws --access public
+      shell: bash
+    # Release Public Packages on dry run
+    - name: Release dry run
+      if: ${{ inputs.dry-run == true }}
+      run: npm publish -dry-run -ws --access public
       shell: bash
