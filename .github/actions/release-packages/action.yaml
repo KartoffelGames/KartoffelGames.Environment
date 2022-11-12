@@ -19,9 +19,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - env:
-      NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
-
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
@@ -41,9 +38,13 @@ runs:
     - name: Release
       if: ${{ inputs.dry-run == false }}
       run: npm publish -ws --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
       shell: bash
     # Release Public Packages on dry run
     - name: Release dry run
       if: ${{ inputs.dry-run == true }}
       run: npm publish -dry-run -ws --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
       shell: bash

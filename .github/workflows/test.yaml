@@ -21,7 +21,7 @@ jobs:
       - name: 'Test Packages'
         uses: ./.github/actions/npm-test
       # Dry run publish.
-      - name: 'Test Packages'
+      - name: 'Test Publish'
         uses: ./.github/actions/release-packages
         with:
           registry-token: ${{ secrets.CI_GITHUB_TOKEN }}
