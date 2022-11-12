@@ -74,7 +74,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Build typescript when configurated.
         if (pOptions.pack) {
             lConsole.writeLine('Build Webpack');
-            await lShell.console(`node "${lWebpackCli} ${lServeParameter}" --config "${lWebpackConfigPath}" --env=buildType=${pOptions.buildType} --env=target=${pOptions.target}`);
+            await lShell.console(`node "${lWebpackCli}" ${lServeParameter} --config "${lWebpackConfigPath}" --env=buildType=${pOptions.buildType} --env=target=${pOptions.target}`);
         }
 
         lConsole.writeLine('Build sucessful');
