@@ -36,12 +36,12 @@ jobs:
         env:
           REPO: ${{ github.repository }}
       - name: Create Release
-        uses: actions/create-release@latest
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          name: Release ${{ github.ref }}
           body: |
             ${{ steps.generate-changelog.outputs.changelog }}
           draft: false
