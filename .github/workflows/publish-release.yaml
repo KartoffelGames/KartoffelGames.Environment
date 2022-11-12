@@ -37,7 +37,6 @@ jobs:
           registry-scope: '@kartoffelgames'
 
   publish-github-packages:
-    if: "contains(github.event.head_commit.author.name, 'GITHUBACTION')"
     needs: test
     runs-on: ubuntu-latest
     steps:
