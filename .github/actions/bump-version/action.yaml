@@ -50,7 +50,7 @@ runs:
       run: |         
         git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.new-version }}"
         git tag ${{ steps.root-version-bump.outputs.new-version }}
-        git push --follow-tags --no-verify
+        git push --no-verify --tags
       env:
         NODE_AUTH_TOKEN: ${{ inputs.github-token }}
       shell: bash
