@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version-type:
-        description: 'Version to bump to'
+        description: 'Version type to update. [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]'
         required: false
 
 permissions:
