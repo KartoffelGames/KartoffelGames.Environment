@@ -39,14 +39,14 @@ runs:
         npm ci --ignore-scripts
         npm run build -- --force
       shell: bash
-    # Bump all child package versions
-    - name: Bump Child Package Version Numbers
-      run: npm version ${{ inputs.version-type }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
-      shell: bash
     # Bump root package
     - name: Bump Root Package Version Numbers
       id: root-version-bump
       run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false)" >> $GITHUB_OUTPUT
+      shell: bash
+    # Bump all child package versions
+    - name: Bump Child Package Version Numbers
+      run: npm version ${{ steps.root-version-bump.outputs.random-id }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
       shell: bash
     # Sync versions between packages.
     - name: Sync Package Versions
