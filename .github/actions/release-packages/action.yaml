@@ -14,7 +14,7 @@ inputs:
   dry-run:
     required: false
     description: 'Dry run release'
-    default: false
+    default: 'false'
 
 runs:
   using: 'composite'
