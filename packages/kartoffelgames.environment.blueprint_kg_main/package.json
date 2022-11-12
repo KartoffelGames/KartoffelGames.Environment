@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment.blueprint-kg-main",
-    "version": "0.0.5-3",
+    "version": "0.0.5-4",
     "description": "KartoffelGames.Environment.Blueprint_Kg_Main",
     "author": {
         "name": "KartoffelGames"
@@ -14,9 +14,9 @@
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
     "dependencies": {
-        "@kartoffelgames/environment.command-create": "^0.0.5-3",
-        "@kartoffelgames/environment.command-init": "^0.0.5-3",
-        "@kartoffelgames/environment.core": "^0.0.5-3"
+        "@kartoffelgames/environment.command-create": "^0.0.5-4",
+        "@kartoffelgames/environment.command-init": "^0.0.5-4",
+        "@kartoffelgames/environment.core": "^0.0.5-4"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",
