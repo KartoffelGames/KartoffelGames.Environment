@@ -10,6 +10,7 @@ on:
 jobs:
 
   test:
+    if: ${{ !contains(github.event.head_commit.message, '[Version-Bump]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,6 +25,8 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[Version-Bump]') }}
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
@@ -32,7 +35,7 @@ jobs:
         uses: ./.github/actions/bump-version
         with:
           version-type: ${{ inputs.version-type }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
 
   empty-job:
     runs-on: ubuntu-latest

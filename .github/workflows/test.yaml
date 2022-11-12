@@ -8,8 +8,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-    
+      contents: read  
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
