@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment.command-build",
     "projectName": "Kartoffelgames.Environment.Command_Build",
-    "version": "0.0.5-1",
+    "version": "0.0.5-2",
     "description": "Kartoffelgames.Environment.Command_Build",
     "author": {
         "name": "KartoffelGames"
@@ -20,9 +20,9 @@
     "dependencies": {
         "@babel/plugin-transform-async-to-generator": "^7.18.6",
         "@babel/preset-env": "^7.20.2",
-        "@kartoffelgames/environment.cli": "^0.0.5-1",
-        "@kartoffelgames/environment.core": "^0.0.5-1",
-        "@kartoffelgames/environment.workspace-essentials": "^0.0.5-1",
+        "@kartoffelgames/environment.cli": "^0.0.5-2",
+        "@kartoffelgames/environment.core": "^0.0.5-2",
+        "@kartoffelgames/environment.workspace-essentials": "^0.0.5-2",
         "@types/node": "^18.11.9",
         "babel-loader": "^8.3.0",
         "jsdom": "^19.0.0",
