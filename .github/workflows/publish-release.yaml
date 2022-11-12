@@ -29,7 +29,7 @@ jobs:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
       # Run local composite package release.
-      - name: 'Test Packages'
+      - name: 'Publish NPM Packages'
         uses: ./.github/actions/release-packages
         with:
           registry-token: ${{ secrets.CI_NPM_TOKEN }}
@@ -43,7 +43,7 @@ jobs:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
       # Run local composite package release.
-      - name: 'Test Packages'
+      - name: 'Publish GitHub Packages'
         uses: ./.github/actions/release-packages
         with:
           registry-token: ${{ secrets.CI_GITHUB_TOKEN }}
