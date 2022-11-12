@@ -1,0 +1,48 @@
+name: 'Release version'
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout needed for local composite file.
+      - uses: actions/checkout@v3
+      # Run local composite test.
+      - name: 'Test Packages'
+        uses: ./.github/actions/npm-test
+
+  publish-npm-packages:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout needed for local composite file.
+      - uses: actions/checkout@v3
+      # Create bad changelog
+      - name: Generate Changelog
+        uses: scottbrenner/generate-changelog-action@master
+        id: generate-changelog
+        env:
+          REPO: ${{ github.repository }}
+      - name: Create Release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ${{ steps.generate-changelog.outputs.changelog }}
+          draft: false
+          prerelease: false

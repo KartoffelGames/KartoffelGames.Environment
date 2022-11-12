@@ -12,21 +12,17 @@ inputs:
 outputs:
   new-version:
     description: "New Root package version"
-    value: ${{ steps.root-version-bump.outputs.random-id }}
+    value: ${{ steps.root-version-bump.outputs.new-version }}
 
 runs:
   using: "composite"
   steps: 
-    - env:
-      NODE_AUTH_TOKEN: ${{ inputs.github-token }}
-
     - uses: actions/checkout@v3
       with:  
         token: ${{ inputs.github-token }}
     - uses: actions/setup-node@v3
       with:
         node-version: 18
-
     # Setup git config
     - name: Setup Git For Commits
       run: |
@@ -39,14 +35,14 @@ runs:
         npm ci --ignore-scripts
         npm run build -- --force
       shell: bash
-    # Bump all child package versions
-    - name: Bump Child Package Version Numbers
-      run: npm version ${{ inputs.version-type }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
-      shell: bash
     # Bump root package
     - name: Bump Root Package Version Numbers
       id: root-version-bump
       run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false)" >> $GITHUB_OUTPUT
+      shell: bash
+    # Bump all child package versions
+    - name: Bump Child Package Version Numbers
+      run: npm version ${{ steps.root-version-bump.outputs.new-version }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
       shell: bash
     # Sync versions between packages.
     - name: Sync Package Versions
@@ -57,8 +53,11 @@ runs:
     # Push updated version with new version number as commit message
     - name: Push updated versions
       run: |         
-        git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.random-id }}"
+        git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.new-version }}"
+        git tag ${{ steps.root-version-bump.outputs.new-version }}
         git push --follow-tags --no-verify
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.github-token }}
       shell: bash
 
 
