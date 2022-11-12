@@ -4,7 +4,7 @@ description: 'Bump Package version and'
 inputs:
   version-type:
     required: true
-    description: 'Type of NPM version to update.'
+    description: 'Version to update. [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]'
   github-token:
     required: true
     description: 'Github Auth-Token'
@@ -23,11 +23,6 @@ runs:
     - uses: actions/setup-node@v3
       with:
         node-version: 18
-    # Setup git config
-    - name: Setup Git For Commits
-      run: |
-        git config user.name "BUMP-ACTION"
-        git config user.email 'kartoffelgames@users.noreply.github.com'
       shell: bash
     # Build for side effects
     - name: Build
