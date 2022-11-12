@@ -5,7 +5,11 @@ on:
     inputs:
       version-type:
         description: 'Version type to update. [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]'
+        required: true
+      prerelease-id:
+        description: 'Prerelease ID'
         required: false
+        default: ''
 
 permissions:
   contents: read
@@ -39,6 +43,7 @@ jobs:
         with:
           version-type: ${{ inputs.version-type }}
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
+          prerelease-id: ${{ inputs.prerelease-id }}
 
   empty-job:
     runs-on: ubuntu-latest

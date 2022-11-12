@@ -8,6 +8,10 @@ inputs:
   github-token:
     required: true
     description: 'Github Auth-Token'
+  prerelease-id:
+    description: 'Prerelease ID'
+    required: false
+    default: ''
 
 outputs:
   new-version:
@@ -38,7 +42,7 @@ runs:
     # Bump root package
     - name: Bump Root Package Version Numbers
       id: root-version-bump
-      run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false)" >> $GITHUB_OUTPUT
+      run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false) --preid ${{ inputs.prerelease-id }}" >> $GITHUB_OUTPUT
       shell: bash
     # Bump all child package versions
     - name: Bump Child Package Version Numbers
