@@ -1,4 +1,4 @@
-name: 'NPM Package Release'
+name: 'Package Release'
 
 on:
   release:
