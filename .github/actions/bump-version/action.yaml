@@ -23,6 +23,12 @@ runs:
     - uses: actions/setup-node@v3
       with:
         node-version: 18
+    # Setup git
+    - name: Setup Git
+      run: |
+        git config --global user.email "github@kartoffelgames.com"
+        git config --global user.name "Bump-Action"
+      shell: bash
     # Build for side effects
     - name: Build
       run: |
