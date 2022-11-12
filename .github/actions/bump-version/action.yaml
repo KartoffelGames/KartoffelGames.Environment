@@ -17,16 +17,12 @@ outputs:
 runs:
   using: "composite"
   steps: 
-    - env:
-      NODE_AUTH_TOKEN: ${{ inputs.github-token }}
-
     - uses: actions/checkout@v3
       with:  
         token: ${{ inputs.github-token }}
     - uses: actions/setup-node@v3
       with:
         node-version: 18
-
     # Setup git config
     - name: Setup Git For Commits
       run: |
@@ -60,6 +56,8 @@ runs:
         git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.new-version }}"
         git tag ${{ steps.root-version-bump.outputs.new-version }}
         git push --follow-tags --no-verify
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.github-token }}
       shell: bash
 
 
