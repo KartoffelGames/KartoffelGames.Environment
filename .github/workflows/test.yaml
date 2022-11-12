@@ -19,7 +19,7 @@ jobs:
       - name: 'Test Packages'
         uses: ./.github/actions/release-packages
         with:
-          registry-token: ${{ secrets.GITHUB_TOKEN }}
+          registry-token: ${{ secrets.CI_GITHUB_TOKEN }}
           registry-url: 'https://npm.pkg.github.com'
           registry-scope: '@kartoffelgames'
           dry-run: true
