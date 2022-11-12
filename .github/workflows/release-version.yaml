@@ -41,7 +41,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          name: Release ${{ github.ref_name }}
           body: |
             ${{ steps.generate-changelog.outputs.changelog }}
           draft: false
