@@ -1,4 +1,4 @@
-name: 'NPM Package Release'
+name: 'Package Release'
 
 on:
   release:
@@ -29,7 +29,7 @@ jobs:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
       # Run local composite package release.
-      - name: 'Test Packages'
+      - name: 'Publish NPM Packages'
         uses: ./.github/actions/release-packages
         with:
           registry-token: ${{ secrets.CI_NPM_TOKEN }}
@@ -37,14 +37,13 @@ jobs:
           registry-scope: '@kartoffelgames'
 
   publish-github-packages:
-    if: "contains(github.event.head_commit.author.name, 'GITHUBACTION')"
     needs: test
     runs-on: ubuntu-latest
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
       # Run local composite package release.
-      - name: 'Test Packages'
+      - name: 'Publish GitHub Packages'
         uses: ./.github/actions/release-packages
         with:
           registry-token: ${{ secrets.CI_GITHUB_TOKEN }}
