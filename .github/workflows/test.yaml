@@ -1,4 +1,4 @@
-name: Test All Packages
+name: 'Test All Packages'
 
 on:
   push:
