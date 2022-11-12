@@ -1,5 +1,8 @@
 name: 'NPM Package Release'
 
+permissions:
+  contents: read
+
 on:
   release:
     types: [published]
@@ -8,8 +11,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
@@ -20,8 +21,6 @@ jobs:
   publish-npm-packages:
     needs: test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
@@ -37,8 +36,6 @@ jobs:
     if: "contains(github.event.head_commit.author.name, 'GITHUBACTION')"
     needs: test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3

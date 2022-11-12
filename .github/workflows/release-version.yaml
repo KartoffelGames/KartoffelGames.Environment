@@ -1,5 +1,8 @@
 name: 'Release version'
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:
@@ -9,8 +12,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3

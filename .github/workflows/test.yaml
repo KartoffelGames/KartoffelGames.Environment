@@ -1,5 +1,8 @@
 name: Test All Packages
 
+permissions:
+  contents: read
+
 on:
   push:
 
@@ -7,8 +10,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read  
     steps:
       # Checkout needed for local composite file.
       - uses: actions/checkout@v3
