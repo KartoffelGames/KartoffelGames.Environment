@@ -1,9 +1,11 @@
 name: Github Package Release
 
 on:
-  push:
-    branches:
-      - 'master'
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: 'Version to bump to'
+        required: false
 
 jobs:
 
@@ -29,8 +31,15 @@ jobs:
       - name: 'Bump Version'
         uses: ./.github/actions/bump-version
         with:
-          version-type: 'patch'
+          version-type: ${{ inputs.version-type }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  empty-job:
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Catch no job
+        run: echo "Catch no job"
 
  
       
