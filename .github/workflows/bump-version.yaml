@@ -1,4 +1,4 @@
-name: Github Package Release
+name: Bump package versions
 
 on:
   workflow_dispatch:
