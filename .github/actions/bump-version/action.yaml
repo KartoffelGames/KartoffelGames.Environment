@@ -54,8 +54,9 @@ runs:
     - name: Push updated versions
       run: |         
         git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.new-version }}"
+        git push --no-verify
         git tag ${{ steps.root-version-bump.outputs.new-version }}
-        git push --no-verify --tags
+        git push origin ${{ steps.root-version-bump.outputs.new-version }} --no-verify
       env:
         NODE_AUTH_TOKEN: ${{ inputs.github-token }}
       shell: bash
