@@ -21,8 +21,9 @@ import * as path from 'path';
         const lCurrentCliVersion: string = JSON.parse(lCliPackageJson)['version'];
 
         // Print execution information.
-        lConsole.writeLine(`KG-CLI [${lCurrentCliVersion}]: "kg ${lParameter.fullPath}"`, 'yellow');
-
+        lConsole.writeLine(`KG-CLI [${lCurrentCliVersion}]: "kg ${lParameter.fullPath.join(' ')}"`, 'yellow');
+        lConsole.writeLine(process.argv.join(' '), 'yellow');
+        
         // Check for changed command root package.
         let lCommandRootPackagePath: string;
         const lCommandRootParameter = lParameter.parameter.get('command-root-package');
