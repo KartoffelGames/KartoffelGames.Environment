@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "KartoffelGames.Environment",
     "author": {
         "name": "KartoffelGames"
@@ -14,16 +14,16 @@
         "kartoffelgames-environment": "library/source/index.js"
     },
     "dependencies": {
-        "@kartoffelgames/environment.blueprint-kg-main": "^1.0.2",
-        "@kartoffelgames/environment.cli": "^1.0.2",
-        "@kartoffelgames/environment.command-build": "^1.0.2",
-        "@kartoffelgames/environment.command-create": "^1.0.2",
-        "@kartoffelgames/environment.command-help": "^1.0.2",
-        "@kartoffelgames/environment.command-init": "^1.0.2",
-        "@kartoffelgames/environment.command-scratchpad": "^1.0.2",
-        "@kartoffelgames/environment.command-sync": "^1.0.2",
-        "@kartoffelgames/environment.command-test": "^1.0.2",
-        "@kartoffelgames/environment.workspace-essentials": "^1.0.2"
+        "@kartoffelgames/environment.blueprint-kg-main": "^1.0.3",
+        "@kartoffelgames/environment.cli": "^1.0.3",
+        "@kartoffelgames/environment.command-build": "^1.0.3",
+        "@kartoffelgames/environment.command-create": "^1.0.3",
+        "@kartoffelgames/environment.command-help": "^1.0.3",
+        "@kartoffelgames/environment.command-init": "^1.0.3",
+        "@kartoffelgames/environment.command-scratchpad": "^1.0.3",
+        "@kartoffelgames/environment.command-sync": "^1.0.3",
+        "@kartoffelgames/environment.command-test": "^1.0.3",
+        "@kartoffelgames/environment.workspace-essentials": "^1.0.3"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",

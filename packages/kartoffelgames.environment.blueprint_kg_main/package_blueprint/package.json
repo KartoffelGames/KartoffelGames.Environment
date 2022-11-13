@@ -27,5 +27,18 @@
     "bugs": {
         "url": "https://github.com/KartoffelGames/{{ROOT_PROJECT_FOLDER}}/issues"
     },
-    "homepage": "https://github.com/KartoffelGames/{{ROOT_PROJECT_FOLDER}}#readme"
+    "homepage": "https://github.com/KartoffelGames/{{ROOT_PROJECT_FOLDER}}#readme",
+    "kg": {
+        "name": "Package_Name",
+        "root": false,
+        "config": {
+            "build-configuration": {
+                "pack": false,
+                "target": "node"
+            },
+            "tests": [
+                "unit"
+            ]
+        }
+    }
 }
