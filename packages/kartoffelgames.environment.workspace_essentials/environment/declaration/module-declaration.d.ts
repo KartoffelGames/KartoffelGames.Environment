@@ -23,7 +23,7 @@ declare module '*.json' {
 }
 
 declare module '*.jsworker' {
-    /* LOADER::raw-loader */
+    /* LOADER::url-loader{"mimetype": "application/javascript"} */
     const Content: string;
     export default Content;
 }

@@ -12,7 +12,7 @@ const gGetDefaultFileLoader = () => {
     const lDeclarationFilepath = gPath.resolve(__dirname, '..', 'declaration', 'module-declaration.d.ts');
     const lFileContent = gFilereader.readFileSync(lDeclarationFilepath, 'utf8');
 
-    const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*{.*?\/\*\s*LOADER::([a-zA-Z-]+)\s*\*\/.*?}/gms;
+    const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*{.*?\/\*\s*LOADER::([a-zA-Z-]+)(\{.*})?\s*\*\/.*?}/gms;
 
     // Get all declaration informations by reading the extension and the loader information from the comment.
     const lDefaultLoader = [];
@@ -20,14 +20,25 @@ const gGetDefaultFileLoader = () => {
     while (lMatch = lFileExtensionRegex.exec(lFileContent)) {
         const lExtension = lMatch[1];
         const lLoaderType = lMatch[2];
+        const lLoaderOptions = lMatch[3] ? JSON.parse(lMatch[3]) : null;
 
         // Create regex from extension.
         const lExtensionRegex = new RegExp(lExtension.replace('.', '\\.') + '$');
 
+        let lLoaderDefinition;
+        if (lLoaderOptions) {
+            lLoaderDefinition = {
+                loader: lLoaderType,
+                options: lLoaderOptions
+            };
+        } else {
+            lLoaderDefinition = lLoaderType;
+        }
+
         // Add loader config.
         lDefaultLoader.push({
             test: lExtensionRegex,
-            use: lLoaderType
+            use: lLoaderDefinition
         });
     }
 
@@ -114,6 +125,14 @@ module.exports = (pEnvironment) => {
             lBuildSettings.includeCoverage = false;
             break;
 
+        case 'worker':
+            lBuildSettings.entryFile = './source/index.ts';
+            lBuildSettings.buildMode = 'production';
+            lBuildSettings.fileName = `${lProjectName}.jsworker`;
+            lBuildSettings.outputDirectory = './library/build';
+            lBuildSettings.includeCoverage = false;
+            break;
+
         case 'test-coverage':
             lBuildSettings.entryFile = './test/index.ts';
             lBuildSettings.buildMode = 'development';
@@ -130,7 +149,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.includeCoverage = false;
             break;
         default:
-            throw `Build type "${pEnvironment.buildType}" not supported.`
+            throw `Build type "${pEnvironment.buildType}" not supported.`;
     }
 
     return {
@@ -148,7 +167,12 @@ module.exports = (pEnvironment) => {
         module: {
             rules: [{
                     test: /\.ts?$/,
-                    use: gGetDefaultTypescriptLoader(lBuildSettings.includeCoverage)
+                    use: gGetDefaultTypescriptLoader(lBuildSettings.includeCoverage),
+                    exclude: /node_modules|\.d\.ts$/
+                },
+                {
+                    test: /\.d\.ts$/,
+                    loader: 'ignore-loader'
                 },
                 ...gGetDefaultFileLoader()
             ]
