@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment.command-init",
     "projectName": "Kartoffelgames.Environment.Command_Init",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Kartoffelgames.Environment.Command_Init",
     "author": {
         "name": "KartoffelGames"
@@ -18,8 +18,8 @@
         "typescript": "^4.8.4"
     },
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^1.0.3",
-        "@kartoffelgames/environment.core": "^1.0.3"
+        "@kartoffelgames/environment.cli": "^1.0.4",
+        "@kartoffelgames/environment.core": "^1.0.4"
     },
     "scripts": {
         "build": "tsc",
