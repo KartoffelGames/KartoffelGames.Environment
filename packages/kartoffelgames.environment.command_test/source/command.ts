@@ -51,6 +51,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
             packgeName: lPackage.packageName,
             pack: true,
             target: 'node',
+            scope: 'main',
             buildType: <any>lBuildType,
             serve: false
         });

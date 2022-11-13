@@ -35,7 +35,8 @@
             "package_blueprint": "kg-main",
             "build-configuration": {
                 "pack": false,
-                "target": "node"
+                "target": "node",
+                "scope": "main"
             },
             "tests": [
                 "unit"
