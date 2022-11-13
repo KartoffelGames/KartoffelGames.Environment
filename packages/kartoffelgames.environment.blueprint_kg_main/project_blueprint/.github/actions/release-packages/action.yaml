@@ -1,0 +1,50 @@
+name: 'Release Packages'
+description: 'Release All packages To Set Registry'
+
+inputs:
+  registry-token:
+    required: true
+    description: 'Auth-Token to push packages to registry'
+  registry-url:
+    required: true
+    description: 'Registry URL'
+  registry-scope:
+    required: true
+    description: 'Package scope'
+  dry-run:
+    required: false
+    description: 'Dry run release'
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        registry-url: ${{ inputs.registry-url }}
+        scope: ${{ inputs.registry-scope }}
+
+    # Clean NPM Install
+    - name: NPM install
+      run: npm ci --ignore-scripts
+      shell: bash
+    # Build
+    - name: Build
+      run: npm run build -- --force
+      shell: bash
+    # Release Public Packages
+    - name: Release
+      if: ${{ inputs.dry-run == 'false' }}
+      run: npm publish -ws --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
+      shell: bash
+    # Release Public Packages on dry run
+    - name: Release dry run
+      if: ${{ inputs.dry-run == 'true' }}
+      run: npm publish -dry-run -ws --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
+      shell: bash
