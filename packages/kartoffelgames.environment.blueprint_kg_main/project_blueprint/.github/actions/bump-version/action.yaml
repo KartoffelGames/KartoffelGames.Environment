@@ -1,0 +1,68 @@
+name: 'Bump Package Version'
+description: 'Bump Package version and'
+
+inputs:
+  version-type:
+    required: true
+    description: 'Version type to update. [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]'
+  github-token:
+    required: true
+    description: 'Github Auth-Token'
+  prerelease-id:
+    description: 'Prerelease ID'
+    required: false
+    default: ''
+
+outputs:
+  new-version:
+    description: "New Root package version"
+    value: ${{ steps.root-version-bump.outputs.new-version }}
+
+runs:
+  using: "composite"
+  steps: 
+    - uses: actions/checkout@v3
+      with:  
+        token: ${{ inputs.github-token }}
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    # Setup git
+    - name: Setup Git
+      run: |
+        git config --global user.email "github@kartoffelgames.com"
+        git config --global user.name "Bump-Action"
+      shell: bash
+    # Build for side effects
+    - name: Build
+      run: |
+        npm ci --ignore-scripts
+        npm run build -- --force
+      shell: bash
+    # Bump root package
+    - name: Bump Root Package Version Numbers
+      id: root-version-bump
+      run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false --preid ${{ inputs.prerelease-id }})" >> $GITHUB_OUTPUT
+      shell: bash
+    # Bump all child package versions
+    - name: Bump Child Package Version Numbers
+      run: npm version ${{ steps.root-version-bump.outputs.new-version }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
+      shell: bash
+    # Sync versions between packages.
+    - name: Sync Package Versions
+      run: | 
+        npm run sync
+        npm update
+      shell: bash
+    # Push updated version with new version number as commit message
+    - name: Push updated versions
+      run: |         
+        git commit -am "[Version-Bump] ${{ steps.root-version-bump.outputs.new-version }}"
+        git push --no-verify
+        git tag ${{ steps.root-version-bump.outputs.new-version }}
+        git push origin ${{ steps.root-version-bump.outputs.new-version }} --no-verify
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+
+
