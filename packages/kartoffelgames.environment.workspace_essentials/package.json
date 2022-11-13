@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment.workspace-essentials",
     "projectName": "Kartoffelgames.Environment.Workspace_Essentials",
-    "version": "1.0.6",
+    "version": "1.1.0",
     "description": "Kartoffelgames.Environment.Workspace_Essentials",
     "author": {
         "name": "KartoffelGames"
