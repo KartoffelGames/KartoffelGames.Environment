@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/--root",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "license": "MIT",
     "scripts": {
         "init-local-git": "git config pull.rebase true",
@@ -15,7 +15,7 @@
         "./packages/*"
     ],
     "devDependencies": {
-        "@kartoffelgames/environment": "^1.0.1",
+        "@kartoffelgames/environment": "^1.0.2",
         "@typescript-eslint/eslint-plugin": "^5.42.0",
         "@typescript-eslint/parser": "^5.42.0",
         "eslint": "^8.26.0",
