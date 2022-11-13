@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment.command-create",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "KartoffelGames.Environment.Command_Create",
     "author": {
         "name": "KartoffelGames"
@@ -17,8 +17,8 @@
         "typescript": "^4.8.4"
     },
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^1.0.5",
-        "@kartoffelgames/environment.core": "^1.0.5"
+        "@kartoffelgames/environment.cli": "^1.0.6",
+        "@kartoffelgames/environment.core": "^1.0.6"
     },
     "scripts": {
         "build": "tsc",
