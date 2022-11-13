@@ -12,7 +12,7 @@ import * as path from 'path';
     const lCurrentWorkingDirectoryPath: string = process.cwd();
 
     // Read command parameter.
-    const lParameter: Parameter = new Parameter('cli.js');
+    const lParameter: Parameter = new Parameter(['cli.js', 'kg']);
 
     // Execute command.
     try {

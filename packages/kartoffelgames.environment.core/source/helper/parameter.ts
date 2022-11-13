@@ -28,7 +28,7 @@ export class Parameter {
      * Constructor.
      * @param pStartingCommand - Starting command path part. Part of a command that initializes the real command start.
      */
-    public constructor(pStartingCommand: string) {
+    public constructor(pStartingCommands: Array<string>) {
         this.mParameters = new Map<string, CommandParameter>();
         this.mPath = new Array<string>();
         this.mFullPath = new Array<string>();
@@ -46,11 +46,14 @@ export class Parameter {
             // Process command only when starting command is reached.
             if (!lCommandStarted) {
                 // Check if path started.
-                if (pValue.toLowerCase().includes(pStartingCommand.toLowerCase())) {
-                    lCommandStarted = true;
-                } else {
-                    return;
+                for(const lPossibleCommandStart of pStartingCommands){
+                    if (pValue.toLowerCase().endsWith(lPossibleCommandStart.toLowerCase())) {
+                        lCommandStarted = true;
+                        return;
+                    }
                 }
+
+                return;
             } else {
                 if (lParameterName.test(pValue)) {
                     // Set area as parameter started.
