@@ -1,8 +1,9 @@
 #! /usr/bin/env node
 
-import { Console, Parameter, Project } from '@kartoffelgames/environment.core';
+import { Console, FileUtil, Parameter, Project } from '@kartoffelgames/environment.core';
 import { CliCommand } from './cli/cli-command';
 import { CliPackages } from './cli/cli-packages';
+import * as path from 'path';
 
 (async () => {
     const lConsole: Console = new Console();
@@ -15,6 +16,13 @@ import { CliPackages } from './cli/cli-packages';
 
     // Execute command.
     try {
+        // Read current version.
+        const lCliPackageJson: string = FileUtil.read(path.resolve(__dirname, '../../', 'package.json')); // Root at /library
+        const lCurrentCliVersion: string = JSON.parse(lCliPackageJson)['version'];
+
+        // Print execution information.
+        lConsole.writeLine(`KG-CLI [${lCurrentCliVersion}]: "kg ${lParameter.fullPath}"`, 'yellow');
+
         // Check for changed command root package.
         let lCommandRootPackagePath: string;
         const lCommandRootParameter = lParameter.parameter.get('command-root-package');
