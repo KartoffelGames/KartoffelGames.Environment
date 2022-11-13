@@ -44,6 +44,7 @@ export class KgCliCommand implements IKgCliCommand {
             packgeName: lPackage.packageName,
             pack: true,
             target: 'web',
+            scope: 'main',
             buildType: 'scratchpad',
             serve: true
         });

@@ -103,7 +103,8 @@ module.exports = (pEnvironment) => {
         target: pEnvironment.target,
         entryFile: '',
         buildMode: 'none',
-        fileName: 'script.js',
+        fileName: 'script',
+        fileExtension: 'js',
         outputDirectory: './library/build',
         includeCoverage: false
     };
@@ -112,7 +113,7 @@ module.exports = (pEnvironment) => {
         case 'release':
             lBuildSettings.entryFile = './source/index.ts';
             lBuildSettings.buildMode = 'production';
-            lBuildSettings.fileName = `${lProjectName}.js`;
+            lBuildSettings.fileName = lProjectName;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
             break;
@@ -120,15 +121,7 @@ module.exports = (pEnvironment) => {
         case 'test':
             lBuildSettings.entryFile = './test/index.ts';
             lBuildSettings.buildMode = 'development';
-            lBuildSettings.fileName = `test-pack.js`;
-            lBuildSettings.outputDirectory = './library/build';
-            lBuildSettings.includeCoverage = false;
-            break;
-
-        case 'worker':
-            lBuildSettings.entryFile = './source/index.ts';
-            lBuildSettings.buildMode = 'production';
-            lBuildSettings.fileName = `${lProjectName}.jsworker`;
+            lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
             break;
@@ -136,7 +129,7 @@ module.exports = (pEnvironment) => {
         case 'test-coverage':
             lBuildSettings.entryFile = './test/index.ts';
             lBuildSettings.buildMode = 'development';
-            lBuildSettings.fileName = `test-pack.js`;
+            lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = true;
             break;
@@ -144,12 +137,24 @@ module.exports = (pEnvironment) => {
         case 'scratchpad':
             lBuildSettings.entryFile = './scratchpad/source/index.ts';
             lBuildSettings.buildMode = 'development';
-            lBuildSettings.fileName = 'scratchpad.js';
+            lBuildSettings.fileName = 'scratchpad';
             lBuildSettings.outputDirectory = 'dist';
             lBuildSettings.includeCoverage = false;
             break;
         default:
             throw `Build type "${pEnvironment.buildType}" not supported.`;
+    }
+
+    // Set file extension based on scope.
+    switch (pEnvironment.scope) {
+        case 'main':
+            lBuildSettings.fileExtension = 'js';
+            break;
+        case 'worker':
+            lBuildSettings.fileExtension = 'jsworker';
+            break;
+        default:
+            throw `Scope "${pEnvironment.scope}" not supported.`;
     }
 
     return {
@@ -158,7 +163,7 @@ module.exports = (pEnvironment) => {
         entry: lBuildSettings.entryFile,
         mode: lBuildSettings.buildMode,
         output: {
-            filename: `../${lBuildSettings.outputDirectory}/${lBuildSettings.fileName}` // ".." because Dist is the staring directory.
+            filename: `../${lBuildSettings.outputDirectory}/${lBuildSettings.fileName}.${lBuildSettings.fileExtension}` // ".." because Dist is the staring directory.
         },
         resolve: {
             extensions: ['.ts', '.js']
