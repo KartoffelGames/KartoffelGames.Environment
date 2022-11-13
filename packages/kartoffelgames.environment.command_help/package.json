@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment.command-help",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "KartoffelGames.Environment.Command_Help",
     "author": {
         "name": "KartoffelGames"
@@ -17,8 +17,8 @@
         "typescript": "^4.8.4"
     },
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^1.0.4",
-        "@kartoffelgames/environment.core": "^1.0.4"
+        "@kartoffelgames/environment.cli": "^1.0.5",
+        "@kartoffelgames/environment.core": "^1.0.5"
     },
     "scripts": {
         "build": "tsc",
