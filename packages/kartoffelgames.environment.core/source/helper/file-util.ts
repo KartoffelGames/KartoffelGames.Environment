@@ -58,14 +58,14 @@ export class FileUtil {
      */
     public static emptyDirectory(pPath: string): void {
         // Exit on non esisting directory.
-        if(!FileUtil.exists(pPath)){
+        if (!FileUtil.exists(pPath)) {
             return;
         }
 
-        filereader.readdirSync(pPath).forEach(pFileName => {
-            const lFilePath: string = path.join(pPath, pFileName);
+        for (const lFileName of filereader.readdirSync(pPath)) {
+            const lFilePath: string = path.join(pPath, lFileName);
             filereader.rmSync(lFilePath, { recursive: true, force: true });
-        });
+        }
     }
 
     /**

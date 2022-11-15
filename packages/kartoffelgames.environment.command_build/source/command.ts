@@ -41,7 +41,8 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
         // Clear output.
         lConsole.writeLine('Clear build output');
-        FileUtil.emptyDirectory(lPackageBuildPath);
+        FileUtil.emptyDirectory(path.join(lPackageBuildPath, 'source'));
+        FileUtil.emptyDirectory(path.join(lPackageBuildPath, 'test'));
 
         // Create shell command executor.
         const lShell: Shell = new Shell(lPackagePath);
