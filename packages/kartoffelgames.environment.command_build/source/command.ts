@@ -70,7 +70,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         }
 
         // Load essentials.
-        const lWebpackConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/webpack.config.js');
+        const lWebpackConfigPath = path.resolve(__dirname, '..', '..', 'configuration/webpack.config.js');
 
         // Start webpack server.
         let lServeParameter: string = '';
