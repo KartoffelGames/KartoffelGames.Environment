@@ -200,6 +200,9 @@ module.exports = (pEnvironment) => {
             client: {
                 logging: 'info',
                 overlay: true,
+            },
+            devMiddleware: {
+                writeToDisk: true,
             }
         },
     };
