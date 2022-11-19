@@ -21,6 +21,7 @@
         "@kartoffelgames/environment.command-help": "^1.1.0",
         "@kartoffelgames/environment.command-init": "^1.1.0",
         "@kartoffelgames/environment.command-scratchpad": "^1.1.0",
+        "@kartoffelgames/environment.command-page": "^1.1.0",
         "@kartoffelgames/environment.command-sync": "^1.1.0",
         "@kartoffelgames/environment.command-test": "^1.1.0",
         "@kartoffelgames/environment.workspace-essentials": "^1.1.0"
