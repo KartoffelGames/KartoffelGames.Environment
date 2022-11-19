@@ -9,7 +9,7 @@ const gFilereader = require('fs');
  */
 const gGetDefaultFileLoader = () => {
     // Read module declaration file.
-    const lDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/declaration/module-declaration.d.ts')
+    const lDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/declaration/module-declaration.d.ts');
     const lFileContent = gFilereader.readFileSync(lDeclarationFilepath, 'utf8');
 
     const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*{.*?\/\*\s*LOADER::([a-zA-Z-]+)(\{.*})?\s*\*\/.*?}/gms;
@@ -141,6 +141,15 @@ module.exports = (pEnvironment) => {
             lBuildSettings.outputDirectory = 'dist';
             lBuildSettings.includeCoverage = false;
             break;
+
+        case 'page':
+            lBuildSettings.entryFile = './page/source/index.ts';
+            lBuildSettings.buildMode = 'development';
+            lBuildSettings.fileName = 'page';
+            lBuildSettings.outputDirectory = './page/build';
+            lBuildSettings.includeCoverage = false;
+            break;
+
         default:
             throw `Build type "${pEnvironment.buildType}" not supported.`;
     }
