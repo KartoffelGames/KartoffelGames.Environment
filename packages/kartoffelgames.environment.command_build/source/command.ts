@@ -39,13 +39,6 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lPackageSourcePath = path.join(lPackagePath, 'source');
         const lPackageBuildPath = path.join(lPackagePath, 'library');
 
-        // Clear output.
-        lConsole.writeLine('Clear build output');
-        FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'source'));
-        FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'test'));
-        // Delete build info
-        FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'tsconfig.tsbuildinfo'));
-
         // Create shell command executor.
         const lShell: Shell = new Shell(lPackagePath);
 
@@ -53,13 +46,23 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lTypescriptCli: string = require.resolve('typescript/lib/tsc.js');
         const lWebpackCli: string = require.resolve('webpack-cli/bin/cli.js');
 
-        // Run tsc.
-        lConsole.writeLine('Build typescript');
-        await lShell.console(`node "${lTypescriptCli}" --project tsconfig.json --noemit false`);
+        // Build ts only when needed.
+        if (pOptions.buildTs) {
+            // Clear output.
+            lConsole.writeLine('Clear build output');
+            FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'source'));
+            FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'test'));
+            // Delete build info
+            FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'tsconfig.tsbuildinfo'));
 
-        // Copy external files.
-        lConsole.writeLine('Copy external files');
-        FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
+            // Run tsc.
+            lConsole.writeLine('Build typescript');
+            await lShell.console(`node "${lTypescriptCli}" --project tsconfig.json --noemit false`);
+
+            // Copy external files.
+            lConsole.writeLine('Copy external files');
+            FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
+        }
 
         // Validate package target.
         if (pOptions.target !== 'node' && pOptions.target !== 'web') {
@@ -116,7 +119,8 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
             target: lPackageTarget,
             buildType: 'release',
             serve: false,
-            scope: lPackageScope
+            scope: lPackageScope,
+            buildTs: true
         });
     }
 }
@@ -137,4 +141,5 @@ export type BuildOptions = {
     buildType: BuildType;
     serve: boolean;
     scope: KgBuildConfiguration['scope'];
+    buildTs: boolean;
 };

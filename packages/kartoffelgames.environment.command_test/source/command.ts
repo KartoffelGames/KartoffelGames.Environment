@@ -53,7 +53,8 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
             target: 'node',
             scope: 'main',
             buildType: <any>lBuildType,
-            serve: false
+            serve: false,
+            buildTs: false
         });
 
         // Run test information.

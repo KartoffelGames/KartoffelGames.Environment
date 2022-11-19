@@ -61,7 +61,8 @@ export class KgCliCommand implements IKgCliCommand {
             target: 'web',
             scope: 'main',
             buildType: 'page',
-            serve: !pParameter.parameter.has('build-only')
+            serve: !pParameter.parameter.has('build-only'),
+            buildTs: false
         });
     }
 }

@@ -46,7 +46,8 @@ export class KgCliCommand implements IKgCliCommand {
             target: 'web',
             scope: 'main',
             buildType: 'scratchpad',
-            serve: true
+            serve: true,
+            buildTs: false
         });
     }
 }
