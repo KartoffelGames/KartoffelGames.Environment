@@ -127,7 +127,7 @@ type KgBuildConfiguration = {
     scope: 'main' | 'worker';
 };
 
-type BuildType = 'release' | 'test' | 'test-coverage' | 'scratchpad';
+type BuildType = 'release' | 'test' | 'test-coverage' | 'scratchpad' | 'page';
 
 export type BuildOptions = {
     projectHandler: Project;
