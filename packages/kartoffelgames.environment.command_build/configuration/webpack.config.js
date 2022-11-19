@@ -106,7 +106,8 @@ module.exports = (pEnvironment) => {
         fileName: 'script',
         fileExtension: 'js',
         outputDirectory: './library/build',
-        includeCoverage: false
+        includeCoverage: false,
+        serveDirectory: ''
     };
 
     switch (pEnvironment.buildType) {
@@ -116,6 +117,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = lProjectName;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = ''
             break;
 
         case 'test':
@@ -124,6 +126,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = ''
             break;
 
         case 'test-coverage':
@@ -132,6 +135,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = true;
+            lBuildSettings.serveDirectory = ''
             break;
 
         case 'scratchpad':
@@ -140,6 +144,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = 'scratchpad';
             lBuildSettings.outputDirectory = 'dist';
             lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = './scratchpad'
             break;
 
         case 'page':
@@ -148,6 +153,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = 'page';
             lBuildSettings.outputDirectory = './page/build';
             lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = './page'
             break;
 
         default:
@@ -201,7 +207,7 @@ module.exports = (pEnvironment) => {
             open: true,
             liveReload: true,
             static: {
-                directory: "./scratchpad",
+                directory: lBuildSettings.serveDirectory,
                 watch: true
             },
             compress: true,
