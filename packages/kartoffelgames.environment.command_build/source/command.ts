@@ -99,7 +99,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Cli parameter.
         const lPackageName: string = <string>pParameter.parameter.get('package_name');
 
-        // Read package information and buld config. 
+        // Read package information and build config. 
         // Configuration is filled up with default information.
         const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
         const lBuildConfiguration: KgBuildConfiguration = lPackage.workspace.config['build-configuration'];
