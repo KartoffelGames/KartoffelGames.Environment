@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment.command-sync",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "KartoffelGames.Environment.Command_Sync",
     "author": {
         "name": "KartoffelGames"
@@ -12,8 +12,8 @@
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^1.2.0",
-        "@kartoffelgames/environment.core": "^1.2.0"
+        "@kartoffelgames/environment.cli": "^1.2.1",
+        "@kartoffelgames/environment.core": "^1.2.1"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",
