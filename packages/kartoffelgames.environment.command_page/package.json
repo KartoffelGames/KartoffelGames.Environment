@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment.command-page",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "description": "Kartoffelgames.Environment.Command_Page",
     "author": {
         "name": "KartoffelGames"
@@ -13,9 +13,9 @@
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^1.2.1",
-        "@kartoffelgames/environment.command-build": "^1.2.1",
-        "@kartoffelgames/environment.core": "^1.2.1"
+        "@kartoffelgames/environment.cli": "^1.2.2",
+        "@kartoffelgames/environment.command-build": "^1.2.2",
+        "@kartoffelgames/environment.core": "^1.2.2"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",
