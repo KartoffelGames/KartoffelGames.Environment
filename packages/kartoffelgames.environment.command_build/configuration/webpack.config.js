@@ -9,7 +9,7 @@ const gFilereader = require('fs');
  */
 const gGetDefaultFileLoader = () => {
     // Read module declaration file.
-    const lDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/declaration/module-declaration.d.ts');
+    const lDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/declaration/module-declaration.d.ts');
     const lFileContent = gFilereader.readFileSync(lDeclarationFilepath, 'utf8');
 
     const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*{.*?\/\*\s*LOADER::([a-zA-Z-]+)(\{.*})?\s*\*\/.*?}/gms;
