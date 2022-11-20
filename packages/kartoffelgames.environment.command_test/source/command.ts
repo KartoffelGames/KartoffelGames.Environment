@@ -1,6 +1,7 @@
 import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
 import { Console, Project, Shell } from '@kartoffelgames/environment.core';
 import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment.command-build';
+import * as path from 'path';
 
 export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
     /**
@@ -53,7 +54,8 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
             target: 'node',
             scope: 'main',
             buildType: <any>lBuildType,
-            serve: false
+            serve: false,
+            buildTs: false
         });
 
         // Run test information.
@@ -65,8 +67,8 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
         // Load mocha and nyc configuration
         // Load essentials.
-        const lMochaConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/mocha.config.js');
-        const lNycConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/nyc.config.json');
+        const lMochaConfigPath = path.resolve(__dirname, '..', '..', 'configuration/mocha.config.js');
+        const lNycConfigPath = path.resolve(__dirname, '..', '..', 'configuration/nyc.config.json');
 
         // Create package shell command executor.
         const lPackageShell: Shell = new Shell(lPackagePath);

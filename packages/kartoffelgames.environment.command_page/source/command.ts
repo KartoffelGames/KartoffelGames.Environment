@@ -11,8 +11,12 @@ export class KgCliCommand implements IKgCliCommand {
     public get information(): KgCliCommandDescription {
         return {
             command: {
-                description: 'Serve scratchpad files over local http server.',
-                pattern: 'scratchpad <package_name>'
+                description: 'Start page with local http server.',
+                pattern: 'page <package_name> --build-only --force'
+            },
+            configuration: {
+                name: 'page',
+                default: false
             }
         };
     }
@@ -27,14 +31,25 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Cli parameter.
         const lPackageName: string = <string>pParameter.parameter.get('package_name');
+        const lForceBuild: boolean = pParameter.parameter.has('force');
+
+        // Read package information and page config. 
+        // Configuration is filled up with default information.
+        const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
+        const lBuildPage: boolean = lPackage.workspace.config['page'];
+
+        // Exit when no build is configurated.
+        if(!lForceBuild && !lBuildPage) {
+            lConsole.writeLine('Disabled page build. Skip page...');
+            return;
+        }
 
         // Construct paths.
-        const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
-        const lBaseFileDirectory = path.resolve(__dirname, '..', '..', 'scratchpad-files'); // called from library/source
-        const lPackageScratchpadDirectory = path.resolve(lPackage.directory, 'scratchpad');
+        const lBaseFileDirectory = path.resolve(__dirname, '..', '..', 'page-files'); // called from library/source
+        const lPackageScratchpadDirectory = path.resolve(lPackage.directory, 'page');
 
-        // Copy scratchpad blueprint. No overrides.
-        lConsole.writeLine('Initialize scratchpad files...');
+        // Copy page blueprint. No overrides.
+        lConsole.writeLine('Initialize page files...');
         FileUtil.copyDirectory(lBaseFileDirectory, lPackageScratchpadDirectory, false);
 
         // Run build command.
@@ -45,8 +60,8 @@ export class KgCliCommand implements IKgCliCommand {
             pack: true,
             target: 'web',
             scope: 'main',
-            buildType: 'scratchpad',
-            serve: true,
+            buildType: 'page',
+            serve: !pParameter.parameter.has('build-only'),
             buildTs: false
         });
     }

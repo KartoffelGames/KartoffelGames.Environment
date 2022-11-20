@@ -9,7 +9,7 @@ const gFilereader = require('fs');
  */
 const gGetDefaultFileLoader = () => {
     // Read module declaration file.
-    const lDeclarationFilepath = gPath.resolve(__dirname, '..', 'declaration', 'module-declaration.d.ts');
+    const lDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/declaration/module-declaration.d.ts');
     const lFileContent = gFilereader.readFileSync(lDeclarationFilepath, 'utf8');
 
     const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*{.*?\/\*\s*LOADER::([a-zA-Z-]+)(\{.*})?\s*\*\/.*?}/gms;
@@ -106,7 +106,8 @@ module.exports = (pEnvironment) => {
         fileName: 'script',
         fileExtension: 'js',
         outputDirectory: './library/build',
-        includeCoverage: false
+        includeCoverage: false,
+        serveDirectory: ''
     };
 
     switch (pEnvironment.buildType) {
@@ -116,6 +117,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = lProjectName;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = ''
             break;
 
         case 'test':
@@ -124,6 +126,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = ''
             break;
 
         case 'test-coverage':
@@ -132,6 +135,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = true;
+            lBuildSettings.serveDirectory = ''
             break;
 
         case 'scratchpad':
@@ -140,7 +144,18 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = 'scratchpad';
             lBuildSettings.outputDirectory = 'dist';
             lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = './scratchpad'
             break;
+
+        case 'page':
+            lBuildSettings.entryFile = './page/source/index.ts';
+            lBuildSettings.buildMode = 'development';
+            lBuildSettings.fileName = 'page';
+            lBuildSettings.outputDirectory = './page/build';
+            lBuildSettings.includeCoverage = false;
+            lBuildSettings.serveDirectory = './page'
+            break;
+
         default:
             throw `Build type "${pEnvironment.buildType}" not supported.`;
     }
@@ -192,7 +207,7 @@ module.exports = (pEnvironment) => {
             open: true,
             liveReload: true,
             static: {
-                directory: "./scratchpad",
+                directory: lBuildSettings.serveDirectory,
                 watch: true
             },
             compress: true,
@@ -200,6 +215,9 @@ module.exports = (pEnvironment) => {
             client: {
                 logging: 'info',
                 overlay: true,
+            },
+            devMiddleware: {
+                writeToDisk: true,
             }
         },
     };

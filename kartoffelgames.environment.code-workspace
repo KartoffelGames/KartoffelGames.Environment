@@ -29,6 +29,10 @@
             "path": "packages\\kartoffelgames.environment.command_init"
         },
         {
+            "name": "Kartoffelgames.Environment.Command_Page",
+            "path": "packages\\kartoffelgames.environment.command_page"
+        },
+        {
             "name": "Kartoffelgames.Environment.Command_Scratchpad",
             "path": "packages\\kartoffelgames.environment.command_scratchpad"
         },

@@ -39,10 +39,6 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lPackageSourcePath = path.join(lPackagePath, 'source');
         const lPackageBuildPath = path.join(lPackagePath, 'library');
 
-        // Clear output.
-        lConsole.writeLine('Clear build output');
-        FileUtil.emptyDirectory(lPackageBuildPath);
-
         // Create shell command executor.
         const lShell: Shell = new Shell(lPackagePath);
 
@@ -50,13 +46,23 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lTypescriptCli: string = require.resolve('typescript/lib/tsc.js');
         const lWebpackCli: string = require.resolve('webpack-cli/bin/cli.js');
 
-        // Run tsc.
-        lConsole.writeLine('Build typescript');
-        await lShell.console(`node "${lTypescriptCli}" --project tsconfig.json --noemit false`);
+        // Build ts only when needed.
+        if (pOptions.buildTs) {
+            // Clear output.
+            lConsole.writeLine('Clear build output');
+            FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'source'));
+            FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'test'));
+            // Delete build info
+            FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'tsconfig.tsbuildinfo'));
 
-        // Copy external files.
-        lConsole.writeLine('Copy external files');
-        FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
+            // Run tsc.
+            lConsole.writeLine('Build typescript');
+            await lShell.console(`node "${lTypescriptCli}" --project tsconfig.json --noemit false`);
+
+            // Copy external files.
+            lConsole.writeLine('Copy external files');
+            FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
+        }
 
         // Validate package target.
         if (pOptions.target !== 'node' && pOptions.target !== 'web') {
@@ -69,7 +75,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         }
 
         // Load essentials.
-        const lWebpackConfigPath = require.resolve('@kartoffelgames/environment.workspace-essentials/environment/configuration/webpack.config.js');
+        const lWebpackConfigPath = path.resolve(__dirname, '..', '..', 'configuration/webpack.config.js');
 
         // Start webpack server.
         let lServeParameter: string = '';
@@ -96,7 +102,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         // Cli parameter.
         const lPackageName: string = <string>pParameter.parameter.get('package_name');
 
-        // Read package information and buld config. 
+        // Read package information and build config. 
         // Configuration is filled up with default information.
         const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
         const lBuildConfiguration: KgBuildConfiguration = lPackage.workspace.config['build-configuration'];
@@ -113,7 +119,8 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
             target: lPackageTarget,
             buildType: 'release',
             serve: false,
-            scope: lPackageScope
+            scope: lPackageScope,
+            buildTs: true
         });
     }
 }
@@ -124,7 +131,7 @@ type KgBuildConfiguration = {
     scope: 'main' | 'worker';
 };
 
-type BuildType = 'release' | 'test' | 'test-coverage' | 'scratchpad';
+type BuildType = 'release' | 'test' | 'test-coverage' | 'scratchpad' | 'page';
 
 export type BuildOptions = {
     projectHandler: Project;
@@ -134,4 +141,5 @@ export type BuildOptions = {
     buildType: BuildType;
     serve: boolean;
     scope: KgBuildConfiguration['scope'];
+    buildTs: boolean;
 };

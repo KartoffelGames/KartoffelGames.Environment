@@ -16,8 +16,9 @@
         "typescript": "^4.8.4"
     },
     "scripts": {
-        "build": "kg build {{PROJECT_NAME}}",
-        "test": "kg test {{PROJECT_NAME}}"
+        "build": "kg build {{PROJECT_NAME}} && kg page {{PROJECT_NAME}} --build-only",
+        "test": "kg test {{PROJECT_NAME}}",
+        "page": "kg page {{PROJECT_NAME}} --build-only"
     },
     "repository": {
         "type": "git",
@@ -39,7 +40,8 @@
             },
             "tests": [
                 "unit"
-            ]
+            ],
+            "page": false
         }
     }
 }

@@ -46,7 +46,8 @@
             },
             "tests": [
                 "unit"
-            ]
+            ],
+            "page": false
         }
     }
 }
