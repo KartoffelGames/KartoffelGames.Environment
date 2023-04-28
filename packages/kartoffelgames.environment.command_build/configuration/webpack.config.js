@@ -4,42 +4,80 @@
 const gPath = require('path');
 const gFilereader = require('fs');
 
+const gFilesByExtension = (pStartPath, pFileExtension) => {
+    const lFileList = [];
+
+    if (!gFilereader.existsSync(pStartPath)) {
+        console.log("Local module declaration directory not found: ", pStartPath);
+        return lFileList;
+    }
+
+    for (const lFileName of gFilereader.readdirSync(pStartPath)) {
+        const lFilePath = gPath.join(pStartPath, lFileName);
+        const stat = gFilereader.lstatSync(lFilePath);
+        if (stat.isDirectory()) {
+            // Recursive call.
+            lFileList.push(...gFilesByExtension(lFilePath, pFileExtension));
+        } else if (lFilePath.endsWith(pFileExtension)) {
+            lFileList.push(lFilePath);
+        }
+    };
+
+    return lFileList;
+};
+
 /**
  * Load default loader from module declaration file.
  */
 const gGetDefaultFileLoader = () => {
-    // Read module declaration file.
-    const lDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/declaration/module-declaration.d.ts');
-    const lFileContent = gFilereader.readFileSync(lDeclarationFilepath, 'utf8');
+    // Read declaration files of local module_declaration directory.
+    const lModuleDeclarationDirectoryPath = gPath.resolve('module_declaration');
+    const lModuleDeclarationFilePathList = gFilesByExtension(lModuleDeclarationDirectoryPath, '.d.ts');
+
+    // Add global module declaration to path list.
+    const lGlobalDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/declaration/module-declaration.d.ts');
+    lModuleDeclarationFilePathList.unshift(lGlobalDeclarationFilepath);
 
     const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*{.*?\/\*\s*LOADER::([a-zA-Z-]+)(\{.*})?\s*\*\/.*?}/gms;
 
     // Get all declaration informations by reading the extension and the loader information from the comment.
     const lDefaultLoader = [];
-    let lMatch;
-    while (lMatch = lFileExtensionRegex.exec(lFileContent)) {
-        const lExtension = lMatch[1];
-        const lLoaderType = lMatch[2];
-        const lLoaderOptions = lMatch[3] ? JSON.parse(lMatch[3]) : null;
+    for (const lDeclarationFilePath of lModuleDeclarationFilePathList) {
+        const lFileContent = gFilereader.readFileSync(lDeclarationFilePath, 'utf8');
 
-        // Create regex from extension.
-        const lExtensionRegex = new RegExp(lExtension.replace('.', '\\.') + '$');
+        let lMatch;
+        while (lMatch = lFileExtensionRegex.exec(lFileContent)) {
+            const lExtension = lMatch[1];
+            const lLoaderType = lMatch[2];
+            const lLoaderOptions = lMatch[3] ? JSON.parse(lMatch[3]) : null;
 
-        let lLoaderDefinition;
-        if (lLoaderOptions) {
-            lLoaderDefinition = {
-                loader: lLoaderType,
-                options: lLoaderOptions
+            // Create regex from extension.
+            const lExtensionRegex = new RegExp(lExtension.replace('.', '\\.') + '$');
+
+            let lLoaderDefinition;
+            if (lLoaderOptions) {
+                lLoaderDefinition = {
+                    loader: lLoaderType,
+                    options: lLoaderOptions
+                };
+            } else {
+                lLoaderDefinition = lLoaderType;
+            }
+
+            const lLoader = {
+                test: lExtensionRegex,
+                use: lLoaderDefinition
             };
-        } else {
-            lLoaderDefinition = lLoaderType;
-        }
 
-        // Add loader config.
-        lDefaultLoader.push({
-            test: lExtensionRegex,
-            use: lLoaderDefinition
-        });
+            // Replace loader or add new loader.
+            const lReplaceLoaderIndex = lDefaultLoader.findIndex(loader => loader.test.toString() === lLoader.test.toString());
+            if (lReplaceLoaderIndex !== -1) {
+                lDefaultLoader.splice(lReplaceLoaderIndex, 1, lLoader);
+            } else {
+                // Add loader config.
+                lDefaultLoader.push(lLoader);
+            }
+        }
     }
 
     return lDefaultLoader;
@@ -117,7 +155,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = lProjectName;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
-            lBuildSettings.serveDirectory = ''
+            lBuildSettings.serveDirectory = '';
             break;
 
         case 'test':
@@ -126,7 +164,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = false;
-            lBuildSettings.serveDirectory = ''
+            lBuildSettings.serveDirectory = '';
             break;
 
         case 'test-coverage':
@@ -135,7 +173,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = `test-pack`;
             lBuildSettings.outputDirectory = './library/build';
             lBuildSettings.includeCoverage = true;
-            lBuildSettings.serveDirectory = ''
+            lBuildSettings.serveDirectory = '';
             break;
 
         case 'scratchpad':
@@ -144,7 +182,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = 'scratchpad';
             lBuildSettings.outputDirectory = 'dist';
             lBuildSettings.includeCoverage = false;
-            lBuildSettings.serveDirectory = './scratchpad'
+            lBuildSettings.serveDirectory = './scratchpad';
             break;
 
         case 'page':
@@ -153,7 +191,7 @@ module.exports = (pEnvironment) => {
             lBuildSettings.fileName = 'page';
             lBuildSettings.outputDirectory = './page/build';
             lBuildSettings.includeCoverage = false;
-            lBuildSettings.serveDirectory = './page'
+            lBuildSettings.serveDirectory = './page';
             break;
 
         default:
@@ -186,15 +224,15 @@ module.exports = (pEnvironment) => {
         context: gPath.resolve('./'),
         module: {
             rules: [{
-                    test: /\.ts?$/,
-                    use: gGetDefaultTypescriptLoader(lBuildSettings.includeCoverage),
-                    exclude: /node_modules|\.d\.ts$/
-                },
-                {
-                    test: /\.d\.ts$/,
-                    loader: 'ignore-loader'
-                },
-                ...gGetDefaultFileLoader()
+                test: /\.ts?$/,
+                use: gGetDefaultTypescriptLoader(lBuildSettings.includeCoverage),
+                exclude: /node_modules|\.d\.ts$/
+            },
+            {
+                test: /\.d\.ts$/,
+                loader: 'ignore-loader'
+            },
+            ...gGetDefaultFileLoader()
             ]
         },
         watch: false,
