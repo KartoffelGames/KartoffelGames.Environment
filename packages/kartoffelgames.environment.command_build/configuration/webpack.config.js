@@ -35,7 +35,7 @@ const gGetDefaultFileLoader = () => {
     const lModuleDeclarationFilePathList = gFilesByExtension(lModuleDeclarationDirectoryPath, '.d.ts');
 
     // Add global module declaration to path list.
-    const lGlobalDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/declaration/module-declaration.d.ts');
+    const lGlobalDeclarationFilepath = require.resolve('@kartoffelgames/environment.workspace-essentials/module_declaration/module-declaration.d.ts');
     lModuleDeclarationFilePathList.unshift(lGlobalDeclarationFilepath);
 
     const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*{.*?\/\*\s*LOADER::([a-zA-Z-]+)(\{.*})?\s*\*\/.*?}/gms;
