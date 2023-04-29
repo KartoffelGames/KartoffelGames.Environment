@@ -89,7 +89,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
             await lShell.console(`node "${lWebpackCli}" ${lServeParameter} --config "${lWebpackConfigPath}" --env=buildType=${pOptions.buildType} --env=target=${pOptions.target} --env=scope=${pOptions.scope}`);
         }
 
-        lConsole.writeLine('Build sucessful');
+        lConsole.writeLine('Build successful');
     }
 
     /**

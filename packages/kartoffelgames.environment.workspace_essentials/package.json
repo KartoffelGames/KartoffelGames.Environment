@@ -7,7 +7,7 @@
         "name": "KartoffelGames"
     },
     "files": [
-        "declaration/**/*"
+        "module_declaration/**/*"
     ],
     "scripts": {
         "build": "echo No build",
