@@ -9,7 +9,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
     public get information(): KgCliCommandDescription<KgBuildConfiguration> {
         return {
             command: {
-                pattern: 'build <package_name> --pack --target --type --scope',
+                pattern: 'build <package_name> --pack --target --type --scope --libraryname',
                 description: 'Build package',
             },
             configuration: {
@@ -109,6 +109,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
         // Set configuration.
         const lPackPackage: boolean = (pParameter.parameter.has('pack') || lBuildConfiguration.pack) ?? false;
+        const lLibraryName: string | undefined = (pParameter.parameter.has('libraryname') || lBuildConfiguration.libraryName) ?? undefined;
         const lPackageTarget: KgBuildConfiguration['target'] = <any>pParameter.parameter.get('target') ?? lBuildConfiguration.target ?? 'node';
         const lPackageScope: KgBuildConfiguration['scope'] = <any>pParameter.parameter.get('scope') ?? lBuildConfiguration.scope ?? 'main';
 
@@ -116,6 +117,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
             projectHandler: pProjectHandler,
             packgeName: lPackageName,
             pack: lPackPackage,
+            libraryName: lLibraryName,
             target: lPackageTarget,
             buildType: 'release',
             serve: false,
@@ -127,6 +129,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
 type KgBuildConfiguration = {
     pack: boolean;
+    libraryName?: string;
     target: 'node' | 'web';
     scope: 'main' | 'worker';
 };
@@ -137,6 +140,7 @@ export type BuildOptions = {
     projectHandler: Project;
     packgeName: string;
     pack: boolean;
+    libraryName?: string | undefined;
     target: KgBuildConfiguration['target'];
     buildType: BuildType;
     serve: boolean;
