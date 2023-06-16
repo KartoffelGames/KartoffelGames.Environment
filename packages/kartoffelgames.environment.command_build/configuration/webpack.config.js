@@ -131,7 +131,7 @@ const gGetProjectName = () => {
 
 /**
  * Get webpack config.
- * @param pEnvironment - { buildType: 'release' | 'debug' | 'test' | 'scratchpad'; coverage: boolan; libraryName: string; }
+ * @param pEnvironment - { buildType: 'release' | 'debug' | 'test' | 'scratchpad'; coverage: boolan; }
  */
 module.exports = (pEnvironment) => {
     const lProjectName = gGetProjectName().toLowerCase();
@@ -145,8 +145,7 @@ module.exports = (pEnvironment) => {
         fileExtension: 'js',
         outputDirectory: './library/build',
         includeCoverage: false,
-        serveDirectory: '',
-        libraryName: undefined
+        serveDirectory: ''
     };
 
     switch (pEnvironment.buildType) {
@@ -211,19 +210,13 @@ module.exports = (pEnvironment) => {
             throw `Scope "${pEnvironment.scope}" not supported.`;
     }
 
-    // Set library name.
-    if (pEnvironment.libraryName !== '') {
-        lBuildSettings.libraryName = pEnvironment.libraryName;
-    }
-
     return {
         devtool: 'source-map',
         target: lBuildSettings.target,
         entry: lBuildSettings.entryFile,
         mode: lBuildSettings.buildMode,
         output: {
-            filename: `../${lBuildSettings.outputDirectory}/${lBuildSettings.fileName}.${lBuildSettings.fileExtension}`, // ".." because Dist is the staring directory.
-            library: lBuildSettings.libraryName
+            filename: `../${lBuildSettings.outputDirectory}/${lBuildSettings.fileName}.${lBuildSettings.fileExtension}` // ".." because Dist is the staring directory.
         },
         resolve: {
             extensions: ['.ts', '.js']
