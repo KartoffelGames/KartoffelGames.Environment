@@ -49,6 +49,10 @@
             "path": "./packages/kartoffelgames.environment.core"
         },
         {
+            "name": "Test Project",
+            "path": "./test_project"
+        },
+        {
             "name": "Kartoffelgames.Environment.Workspace_Essentials",
             "path": "packages\\kartoffelgames.environment.workspace_essentials"
         },

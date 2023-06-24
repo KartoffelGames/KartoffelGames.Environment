@@ -42,7 +42,7 @@ export class KgCliCommand implements IKgCliCommand {
         await lBuildCommand.build({
             projectHandler: pProjectHandler,
             packgeName: lPackage.packageName,
-            pack: true,
+            pack: 'Page',
             target: 'web',
             scope: 'main',
             buildType: 'scratchpad',

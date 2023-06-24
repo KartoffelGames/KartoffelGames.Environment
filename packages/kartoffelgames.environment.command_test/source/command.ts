@@ -50,7 +50,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         await lBuildCommand.build({
             projectHandler: pProjectHandler,
             packgeName: lPackage.packageName,
-            pack: true,
+            pack: 'TestLib',
             target: 'node',
             scope: 'main',
             buildType: <any>lBuildType,

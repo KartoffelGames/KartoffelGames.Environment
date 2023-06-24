@@ -1,0 +1,49 @@
+{
+    "name": "@kartoffelgames/environment-test-project.test-package",
+    "version": "0.0.0",
+    "description": "Kartoffelgames.Environment_Test_Project.Test_Package",
+    "author": {
+        "name": "KartoffelGames"
+    },
+    "private": true,
+    "files": [
+        "library/source/**/*"
+    ],
+    "main": "library/source/index.js",
+    "types": "library/source/index.d.ts",
+    "devDependencies": {
+        "@types/chai": "^4.3.3",
+        "@types/mocha": "^5.2.7",
+        "typescript": "^4.8.4"
+    },
+    "scripts": {
+        "build": "kg build Kartoffelgames.Environment_Test_Project.Test_Package && kg page Kartoffelgames.Environment_Test_Project.Test_Package --build-only",
+        "test": "kg test Kartoffelgames.Environment_Test_Project.Test_Package",
+        "page": "kg page Kartoffelgames.Environment_Test_Project.Test_Package --build-only"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/KartoffelGames/test_project.git",
+        "directory": "packages/kartoffelgames.environment_test_project"
+    },
+    "bugs": {
+        "url": "https://github.com/KartoffelGames/test_project/issues"
+    },
+    "homepage": "https://github.com/KartoffelGames/test_project#readme",
+    "kg": {
+        "name": "Kartoffelgames.Environment_Test_Project.Test_Package",
+        "root": false,
+        "config": {
+            "package-blueprint": "kg-main",
+            "build-configuration": {
+                "pack": "TestPackage",
+                "target": "node",
+                "scope": "main"
+            },
+            "page": false,
+            "tests": [
+                "unit"
+            ]
+        }
+    }
+}

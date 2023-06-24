@@ -1,0 +1,27 @@
+{
+    "folders": [
+        {
+            "name": "Kartoffelgames.Environment_Test_Project.Test_Package",
+            "path": "packages\\kartoffelgames.environment_test_project.test_package"
+        },
+        {
+            "name": "_ROOT",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.nyc_output": true,
+            "**/.turbo": true,
+            "**/*.tsbuildinfo": true,
+            "**/coverage": true,
+            "**/dist": true,
+            "**/node_modules": true
+        },
+        "typescript.implementationsCodeLens.enabled": true,
+        "typescript.referencesCodeLens.enabled": true,
+        "javascript.format.semicolons": "insert",
+        "typescript.referencesCodeLens.showOnAllFunctions": true,
+        "typescript.tsdk": "node_modules\\typescript\\lib"
+    }
+}
