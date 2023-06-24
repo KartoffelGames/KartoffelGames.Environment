@@ -5,6 +5,7 @@
     "author": {
         "name": "KartoffelGames"
     },
+    "private": true,
     "files": [
         "library/source/**/*"
     ],
