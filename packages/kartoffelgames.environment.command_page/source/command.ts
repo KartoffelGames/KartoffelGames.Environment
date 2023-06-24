@@ -3,7 +3,6 @@ import { Console, FileUtil, Project } from '@kartoffelgames/environment.core';
 import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment.command-build';
 import * as path from 'path';
 
-
 export class KgCliCommand implements IKgCliCommand {
     /**
      * Command description.
@@ -57,7 +56,7 @@ export class KgCliCommand implements IKgCliCommand {
         await lBuildCommand.build({
             projectHandler: pProjectHandler,
             packgeName: lPackage.packageName,
-            pack: true,
+            pack: 'Page',
             target: 'web',
             scope: 'main',
             buildType: 'page',

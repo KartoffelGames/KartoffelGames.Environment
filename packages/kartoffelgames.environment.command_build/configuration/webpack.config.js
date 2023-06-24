@@ -146,7 +146,7 @@ module.exports = (pEnvironment) => {
         outputDirectory: './library/build',
         includeCoverage: false,
         serveDirectory: '',
-        libraryName: undefined
+        libraryName: pEnvironment.libraryName
     };
 
     switch (pEnvironment.buildType) {
@@ -209,11 +209,6 @@ module.exports = (pEnvironment) => {
             break;
         default:
             throw `Scope "${pEnvironment.scope}" not supported.`;
-    }
-
-    // Set library name.
-    if (pEnvironment.libraryName !== '') {
-        lBuildSettings.libraryName = pEnvironment.libraryName;
     }
 
     return {
