@@ -105,11 +105,13 @@ module.exports = {
                     "memberTypes": [
                         // Index signature
                         "signature",
+                        "call-signature",
 
                         // Static Fields
                         "public-static-field",
                         "protected-static-field",
                         "private-static-field",
+                        "#private-static-field",
 
                         // Static accessors.
                         ["public-static-get", "public-static-set"],
@@ -130,7 +132,6 @@ module.exports = {
                         "private-instance-field",
                         "public-abstract-field",
                         "protected-abstract-field",
-                        "private-abstract-field",
 
                         // Accessors.
                         ["public-decorated-get", "public-decorated-set"],
@@ -141,7 +142,6 @@ module.exports = {
                         ["private-instance-get", "private-instance-set"],
                         ["public-abstract-get", "public-abstract-set"],
                         ["protected-abstract-get", "protected-abstract-set"],
-                        ["private-abstract-get", "private-abstract-set"],
 
                         // Constructors
                         "public-constructor",
@@ -159,7 +159,6 @@ module.exports = {
                         // Abstract methods
                         "public-abstract-method",
                         "protected-abstract-method",
-                        "private-abstract-method"
                     ]
                 },
                 interfaces: ['signature', 'field', 'constructor', 'method'],
