@@ -43,10 +43,6 @@
     "**/Library/*",
     "Library"
   ],
-  "files": [
-    "node_modules/@kartoffelgames/environment.workspace-essentials/module_declaration/module-declaration.d.ts",
-    
-  ],
   "include": [
     "./**/*.ts",
     "packages/*/module_declaration/**/*.d.ts"
