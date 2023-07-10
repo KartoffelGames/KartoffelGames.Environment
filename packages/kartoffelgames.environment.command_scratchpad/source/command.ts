@@ -37,17 +37,25 @@ export class KgCliCommand implements IKgCliCommand {
         lConsole.writeLine('Initialize scratchpad files...');
         FileUtil.copyDirectory(lBaseFileDirectory, lPackageScratchpadDirectory, false);
 
+        // Add extened parameter.
+        const lExtendedParameter: { [key: string]: boolean | string; } = {};
+        for (const [lParameterKey, lParameterValue] of pParameter.parameter) {
+            lExtendedParameter[lParameterKey] = lParameterValue ?? true;
+        }
+
+        // Add build type as extended parameter.
+        lExtendedParameter['buildType'] = 'scratchpad';
+
         // Run build command.
         const lBuildCommand: BuildCommand = new BuildCommand();
-        await lBuildCommand.build({
-            projectHandler: pProjectHandler,
+        await lBuildCommand.build(pProjectHandler, {
             packgeName: lPackage.packageName,
             pack: 'Page',
             target: 'web',
             scope: 'main',
-            buildType: 'scratchpad',
             serve: true,
-            buildTs: false
+            buildTs: false,
+            extended: lExtendedParameter
         });
     }
 }

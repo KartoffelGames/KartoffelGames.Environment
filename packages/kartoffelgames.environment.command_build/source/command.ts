@@ -27,12 +27,12 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
      * Build project.
      * @param pOptions - Build options.
      */
-    public async build(pOptions: BuildOptions): Promise<void> {
+    public async build(pProjectHandler: Project, pOptions: BuildOptions): Promise<void> {
         const lConsole = new Console();
 
         // Read package information and buld config. 
         // Configuration is filled up with default information.
-        const lPackage = pOptions.projectHandler.getPackageConfiguration(pOptions.packgeName);
+        const lPackage = pProjectHandler.getPackageConfiguration(pOptions.packgeName);
 
         // Construct paths.
         const lPackagePath = lPackage.directory;
@@ -89,10 +89,17 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
             // Create build command. WITHOUT newlines.
             let lBuildCommand = `node "${lWebpackCli}" ${lServeParameter} --config "${lWebpackConfigPath}"`;
-            lBuildCommand += ' ' + `--env=buildType=${pOptions.buildType}`;
             lBuildCommand += ' ' + `--env=target=${pOptions.target}`;
             lBuildCommand += ' ' + `--env=scope=${pOptions.scope}`;
             lBuildCommand += ' ' + `--env=libraryName=${pOptions.pack}`;
+
+            // Add additional parameter.
+            for (const [lPropertyKey, lPropertyValue] of Object.entries(pOptions.extended)) {
+                // Exclude parameter that are already inside of build options.
+                if (!(lPropertyKey in pOptions)) {
+                    lBuildCommand += ' ' + `--env=${lPropertyKey}="${lPropertyValue}"`;
+                }
+            }
 
             await lShell.console(lBuildCommand);
         }
@@ -120,15 +127,23 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lPackageTarget: KgBuildConfiguration['target'] = <any>pParameter.parameter.get('target') ?? lBuildConfiguration.target ?? 'node';
         const lPackageScope: KgBuildConfiguration['scope'] = <any>pParameter.parameter.get('scope') ?? lBuildConfiguration.scope ?? 'main';
 
-        await this.build({
-            projectHandler: pProjectHandler,
+        // Add extened parameter.
+        const lExtendedParameter: { [key: string]: boolean | string; } = {};
+        for (const [lParameterKey, lParameterValue] of pParameter.parameter) {
+            lExtendedParameter[lParameterKey] = lParameterValue ?? true;
+        }
+
+        // Add build type as extended parameter.
+        lExtendedParameter['buildType'] = 'release';
+
+        await this.build(pProjectHandler, {
             packgeName: lPackageName,
             pack: lPackLibraryName,
             target: lPackageTarget,
-            buildType: 'release',
             serve: false,
             scope: lPackageScope,
-            buildTs: true
+            buildTs: true,
+            extended: lExtendedParameter
         });
     }
 }
@@ -140,15 +155,12 @@ type KgBuildConfiguration = {
     scope: 'main' | 'worker';
 };
 
-type BuildType = 'release' | 'test' | 'test-coverage' | 'scratchpad' | 'page';
-
 export type BuildOptions = {
-    projectHandler: Project;
     packgeName: string;
     pack: string | false;
     target: KgBuildConfiguration['target'];
-    buildType: BuildType;
     serve: boolean;
     scope: KgBuildConfiguration['scope'];
     buildTs: boolean;
+    extended: { [key: string]: boolean | string; };
 };
