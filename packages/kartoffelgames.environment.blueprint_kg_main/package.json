@@ -13,6 +13,10 @@
     ],
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
+    "devDependencies": {
+        "@types/chai": "^4.3.3",
+        "@types/mocha": "^5.2.7"
+    },
     "dependencies": {
         "@kartoffelgames/environment.command-create": "^1.4.1",
         "@kartoffelgames/environment.command-init": "^1.4.1",
