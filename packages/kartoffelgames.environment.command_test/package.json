@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment.command-test",
     "projectName": "Kartoffelgames.Environment.Command_Test",
-    "version": "1.4.1",
+    "version": "2.0.0",
     "description": "Kartoffelgames.Environment.Command_Test",
     "author": {
         "name": "KartoffelGames"
@@ -14,9 +14,9 @@
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^1.4.1",
-        "@kartoffelgames/environment.command-build": "^1.4.1",
-        "@kartoffelgames/environment.core": "^1.4.1",
+        "@kartoffelgames/environment.cli": "^2.0.0",
+        "@kartoffelgames/environment.command-build": "^2.0.0",
+        "@kartoffelgames/environment.core": "^2.0.0",
         "@kartoffelgames/environment.workspace-essentials": "^1.4.1",
         "chai": "^4.3.6",
         "jsdom": "^19.0.0",
