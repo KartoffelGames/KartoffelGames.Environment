@@ -38,7 +38,7 @@ export class KgCliCommand implements IKgCliCommand {
         const lBuildPage: boolean = lPackage.workspace.config['page'];
 
         // Exit when no build is configurated.
-        if(!lForceBuild && !lBuildPage) {
+        if (!lForceBuild && !lBuildPage) {
             lConsole.writeLine('Disabled page build. Skip page...');
             return;
         }
@@ -51,17 +51,25 @@ export class KgCliCommand implements IKgCliCommand {
         lConsole.writeLine('Initialize page files...');
         FileUtil.copyDirectory(lBaseFileDirectory, lPackageScratchpadDirectory, false);
 
+        // Add extened parameter.
+        const lExtendedParameter: { [key: string]: boolean | string; } = {};
+        for (const [lParameterKey, lParameterValue] of pParameter.parameter) {
+            lExtendedParameter[lParameterKey] = lParameterValue ?? true;
+        }
+
+        // Add build type as extended parameter.
+        lExtendedParameter['buildType'] = 'page';
+
         // Run build command.
         const lBuildCommand: BuildCommand = new BuildCommand();
-        await lBuildCommand.build({
-            projectHandler: pProjectHandler,
+        await lBuildCommand.build(pProjectHandler, {
             packgeName: lPackage.packageName,
             pack: 'Page',
             target: 'web',
             scope: 'main',
-            buildType: 'page',
             serve: !pParameter.parameter.has('build-only'),
-            buildTs: false
+            buildTs: false,
+            extended: lExtendedParameter
         });
     }
 }

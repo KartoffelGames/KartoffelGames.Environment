@@ -36,26 +36,28 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
         const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
         const lPackagePath = lPackage.directory;
 
-        // Construct webpack command.
-        let lBuildType: string = 'test';
-        if (pParameter.parameter.has('coverage')) {
-            lBuildType = 'test-coverage';
-        }
-
         // Build test webpack information.
         lConsole.writeLine('Build Test');
 
+        // Add extened parameter.
+        const lExtendedParameter: { [key: string]: boolean | string; } = {};
+        for (const [lParameterKey, lParameterValue] of pParameter.parameter) {
+            lExtendedParameter[lParameterKey] = lParameterValue ?? true;
+        }
+
+        // Add build type as extended parameter.
+        lExtendedParameter['buildType'] = 'test';
+
         // Run build command.
         const lBuildCommand: BuildCommand = new BuildCommand();
-        await lBuildCommand.build({
-            projectHandler: pProjectHandler,
+        await lBuildCommand.build(pProjectHandler, {
             packgeName: lPackage.packageName,
             pack: 'TestLib',
             target: 'node',
             scope: 'main',
-            buildType: <any>lBuildType,
             serve: false,
-            buildTs: false
+            buildTs: false,
+            extended: lExtendedParameter
         });
 
         // Run test information.

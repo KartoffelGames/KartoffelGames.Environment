@@ -14,8 +14,7 @@
     "types": "library/source/index.d.ts",
     "devDependencies": {
         "@types/chai": "^4.3.3",
-        "@types/mocha": "^5.2.7",
-        "typescript": "^4.8.4"
+        "@types/mocha": "^5.2.7"
     },
     "dependencies": {
         "@kartoffelgames/environment.cli": "^1.4.1",

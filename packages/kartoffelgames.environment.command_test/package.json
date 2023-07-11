@@ -17,12 +17,16 @@
         "@kartoffelgames/environment.cli": "^1.4.1",
         "@kartoffelgames/environment.command-build": "^1.4.1",
         "@kartoffelgames/environment.core": "^1.4.1",
-        "@kartoffelgames/environment.workspace-essentials": "^1.4.1"
+        "@kartoffelgames/environment.workspace-essentials": "^1.4.1",
+        "chai": "^4.3.6",
+        "jsdom": "^19.0.0",
+        "jsdom-global": "^3.0.2",
+        "mocha": "^9.2.2",
+        "nyc": "^15.1.0"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",
-        "@types/mocha": "^5.2.7",
-        "typescript": "^4.8.4"
+        "@types/mocha": "^5.2.7"
     },
     "scripts": {
         "build": "tsc",
