@@ -34,7 +34,7 @@ class PackLoader {
             fileName: packageName,
             fileExtension: 'js',
             outputDirectory: './library/build',
-            coverage: this.environment.target ?? false,
+            coverage: !!this.environment.coverage,
             serveDirectory: '',
             libraryName: this.environment.libraryName ?? 'Library'
         };
