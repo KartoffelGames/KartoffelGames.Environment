@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment.blueprint-kg-main",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "KartoffelGames.Environment.Blueprint_Kg_Main",
     "author": {
         "name": "KartoffelGames"
@@ -18,9 +18,9 @@
         "@types/mocha": "^5.2.7"
     },
     "dependencies": {
-        "@kartoffelgames/environment.command-create": "^2.0.0",
-        "@kartoffelgames/environment.command-init": "^2.0.0",
-        "@kartoffelgames/environment.core": "^2.0.0"
+        "@kartoffelgames/environment.command-create": "^2.0.1",
+        "@kartoffelgames/environment.command-init": "^2.0.1",
+        "@kartoffelgames/environment.core": "^2.0.1"
     },
     "scripts": {
         "build": "tsc",
