@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment.command-build",
     "projectName": "Kartoffelgames.Environment.Command_Build",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "Kartoffelgames.Environment.Command_Build",
     "author": {
         "name": "KartoffelGames"
@@ -18,8 +18,8 @@
         "@types/mocha": "^5.2.7"
     },
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^2.0.3",
-        "@kartoffelgames/environment.core": "^2.0.3",
+        "@kartoffelgames/environment.cli": "^2.0.4",
+        "@kartoffelgames/environment.core": "^2.0.4",
         "@kartoffelgames/environment.workspace-essentials": "^1.4.1",
         "webpack": "^5.74.0",
         "webpack-cli": "^4.10.0",
