@@ -19,6 +19,7 @@ export class FileUtil {
             // Create relative item path. Trim leading slash.
             let lRelativeItemPath: string = lSourceFile.replace(lSourcePath, '');
             lRelativeItemPath = lRelativeItemPath.startsWith('\\') ? lRelativeItemPath.substring(1) : lRelativeItemPath;
+            lRelativeItemPath = lRelativeItemPath.startsWith('/') ? lRelativeItemPath.substring(1) : lRelativeItemPath;
 
             // Remove source path from source file, to append destination path instead of it.
             const lSourceItem: string = lSourceFile;
