@@ -48,6 +48,9 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
         // Build ts only when needed.
         if (pOptions.buildTs) {
+            // Join external file target path.
+            const lExternalFileTargetPath: string = path.join(lPackageBuildPath, 'source');
+
             // Clear output.
             lConsole.writeLine('Clear build output');
             FileUtil.deleteDirectory(path.join(lPackageBuildPath, 'source'));
@@ -61,7 +64,7 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
 
             // Copy external files.
             lConsole.writeLine('Copy external files');
-            FileUtil.copyDirectory(lPackageSourcePath, lPackageBuildPath, true, { exclude: { extensions: ['ts'] } });
+            FileUtil.copyDirectory(lPackageSourcePath, lExternalFileTargetPath, true, { exclude: { extensions: ['ts'] } });
         }
 
         // Validate package target.
