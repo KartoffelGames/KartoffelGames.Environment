@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment.cli",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "description": "KartoffelGames.Environment.Cli",
     "author": {
         "name": "KartoffelGames"
@@ -19,7 +19,7 @@
         "@types/mocha": "^5.2.7"
     },
     "dependencies": {
-        "@kartoffelgames/environment.core": "^2.0.2"
+        "@kartoffelgames/environment.core": "^2.0.3"
     },
     "scripts": {
         "build": "tsc",
