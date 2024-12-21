@@ -1,13 +1,14 @@
 import * as path from 'path';
-import { FileUtil } from './file-util';
+import { FileSystem } from './file-system';
 
 export class Project {
     /**
+     * Find the project root path by searching for the root workspace file.
      * 
      * @param pCurrentPath - Current path.
      */
     public static findRoot(pCurrentPath: string): string {
-        const lAllFiles: Array<string> = FileUtil.findFiles(pCurrentPath, {
+        const lAllFiles: Array<string> = FileSystem.findFiles(pCurrentPath, {
             direction: 'insideOut',
             include: { extensions: ['code-workspace'] }
         });
@@ -55,8 +56,8 @@ export class Project {
      */
     public addWorkspace(pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
-        const lWorkspaceFilePath: string = FileUtil.findFiles(this.projectRootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
-        const lFileText = FileUtil.read(lWorkspaceFilePath);
+        const lWorkspaceFilePath: string = FileSystem.findFiles(this.projectRootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
+        const lFileText = FileSystem.read(lWorkspaceFilePath);
         const lPackageJson = JSON.parse(lFileText);
 
         // Add new folder to folder list.
@@ -76,7 +77,7 @@ export class Project {
 
         // Update workspace file.
         const lPackageJsonText = JSON.stringify(lPackageJson, null, 4);
-        FileUtil.write(lWorkspaceFilePath, lPackageJsonText);
+        FileSystem.write(lWorkspaceFilePath, lPackageJsonText);
     }
 
     /**
@@ -148,7 +149,7 @@ export class Project {
      */
     public readAllProject(): Array<ProjectInformation> {
         // Search all package.json files of root workspaces. Exclude node_modules.
-        const lAllFiles: Array<string> = FileUtil.findFiles(this.projectRootDirectory, {
+        const lAllFiles: Array<string> = FileSystem.findFiles(this.projectRootDirectory, {
             include: { fileNames: ['package.json'] },
             exclude: { directories: ['node_modules'] }
         });
@@ -158,7 +159,7 @@ export class Project {
 
         // Search all files.
         for (const lFile of lAllFiles) {
-            const lFileContent: string = FileUtil.read(lFile);
+            const lFileContent: string = FileSystem.read(lFile);
 
             let lPackageJson: any;
             try {
@@ -202,7 +203,7 @@ export class Project {
 
         // Read and parse package.json
         const lPackageJsonPath: string = path.resolve(lPackageInformation.directory, 'package.json');
-        const lFile: string = FileUtil.read(lPackageJsonPath);
+        const lFile: string = FileSystem.read(lPackageJsonPath);
         const lJson: any = JSON.parse(lFile);
 
         // Set al least name.
@@ -217,7 +218,7 @@ export class Project {
         lJson['kg'] = lFilledProjectInformation.workspace;
 
         // Save packag.json.
-        FileUtil.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));
+        FileSystem.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));
     }
 
     /**

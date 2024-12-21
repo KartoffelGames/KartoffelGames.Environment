@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as filereader from 'fs';
 
-export class FileUtil {
+export class FileSystem {
     /**
      * Copy directory with all files into destination.
      * @param pSource - The path to the thing to copy.
@@ -59,7 +59,7 @@ export class FileUtil {
      */
     public static emptyDirectory(pPath: string): void {
         // Exit on non esisting directory.
-        if (!FileUtil.exists(pPath)) {
+        if (!FileSystem.exists(pPath)) {
             return;
         }
 
@@ -203,7 +203,7 @@ export class FileUtil {
             }
 
             // Search in parent directory files.
-            lResultList.push(...FileUtil.findFiles(lBackwardsPath, lNextSearchOptions));
+            lResultList.push(...FileSystem.findFiles(lBackwardsPath, lNextSearchOptions));
         }
 
         return lResultList;

@@ -7,8 +7,7 @@
     },
     "files": [
         "library/source/**/*",
-        "package_blueprint/**/*",
-        "project_blueprint/**/*",
+        "blueprints/**/*",
         "kg-cli.config.json"
     ],
     "main": "library/source/index.js",
@@ -39,15 +38,12 @@
         "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
         "root": false,
         "config": {
-            "package_blueprint": "kg-main",
-            "build-configuration": {
+            "blueprint": "kg-main",
+            "build": {
                 "pack": false,
-                "target": "node",
+                "target": "server",
                 "scope": "main"
             },
-            "tests": [
-                "unit"
-            ],
             "page": false
         }
     }
