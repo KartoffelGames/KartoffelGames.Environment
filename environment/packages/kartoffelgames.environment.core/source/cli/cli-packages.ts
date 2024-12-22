@@ -2,6 +2,7 @@ import { Process } from '../process/process';
 import { FileSystem } from '../system/file-system';
 import { ProcessParameter } from '../process/process-parameter';
 import { Package } from '../project/package';
+import { ICliCommand } from './i-cli-command.interface';
 
 /**
  * Cli packages. Resolves all available cli packages.
@@ -15,6 +16,27 @@ export class CliPackages {
      */
     public constructor(pCommandRootDirectory: string,) {
         this.mCommandRootPackageDirectory = pCommandRootDirectory;
+    }
+
+    /**
+     * Create a new instance of a package command.
+     * 
+     * @param pPackage - Package information.
+     * 
+     * @returns - Cli Command instance. 
+     */
+    public async createPackageInstance(pPackage: CliPackageInformation): Promise<ICliCommand> {
+        // Catch any create errors for malfunctioning packages.
+        try {
+            // Import package and get command constructor.
+            const lPackageImport: any = await Package.import(pPackage.packageName);
+            const lPackageCliCommandConstructor: KgCliCommandConstructor = lPackageImport[pPackage.configuration.commandEntyClass!] as KgCliCommandConstructor;
+
+            // Create command instance
+            return new lPackageCliCommandConstructor();
+        } catch (e) {
+            throw new Error(`Can't initialize command ${pPackage.configuration.name}. ${e}`);
+        }
     }
 
     /**
@@ -137,4 +159,8 @@ export type CliPackageConfiguration = {
 export type CliPackageInformation = {
     packageName: string;
     configuration: CliPackageConfiguration;
+};
+
+type KgCliCommandConstructor = {
+    new(): ICliCommand;
 };

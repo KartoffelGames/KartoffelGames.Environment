@@ -1,3 +1,5 @@
+import { CliPackageInformation, CliPackages } from '../cli/cli-packages';
+import { ICliCommand } from '../cli/i-cli-command.interface';
 import { FileSystem } from '../system/file-system';
 
 export class Project {
@@ -39,7 +41,7 @@ export class Project {
         }
     }
 
-    private readonly mDefaultConfiguration: Record<string, any>;
+    private readonly mCliPackages: CliPackages;
     private readonly mRootPath: string;
 
     /**
@@ -55,8 +57,8 @@ export class Project {
      * @param pCurrentPath - Project root path.
      * @param pDefaultConfiguration - Default configuration for project.
      */
-    public constructor(pCurrentPath: string, pDefaultConfiguration: Record<string, any>) {
-        this.mDefaultConfiguration = pDefaultConfiguration;
+    public constructor(pCurrentPath: string, pPackaged: CliPackages) {
+        this.mCliPackages = pPackaged;
         this.mRootPath = Project.findRoot(pCurrentPath);
     }
 
@@ -95,7 +97,7 @@ export class Project {
      * Read project configuration.
      * @param pName - Project name.
      */
-    public getPackageConfiguration(pName: string): PackageInformation {
+    public getPackageInformation(pName: string): PackageInformation {
         // Construct paths.
         const lPackageDirectory: PackageInformation | null = this.findPackageByName(pName);
         if (lPackageDirectory === null) {
@@ -162,7 +164,11 @@ export class Project {
     public readAllProject(): Array<PackageInformation> {
         // Search all package.json files of root workspaces. Exclude node_modules.
         const lAllFiles: Array<string> = FileSystem.findFiles(this.projectRootDirectory, {
-            include: { fileNames: ['package.json'] },
+            depth: 2, // ./packages/{package_name}/Package.json
+            include: {
+                fileNames: ['package'],
+                extensions: ['json']
+            },
             exclude: { directories: ['node_modules'] }
         });
 
@@ -171,74 +177,44 @@ export class Project {
 
         // Search all files.
         for (const lFile of lAllFiles) {
-            const lFileContent: string = FileSystem.read(lFile);
-
-            let lPackageJson: any;
-            try {
-                // Parse json and read project information.
-                lPackageJson = JSON.parse(lFileContent);
-            } catch (_pError) {
-                // eslint-disable-next-line no-console
-                console.warn(`Error parsing ${lFile}`);
+            // Read package information.
+            const lPackageInformation: PackageInformation | null = this.readPackageInformation(lFile);
+            if (lPackageInformation === null) {
                 continue;
             }
 
-            // Ignore unnamed packages.
-            if (typeof lPackageJson['name'] !== 'string') {
-                continue;
-            }
-
-            // Ignore all packages where kg config is not set.
-            if (typeof lPackageJson['kg'] !== 'object') {
-                continue;
-            }
-
-            // Ignore root package.
-            if (lPackageJson['kg']['root']) {
-                continue;
-            }
-
-            // Read package information and fill in unset config values.
-            const lFilledPackageInformation: PackageInformation = this.setPackageDefaults({
-                packageName: lPackageJson['name'],
-                version: lPackageJson['version'],
-                directory: FileSystem.directoryOfFile(lFile),
-                workspace: lPackageJson['kg']
-            });
-
-            lPackageList.push(lFilledPackageInformation);
+            // Read and push package settings.
+            lPackageList.push(lPackageInformation);
         }
 
         return lPackageList;
     }
 
     /**
-     * Update project kg information.
-     * @param pName - Name of project.
-     * @param pConfigInformation - Project information.
+     * Update project kg information in package.json.
+     * 
+     * @param pPackageName - Name of project.
      */
-    public updateProjectConfiguration(pName: string, pConfigInformation: DeepPartial<PackageInformation>): void {
+    public updatePackageConfiguration(pPackageName: string): void {
         // Construct paths.
-        const lPackageInformation: PackageInformation | null = this.findPackageByName(pName);
+        const lPackageInformation: PackageInformation | null = this.findPackageByName(pPackageName);
         if (lPackageInformation === null) {
-            throw `Package "${pName}" not found.`;
+            throw `Package "${pPackageName}" not found.`;
         }
 
         // Read and parse package.json
+        const lJson: Record<string, any> = lPackageInformation.packageJson;
+
+        // Read package config.
+        lJson['name'] = lPackageInformation.packageName;
+        lJson['version'] = lPackageInformation.version;
+        lJson['kg'] = lPackageInformation.workspace;
+
+        // Read package cli configuration.
+        lJson['kg']['configuration'] = this.readPackageConfiguration(lPackageInformation);
+
+        // Create path to package.json.
         const lPackageJsonPath: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'package.json');
-        const lFile: string = FileSystem.read(lPackageJsonPath);
-        const lJson: any = JSON.parse(lFile);
-
-        // Set al least name.
-        pConfigInformation.packageName = lPackageInformation.packageName;
-
-        // Fill in unset project settings.
-        const lFilledProjectInformation: Partial<PackageInformation> = this.setPackageDefaults(pConfigInformation);
-
-        // Read project config.
-        lJson['name'] = lFilledProjectInformation.packageName;
-        lJson['version'] = lFilledProjectInformation.version;
-        lJson['kg'] = lFilledProjectInformation.workspace;
 
         // Save packag.json.
         FileSystem.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));
@@ -249,7 +225,7 @@ export class Project {
      * 
      * @param pName - Package id name. Can be the package name too.
      * 
-     * @returns - Package information or null if not found.
+     * @returns Package information or null if not found.
      */
     private findPackageByName(pName: string): PackageInformation | null {
         // Converts package name to id name. When it is already the id name, the convert does nothing.
@@ -262,26 +238,50 @@ export class Project {
     }
 
     /**
-     * Default all unset project informations.
-     * @param pPackageInformation - Partial project information.
+     * Read complete package configuration for all available cli packages.
+     * Fill in default values for all cli packages.
+     * 
+     * @param pPackageInformation - Package information.
+     * 
+     * @returns Configuration object filled with default values. 
      */
-    private setPackageDefaults(pPackageInformation: DeepPartial<PackageInformation>): PackageInformation {
-        const lPackageName: string | null = pPackageInformation.packageName ?? null;
-        // Exit with error message.
-        if (!lPackageName) {
-            throw `Package name couldn't be found. At least "name" must be set to package.json. \n Tried to update: ${JSON.stringify(pPackageInformation)}`;
+    private async readPackageConfiguration(pPackageInformation: PackageInformation): Promise<Record<string, any>> {
+        // Initially empty configuration object.
+        let lConfigurationObject: Record<string, any> = {};
+
+        for (const [, lCliPackageInformation] of await this.mCliPackages.getCommandPackages()) {
+            const lCliPackageConfiguration: Record<string, any> | null = this.readPackageConfigurationForCliPackage(pPackageInformation, lCliPackageInformation);
+            if (!lCliPackageConfiguration) {
+                continue;
+            }
+
+            // Merge configuration object.
+            lConfigurationObject = {
+                ...lConfigurationObject,
+                ...lCliPackageConfiguration
+            };
         }
 
-        // Convert package name.
-        const lPackageIdName: string = this.packageToIdName(lPackageName);
+        // Return configuration object.
+        return lConfigurationObject;
+    }
 
-        // Find or parse directory
-        const lProjectDirectory: string = pPackageInformation.directory ?? FileSystem.pathToAbsolute(this.projectRootDirectory, 'packages', lPackageName.toLowerCase());
-
+    /**
+     * Read package configuration for a single cli package.
+     * The configuration object is nested with the set cli configuration key.
+     * 
+     * @param pPackageInformation - Package information.
+     * @param pCliPackageInformation - Cli package information.
+     * 
+     * @returns - Configuration object filled with default values or null if no configuration is setable. 
+     */
+    private async readPackageConfigurationForCliPackage(pPackageInformation: PackageInformation, pCliPackageInformation: CliPackageInformation): Promise<Record<string, any> | null> {
+        // Value is object.
         const lIsObject = (pValue: any) => {
             return typeof pValue === 'object' && pValue !== null;
         };
 
+        // Merge current configuration with default configuration object.
         const lFillDefaults = (pCurrent: Record<string, any>, pDefault: Record<string, any>): Record<string, any> => {
             for (const lKey of Object.keys(pDefault)) {
                 const lCurrentValue: any = pCurrent?.[lKey];
@@ -302,15 +302,83 @@ export class Project {
             return pCurrent;
         };
 
+        // Create instance of package and skip if no configuration is setable.
+        const lPackageInstance: ICliCommand = await this.mCliPackages.createPackageInstance(pCliPackageInformation);
+        if (!lPackageInstance.information.configuration) {
+            return null;
+        }
+
+        // Read configuration key.
+        const lPackageConfigurationKey: string | undefined = lPackageInstance.information.configuration.name;
+
+        // Read current available configuration of package.
+        const lCurrentConfiguration: Record<string, any> = pPackageInformation.packageJson['kg']?.['config']?.[lPackageConfigurationKey] ?? {};
+
+        // Fill in and return default values.
+        return {
+            [lPackageConfigurationKey]: lFillDefaults(lCurrentConfiguration, lPackageInstance.information.configuration!.default)
+        };
+    }
+
+    /**
+     * Read package informations from package.json.
+     * 
+     * @param pPackageName - Package name or name id.
+     */
+    private readPackageInformation(pPackageJsonFile: string): PackageInformation | null {
+        // Find or parse directory
+        const lPackageJsonFile: string = FileSystem.pathToAbsolute(pPackageJsonFile);
+        const lPackageDirectory: string = FileSystem.directoryOfFile(lPackageJsonFile);
+
+        // Package json must exist.
+        if (!FileSystem.exists(lPackageJsonFile)) {
+            return null;
+        }
+
+        // Read and parse package.json
+        const lFileContent: string = FileSystem.read(lPackageJsonFile);
+
+        let lPackageJson: any;
+        try {
+            // Parse json and read project information.
+            lPackageJson = JSON.parse(lFileContent);
+        } catch (_pError) {
+            // eslint-disable-next-line no-console
+            console.warn(`Error parsing ${lPackageJsonFile}`);
+            return null;
+        }
+
+        // Ignore all packages where kg config is not set.
+        if (typeof lPackageJson['kg'] !== 'object') {
+            return null;
+        }
+
+        // Ignore root package.
+        if (lPackageJson['kg']['root']) {
+            return null;
+        }
+
+        // Ignore unnamed packages.
+        if (typeof lPackageJson['name'] !== 'string') {
+            return null;
+        }
+
+        // Read package information and fill in unset values.
+        const lPackageName: string = lPackageJson['name'];
+        const lPackageVersion: string = lPackageJson['version'] ?? '0.0.0';
+
+        // Convert package name.
+        const lPackageIdName: string = this.packageToIdName(lPackageName);
+
         return {
             packageName: lPackageName,
-            version: pPackageInformation.version ?? '0.0.0',
-            directory: lProjectDirectory,
+            version: lPackageVersion,
+            directory: lPackageDirectory,
             workspace: {
                 name: lPackageIdName,
-                root: lProjectDirectory === this.projectRootDirectory,
-                config: lFillDefaults(pPackageInformation.workspace?.config ?? {}, this.mDefaultConfiguration)
-            }
+                root: false
+            },
+            packageJson: lPackageJson
         };
     }
 }
@@ -322,10 +390,6 @@ export type PackageInformation = {
     workspace: {
         name: string;
         root: boolean,
-        config: Record<string, any>;
     };
+    packageJson: Record<string, any>;
 };
-
-type DeepPartial<T> = T extends object ? {
-    [P in keyof T]?: DeepPartial<T[P]>;
-} : T;

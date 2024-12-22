@@ -1,13 +1,27 @@
-import { Console, FileSystem, ShellParameter, Project, CliPackages, CliCommand } from '@kartoffelgames/environment.core';
+import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext } from '@kartoffelgames/environment.core';
 
+// TODO: Deno-Rework __dirname
 (async () => {
     const lConsole: Console = new Console();
 
-    // Construct paths.
-    const lCurrentWorkingDirectoryPath: string = process.cwd();
+    // Read parameter and cut before cli.js parameter.
+    const lParameter: Array<string> = (() => {
+        const lCliCommandStartIndex: number = ProcessContext.parameters.findIndex((pParameter) => {
+            return pParameter.toLowerCase().endsWith('cli.js');
+        });
+        return ProcessContext.parameters.slice(lCliCommandStartIndex + 1);
+    })();
 
-    // Read command parameter.
-    const lParameter: ShellParameter = new ShellParameter(['cli.js', 'kg']);
+    // Check for enabled debug option.
+    const lDebugParameterIndex: number = lParameter.findIndex((pParameter) => {
+        return pParameter.toLowerCase() === '--debug';
+    });
+
+    // Set debug flag and remove debug parameter.
+    const lDebugEnabled: boolean = lDebugParameterIndex !== -1;
+    if (lDebugParameterIndex !== -1) {
+        lParameter.splice(lDebugParameterIndex, 1);
+    }
 
     // Execute command.
     try {
@@ -16,49 +30,33 @@ import { Console, FileSystem, ShellParameter, Project, CliPackages, CliCommand }
         const lCurrentCliVersion: string = JSON.parse(lCliPackageJson)['version'];
 
         // Print execution information.
-        lConsole.writeLine(`KG-CLI [${lCurrentCliVersion}]: "kg ${lParameter.fullPath.join(' ')}"`, 'yellow');
-        lConsole.writeLine(process.argv.join(' '), 'yellow');
-        
-        // Check for changed command root package.
-        let lCommandRootPackagePath: string;
-        const lCommandRootParameter = lParameter.parameter.get('command-root-package');
-        if (lCommandRootParameter?.value) {
-            lCommandRootPackagePath = lCommandRootParameter.value;
-        } else {
-            lCommandRootPackagePath = Project.findRoot(lCurrentWorkingDirectoryPath);
+        lConsole.writeLine(`KG-CLI [${lCurrentCliVersion}]: "kg ${lParameter.join(' ')}"`, 'yellow');
+        if (lDebugEnabled) {
+            lConsole.writeLine(ProcessContext.parameters.join(' '), 'green');
         }
+
+        // Check for changed command root package.
+        const lCommandRootPackagePath: string = Project.findRoot(ProcessContext.workingDirectory);
 
         // Init command indexing.
-        const lCliPackagesHandler: CliPackages = new CliPackages(lCommandRootPackagePath);
-        const lCliPackages: Record<string, Array<string>> = await lCliPackagesHandler.getCommandPackages();
+        const lCliPackages: CliPackages = new CliPackages(lCommandRootPackagePath);
+        const lCliPackageName: string = lParameter[0]; // First parameter should be the package name.
 
         // Init commands.
-        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages);
-
-        // Build package handler.
-        const lDefaultConfiguration: Record<string, any> = {};
-        for (const lCommand of lCliCommandHandler.commands) {
-            if (lCommand.information.configuration) {
-                lDefaultConfiguration[lCommand.information.configuration.name] = lCommand.information.configuration.default;
-            }
-        }
+        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackageName, lParameter, lCliPackages);
 
         // Create package handler.
-        const lProject: Project = new Project(lCurrentWorkingDirectoryPath, lDefaultConfiguration);
+        const lProject: Project = new Project(lCommandRootPackagePath, lCliPackages);
 
         // Print debug information.
-        if (lParameter.parameter.has('debug')) {
+        if (lDebugEnabled) {
             lConsole.writeLine(`Project root: ${lProject.projectRootDirectory}`, 'green');
 
             // Print all packages.
             lConsole.writeLine(`CLI-Packages:`, 'green');
-            for (const lGroupName of Object.keys(lCliPackages)) {
-                lConsole.writeLine(`    ${lGroupName}:`, 'green');
-
-                const lPackages = lCliPackages[lGroupName];
-                for (const lPackage of lPackages) {
-                    lConsole.writeLine(`        ${lPackage}:`, 'green');
-                }
+            for(const [lPackageName, lPackageConfig] of await lCliPackages.getCommandPackages()){
+                lConsole.writeLine(`    ${lPackageName}:`, 'green');
+                lConsole.writeLine(`        ${JSON.stringify(lPackageConfig)}:`, 'green');
             }
 
             // Print all projects.
@@ -70,12 +68,12 @@ import { Console, FileSystem, ShellParameter, Project, CliPackages, CliCommand }
 
         // Execute command.
         lConsole.write('Execute command...\n');
-        await lCliCommandHandler.execute(lParameter, lProject);
+        await lCliCommandHandler.execute(lProject);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
 
         // Include error stack when command has --stack parameter. 
-        if (lParameter.parameter.has('debug')) {
+        if (lDebugEnabled) {
             lConsole.writeLine((<Error>e)?.stack ?? '', 'red');
         }
 

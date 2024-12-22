@@ -1,8 +1,7 @@
-import { ICliCommand } from './i-cli-command.interface';
-import { Package } from '../project/package';
 import { Project } from '../project/project';
 import { CliPackageInformation, CliPackages } from './cli-packages';
 import { CliParameter } from './cli-parameter';
+import { ICliCommand } from './i-cli-command.interface';
 
 /**
  * Command line interface command that can be executed.
@@ -60,19 +59,7 @@ export class CliCommand {
         }
 
         // Create command constructor.
-        const lCommand: ICliCommand = await (async () => {
-            // Catch any create errors for malfunctioning packages.
-            try {
-                // Import package and get command constructor.
-                const lPackageImport: any = await Package.import(lCliPackageConfiguration.packageName);
-                const lPackageCliCommandConstructor: KgCliCommandConstructor = lPackageImport[lCliPackageConfiguration.configuration.commandEntyClass!] as KgCliCommandConstructor;
-
-                // Create command instance
-                return new lPackageCliCommandConstructor();
-            } catch (e) {
-                throw new Error(`Can't initialize command ${lCliPackageConfiguration.configuration.name}. ${e}`);
-            }
-        })();
+        const lCommand: ICliCommand = await this.mCliPackages.createPackageInstance(lCliPackageConfiguration);
 
         // Validate command pattern for cli package configuration.
         const lCommandParameter: CliParameter = this.convertCommandParameter(lCommand, this.mParameters);
@@ -213,7 +200,3 @@ export class CliCommand {
         return lCliParameter;
     }
 }
-
-type KgCliCommandConstructor = {
-    new(): ICliCommand;
-};
