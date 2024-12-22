@@ -59,7 +59,7 @@ export class CliCommand {
         }
 
         // Create command constructor.
-        const lCommand: ICliCommand = await this.mCliPackages.createPackageInstance(lCliPackageConfiguration);
+        const lCommand: ICliCommand = await this.mCliPackages.createPackageCommandInstance(lCliPackageConfiguration);
 
         // Validate command pattern for cli package configuration.
         const lCommandParameter: CliParameter = this.convertCommandParameter(lCommand, this.mParameters);

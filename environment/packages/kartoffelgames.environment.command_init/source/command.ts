@@ -1,7 +1,7 @@
 import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
 import { Console, FileUtil, Project, Shell } from '@kartoffelgames/environment.core';
 import * as path from 'path';
-import { IKgCliProjectBlueprint } from './interfaces/i-kg-cli-project-blueprint';
+import { IKgCliProjectBlueprint } from './interfaces/i-cli-project-blueprint-resolver.interface';
 import { ProjectParameter } from './package/project-parameter';
 
 export class KgCliCommand implements IKgCliCommand<string | undefined> {

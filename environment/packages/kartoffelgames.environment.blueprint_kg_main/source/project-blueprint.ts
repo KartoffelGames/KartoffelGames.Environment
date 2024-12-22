@@ -1,18 +1,6 @@
-import { IKgCliProjectBlueprint, KgCliProjectBlueprintDescription } from '@kartoffelgames/environment.command-init';
-import * as path from 'path';
+import { ICliProjectBlueprintResolver } from '@kartoffelgames/environment.core';
 
-export class KgCliProjectBlueprint implements IKgCliProjectBlueprint {
-    /**
-     * Package information.
-     */
-    public get information(): KgCliProjectBlueprintDescription {
-        return {
-            name: 'kg-main',
-            blueprintDirectory: path.resolve(__dirname, '..', '..', 'project_blueprint'), // called from library/source
-            description: 'Default KartoffelGames project'
-        };
-    }
-
+export class CliProjectBlueprint implements ICliProjectBlueprintResolver {
     /**
      * Needs nothing.
      */

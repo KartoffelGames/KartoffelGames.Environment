@@ -1,2 +1,2 @@
 export { KgCliCommand } from './command';
-export { IKgCliProjectBlueprint, KgCliProjectBlueprintDescription } from './interfaces/i-kg-cli-project-blueprint';
+export { IKgCliProjectBlueprint, KgCliProjectBlueprintDescription } from './interfaces/i-cli-project-blueprint-resolver.interface';

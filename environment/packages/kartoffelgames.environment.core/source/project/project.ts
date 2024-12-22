@@ -1,4 +1,4 @@
-import { CliPackageInformation, CliPackages } from '../cli/cli-packages';
+import { CliPackages } from '../cli/cli-packages';
 import { ICliCommand } from '../cli/i-cli-command.interface';
 import { FileSystem } from '../system/file-system';
 
@@ -191,6 +191,66 @@ export class Project {
     }
 
     /**
+     * Write project kg information into package.json.
+     * 
+     * @param pPackageName - Name of project.
+     * @param pUpdater - Update function.
+     */
+    public async readCliPackageConfiguration<T>(pPackageInformation: PackageInformation, pCommand: ICliCommand<T>): Promise<T> {
+        // Value is object.
+        const lIsObject = (pValue: any) => {
+            return typeof pValue === 'object' && pValue !== null;
+        };
+
+        // Merge current configuration with default configuration object.
+        const lFillDefaults = (pCurrent: Record<string, any>, pDefault: Record<string, any>): Record<string, any> => {
+            for (const lKey of Object.keys(pDefault)) {
+                const lCurrentValue: any = pCurrent?.[lKey];
+                const lDefaultValue: any = pDefault[lKey];
+
+                if (lIsObject(lDefaultValue) && lIsObject(lCurrentValue)) {
+                    // Rekursion fill in inner objects.
+                    lFillDefaults(lCurrentValue, lDefaultValue);
+                } else if (typeof lCurrentValue === 'undefined') {
+                    // Fill in value.
+                    pCurrent[lKey] = lDefaultValue;
+                } else if (lIsObject(lDefaultValue) !== lIsObject(lCurrentValue)) {
+                    // Values differ. Update value.
+                    pCurrent[lKey] = lDefaultValue;
+                }
+            }
+
+            return pCurrent;
+        };
+
+        // Create instance of package and skip if no configuration is setable.
+        if (!pCommand.information.configuration) {
+            throw new Error(`Cli package has no configuration.`);
+        }
+
+        // Read configuration key.
+        const lPackageConfigurationKey: string | undefined = pCommand.information.configuration.name;
+
+        // Read current available configuration of package.
+        const lCurrentConfiguration: Record<string, any> = (() => {
+            // Return empty object if no configuration is set.
+            if (pPackageInformation.packageJson['kg']?.['config']?.[lPackageConfigurationKey] ?? null === null) {
+                return {};
+            }
+
+            // Wrap configuration in object.
+            return {
+                [lPackageConfigurationKey]: pPackageInformation.packageJson['kg']['config'][lPackageConfigurationKey]
+            };
+        })();
+
+        // Fill in and return default values.
+        return lFillDefaults(lCurrentConfiguration, {
+            [lPackageConfigurationKey]: pCommand.information.configuration.default
+        })[lPackageConfigurationKey] as T;
+    }
+
+    /**
      * Update project kg information in package.json.
      * 
      * @param pPackageName - Name of project.
@@ -202,6 +262,9 @@ export class Project {
             throw `Package "${pPackageName}" not found.`;
         }
 
+        // Read package configuration before updating package json.
+        const lPackageConfiguration: Record<string, any> = await this.readPackageConfiguration(lPackageInformation);
+
         // Read and parse package.json
         const lJson: Record<string, any> = lPackageInformation.packageJson;
 
@@ -209,12 +272,37 @@ export class Project {
         lJson['name'] = lPackageInformation.packageName;
         lJson['version'] = lPackageInformation.version;
         lJson['kg'] = lPackageInformation.workspace;
-
-        // Read package cli configuration.
-        lJson['kg']['config'] = await this.readPackageConfiguration(lPackageInformation);
+        lJson['kg']['config'] = lPackageConfiguration;
 
         // Create path to package.json.
         const lPackageJsonPath: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'package.json');
+
+        // Save packag.json.
+        FileSystem.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));
+    }
+
+    /**
+     * Write project kg information into package.json.
+     * 
+     * @param pPackageName - Name of project.
+     * @param pUpdater - Update function.
+     */
+    public async writeCliPackageConfiguration<T>(pPackageInformation: PackageInformation, pCommand: ICliCommand<T>, pUpdater: (pConfiguration: T) => T): Promise<void> {
+        // Read defaults
+        let lPackageConfiguration: T = await this.readCliPackageConfiguration(pPackageInformation, pCommand);
+
+        // Call update callback.
+        lPackageConfiguration = pUpdater(lPackageConfiguration);
+
+        // Read and parse package.json
+        const lJson: Record<string, any> = pPackageInformation.packageJson;
+
+        // Update package json information.
+        lJson['kg'] = pPackageInformation.workspace;
+        lJson['kg']['config'] = lPackageConfiguration;
+
+        // Create path to package.json.
+        const lPackageJsonPath: string = FileSystem.pathToAbsolute(pPackageInformation.directory, 'package.json');
 
         // Save packag.json.
         FileSystem.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));
@@ -255,7 +343,14 @@ export class Project {
                 continue;
             }
 
-            const lCliPackageConfiguration: Record<string, any> | null = await this.readPackageConfigurationForCliPackage(pPackageInformation, lCliPackageInformation);
+            // Create package instance and skip configuration when no config can be set.
+            const lPackageInstance: ICliCommand = await this.mCliPackages.createPackageCommandInstance(lCliPackageInformation);
+            if (!lPackageInstance.information.configuration) {
+                continue;
+            }
+
+            // Read package information.
+            const lCliPackageConfiguration: Record<string, any> | null = await this.readCliPackageConfiguration(pPackageInformation, lPackageInstance);
             if (!lCliPackageConfiguration) {
                 continue;
             }
@@ -263,76 +358,12 @@ export class Project {
             // Merge configuration object.
             lConfigurationObject = {
                 ...lConfigurationObject,
-                ...lCliPackageConfiguration
+                [lCliPackageInformation.configuration.name]: lCliPackageConfiguration
             };
         }
 
         // Return configuration object.
         return lConfigurationObject;
-    }
-
-    /**
-     * Read package configuration for a single cli package.
-     * The configuration object is nested with the set cli configuration key.
-     * 
-     * @param pPackageInformation - Package information.
-     * @param pCliPackageInformation - Cli package information.
-     * 
-     * @returns - Configuration object filled with default values or null if no configuration is setable. 
-     */
-    private async readPackageConfigurationForCliPackage(pPackageInformation: PackageInformation, pCliPackageInformation: CliPackageInformation): Promise<Record<string, any> | null> {
-        // Value is object.
-        const lIsObject = (pValue: any) => {
-            return typeof pValue === 'object' && pValue !== null;
-        };
-
-        // Merge current configuration with default configuration object.
-        const lFillDefaults = (pCurrent: Record<string, any>, pDefault: Record<string, any>): Record<string, any> => {
-            for (const lKey of Object.keys(pDefault)) {
-                const lCurrentValue: any = pCurrent?.[lKey];
-                const lDefaultValue: any = pDefault[lKey];
-
-                if (lIsObject(lDefaultValue) && lIsObject(lCurrentValue)) {
-                    // Rekursion fill in inner objects.
-                    lFillDefaults(lCurrentValue, lDefaultValue);
-                } else if (typeof lCurrentValue === 'undefined') {
-                    // Fill in value.
-                    pCurrent[lKey] = lDefaultValue;
-                } else if (lIsObject(lDefaultValue) !== lIsObject(lCurrentValue)) {
-                    // Values differ. Update value.
-                    pCurrent[lKey] = lDefaultValue;
-                }
-            }
-
-            return pCurrent;
-        };
-
-        // Create instance of package and skip if no configuration is setable.
-        const lPackageInstance: ICliCommand = await this.mCliPackages.createPackageInstance(pCliPackageInformation);
-        if (!lPackageInstance.information.configuration) {
-            return null;
-        }
-
-        // Read configuration key.
-        const lPackageConfigurationKey: string | undefined = lPackageInstance.information.configuration.name;
-
-        // Read current available configuration of package.
-        const lCurrentConfiguration: Record<string, any> = (() => {
-            // Return empty object if no configuration is set.
-            if (pPackageInformation.packageJson['kg']?.['config']?.[lPackageConfigurationKey] ?? null === null) {
-                return {};
-            }
-
-            // Wrap configuration in object.
-            return {
-                [lPackageConfigurationKey]: pPackageInformation.packageJson['kg']['config'][lPackageConfigurationKey]
-            };
-        })();
-
-        // Fill in and return default values.
-        return lFillDefaults(lCurrentConfiguration, {
-            [lPackageConfigurationKey]: lPackageInstance.information.configuration.default
-        });
     }
 
     /**

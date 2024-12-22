@@ -1,8 +1,10 @@
 import { Process } from '../process/process';
-import { FileSystem } from '../system/file-system';
 import { ProcessParameter } from '../process/process-parameter';
 import { Package } from '../project/package';
+import { FileSystem } from '../system/file-system';
 import { ICliCommand } from './i-cli-command.interface';
+import { ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface';
+import { ICliProjectBlueprintResolver } from './i-cli-project-blueprint-resolver.interface';
 
 /**
  * Cli packages. Resolves all available cli packages.
@@ -25,16 +27,16 @@ export class CliPackages {
      * 
      * @returns - Cli Command instance. 
      */
-    public async createPackageInstance(pPackage: CliPackageInformation): Promise<ICliCommand> {
+    public async createPackageCommandInstance(pPackage: CliPackageInformation): Promise<ICliCommand> {
         if (!pPackage.configuration.commandEntyClass) {
-            throw new Error(`Can't initialize command ${pPackage.configuration.name}. No command entry class defined.`);
+            throw new Error(`Can't initialize command ${pPackage.configuration.name}. No entry class defined.`);
         }
 
         // Catch any create errors for malfunctioning packages.
         try {
             // Import package and get command constructor.
             const lPackageImport: any = await Package.import(pPackage.packageName);
-            const lPackageCliCommandConstructor: KgCliCommandConstructor = lPackageImport[pPackage.configuration.commandEntyClass] as KgCliCommandConstructor;
+            const lPackageCliCommandConstructor: CliCommandConstructor = lPackageImport[pPackage.configuration.commandEntyClass] as CliCommandConstructor;
 
             // Create command instance
             return new lPackageCliCommandConstructor();
@@ -42,6 +44,57 @@ export class CliPackages {
             throw new Error(`Can't initialize command ${pPackage.configuration.name}. ${e}`);
         }
     }
+
+    /**
+     * Create a new instance of a package blueprint resolver.
+     * 
+     * @param pPackage - Package information.
+     * 
+     * @returns - Cli package resolver instance. 
+     */
+    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation): Promise<ICliPackageBlueprintResolver> {
+        if (!pPackage.configuration.packageBlueprints?.resolveClass) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
+        }
+
+        // Catch any create errors for malfunctioning packages.
+        try {
+            // Import package and get command constructor.
+            const lPackageImport: any = await Package.import(pPackage.packageName);
+            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints?.resolveClass] as CliPackageBlueprintResolverConstructor;
+
+            // Create command instance
+            return new lPackageCliConstructor();
+        } catch (e) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
+        }
+    }
+
+    /**
+     * Create a new instance of a project blueprint resolver.
+     * 
+     * @param pPackage - Package information.
+     * 
+     * @returns - Cli project resolver instance. 
+     */
+    public async createPackageProjectBlueprintResolverInstance(pPackage: CliPackageInformation): Promise<ICliProjectBlueprintResolver> {
+        if (!pPackage.configuration.projectBlueprints?.resolveClass) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
+        }
+
+        // Catch any create errors for malfunctioning packages.
+        try {
+            // Import package and get command constructor.
+            const lPackageImport: any = await Package.import(pPackage.packageName);
+            const lPackageCliConstructor: CliProjectBlueprintResolverConstructor = lPackageImport[pPackage.configuration.projectBlueprints?.resolveClass] as CliProjectBlueprintResolverConstructor;
+
+            // Create command instance
+            return new lPackageCliConstructor();
+        } catch (e) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
+        }
+    }
+
 
     /**
      * Get all KG_Cli command packages sorted by cli package type.
@@ -156,8 +209,14 @@ export class CliPackages {
 export type CliPackageConfiguration = {
     name: string;
     commandEntyClass?: string;
-    projectBlueprints?: Array<string>;
-    packageBlueprints?: Array<string>;
+    projectBlueprints?: {
+        resolveClass: string;
+        packages: Record<string, string>;
+    };
+    packageBlueprints?: {
+        resolveClass: string;
+        packages: Record<string, string>;
+    };
 };
 
 export type CliPackageInformation = {
@@ -165,6 +224,14 @@ export type CliPackageInformation = {
     configuration: CliPackageConfiguration;
 };
 
-type KgCliCommandConstructor = {
+type CliCommandConstructor = {
     new(): ICliCommand;
+};
+
+type CliPackageBlueprintResolverConstructor = {
+    new(): ICliPackageBlueprintResolver;
+};
+
+type CliProjectBlueprintResolverConstructor = {
+    new(): ICliProjectBlueprintResolver;
 };

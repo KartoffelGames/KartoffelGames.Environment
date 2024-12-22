@@ -34,7 +34,7 @@ export class CliCommand implements ICliCommand {
             }
 
             // Add command class to list. Skip any failed package creations.
-            lPackageInstancePromiseList.push(lCliPackages.createPackageInstance(lPackageInformation).catch((pError: Error) => {
+            lPackageInstancePromiseList.push(lCliPackages.createPackageCommandInstance(lPackageInformation).catch((pError: Error) => {
                 // eslint-disable-next-line no-console
                 console.warn(pError);
                 return null;
