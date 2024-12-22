@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Process, Package, ProcessParameter, ProcessContext } from '@kartoffelgames/environment.core';
 
 // TODO: Deno-rework

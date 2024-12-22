@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext } from '@kartoffelgames/environment.core';
 
 // TODO: Deno-Rework __dirname

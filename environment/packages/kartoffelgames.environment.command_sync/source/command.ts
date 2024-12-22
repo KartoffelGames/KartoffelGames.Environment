@@ -1,17 +1,16 @@
-import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console, FileUtil, Project, ProjectInformation } from '@kartoffelgames/environment.core';
-import * as path from 'path';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment.core';
 
-export class KgCliCommand implements IKgCliCommand {
+export class CliCommand implements ICliCommand {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription {
+    public get information(): CliCommandDescription {
         return {
             command: {
                 description: 'Sync local package versions into all package.json files.',
                 pattern: 'sync'
-            }
+            },
+            configuration: null
         };
     }
 
@@ -20,11 +19,11 @@ export class KgCliCommand implements IKgCliCommand {
      * @param _pParameter - Command parameter.
      * @param _pCliPackages - All cli packages grouped by type.
      */
-    public async run(_pParameter: CliParameter, _pCliPackages: Array<string>, pProjectHandler: Project): Promise<void> {
+    public async run(_pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
         const lConsole = new Console();
 
         // Find all packages.
-        const lPackageList: Array<ProjectInformation> = pProjectHandler.readAllProject();
+        const lPackageList: Array<PackageInformation> = pProjectHandler.readAllPackages();
 
         // Sync package versions.
         lConsole.writeLine('Sync package version numbers...');
@@ -40,11 +39,11 @@ export class KgCliCommand implements IKgCliCommand {
     /**
      * Update kg project configuration to updated structure.
      * @param pProjectList - Local project list.
-     * @param pProjectHander - Project handler.
+     * @param pProject - Project handler.
      */
-    private updatePackageConfigurations(pProjectList: Array<ProjectInformation>, pProjectHander: Project): void {
+    private updatePackageConfigurations(pProjectList: Array<PackageInformation>, pProject: Project): void {
         for (const lProject of pProjectList) {
-            pProjectHander.updateProjectConfiguration(lProject.packageName, lProject);
+            pProject.updatePackageConfiguration(lProject.packageName);
         }
     }
 
@@ -52,20 +51,19 @@ export class KgCliCommand implements IKgCliCommand {
      * Update local package dependencies with current project versions.
      * @param pProjectList - Local project list.
      */
-    private updatePackageVersions(pProjectList: Array<ProjectInformation>): void {
+    private updatePackageVersions(pProjectList: Array<PackageInformation>): void {
         // Map each package.json with its path.
         const lPackageInformations: Map<string, PackageChangeInformation> = new Map<string, PackageChangeInformation>();
-        for (const lProject of pProjectList) {
-            const lFileText = FileUtil.read(path.resolve(lProject.directory, 'package.json'));
-            const lPackageJson = JSON.parse(lFileText);
+        for (const lPackage of pProjectList) {
+            const lPackageJson = lPackage.packageJson;
 
             // Map package information.
             lPackageInformations.set(lPackageJson['name'], {
-                packageName: lProject.packageName,
-                path: lProject.directory,
+                packageName: lPackage.packageName,
+                path: lPackage.directory,
                 json: lPackageJson,
                 changed: false,
-                version: lProject.version
+                version: lPackage.version
             });
         }
 
@@ -99,10 +97,10 @@ export class KgCliCommand implements IKgCliCommand {
         for (const lPackageInformation of lPackageInformations.values()) {
             if (lPackageInformation.changed) {
                 const lPackageJsonText = JSON.stringify(lPackageInformation.json, null, 4);
-                const lPackageFilePath = path.resolve(lPackageInformation.path, 'package.json');
+                const lPackageFilePath = FileSystem.pathToAbsolute(lPackageInformation.path, 'package.json');
 
                 // Write altered data to package.json.
-                FileUtil.write(lPackageFilePath, lPackageJsonText);
+                FileSystem.write(lPackageFilePath, lPackageJsonText);
             }
         }
     }
