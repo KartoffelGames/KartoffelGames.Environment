@@ -11,7 +11,7 @@
     "main": "library/source/index.js",
     "types": "library/source/index.d.ts",
     "bin": {
-        "kartoffelgames-environment": "library/source/index.js"
+        "kartoffelgames-environment": "library/source/cli.js"
     },
     "dependencies": {
         "@kartoffelgames/environment.core": "^2.0.4",
