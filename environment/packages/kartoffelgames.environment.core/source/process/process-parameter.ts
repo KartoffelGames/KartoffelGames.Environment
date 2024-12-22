@@ -1,4 +1,4 @@
-export class ShellParameter {
+export class ProcessParameter {
     private readonly mFullPath: Array<string>;
     private readonly mParameters: Map<string, CommandParameter>;
     private readonly mPath: Array<string>;

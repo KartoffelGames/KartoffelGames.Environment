@@ -1,30 +1,39 @@
-import * as path from 'path';
 import { FileSystem } from './file-system';
 
 export class Project {
     /**
-     * Find the project root path by searching for the root workspace file.
+     * Find the project root path by searching for the root package file.
      * 
      * @param pCurrentPath - Current path.
      */
     public static findRoot(pCurrentPath: string): string {
         const lAllFiles: Array<string> = FileSystem.findFiles(pCurrentPath, {
-            direction: 'insideOut',
-            include: { extensions: ['code-workspace'] }
+            direction: 'reverse',
+            include: {
+                fileNames: ['package'],
+                extensions: ['json']
+            }
         });
 
-        // Find longest directory.
-        let lLongestDirectoryName: string = '';
+        // Root directory names.
+        const lRootDirectories: Array<string> = new Array<string>();
+
+        // Load and filter all package files without root set to true.
         for (const lFile of lAllFiles) {
-            const lDirectoryName: string = path.dirname(lFile);
-            if (lDirectoryName.length > lLongestDirectoryName.length) {
-                lLongestDirectoryName = lDirectoryName;
+            const lFileContent: string = FileSystem.read(lFile);
+            const lPackageJson = JSON.parse(lFileContent);
+
+            if (lPackageJson['kg']?.root === true) {
+                lRootDirectories.push(FileSystem.directoryOfFile(lFile));
             }
         }
 
+        // Order root directory names by length where the longest is first and the shortest is last.
+        lRootDirectories.sort((pFirst, pSecond) => pSecond.length - pFirst.length);
+
         // Return current directory if no root was found.
-        if (lLongestDirectoryName.length !== 0) {
-            return lLongestDirectoryName;
+        if (lRootDirectories.length !== 0) {
+            return lRootDirectories[0];
         } else {
             return pCurrentPath;
         }
@@ -42,7 +51,9 @@ export class Project {
 
     /**
      * Constructor.
+     * 
      * @param pCurrentPath - Project root path.
+     * @param pDefaultConfiguration - Default configuration for project.
      */
     public constructor(pCurrentPath: string, pDefaultConfiguration: Record<string, any>) {
         this.mDefaultConfiguration = pDefaultConfiguration;
@@ -60,11 +71,11 @@ export class Project {
         const lFileText = FileSystem.read(lWorkspaceFilePath);
         const lPackageJson = JSON.parse(lFileText);
 
-        // Add new folder to folder list.
-        const lWorkspaceDirectory: string = path.relative(this.projectRootDirectory, pPackageDirectory);
+        // Add new folder to folder list.Y
+        const lWorkspaceDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
         const lFolderList: Array<{ name: string, path: string; }> = lPackageJson['folders'];
         lFolderList.push({
-            name: this.convertToProjectName(pPackageName),
+            name: this.packageToIdName(pPackageName),
             path: lWorkspaceDirectory
         });
 
@@ -81,10 +92,34 @@ export class Project {
     }
 
     /**
+     * Read project configuration.
+     * @param pName - Project name.
+     */
+    public getPackageConfiguration(pName: string): PackageInformation {
+        // Construct paths.
+        const lPackageDirectory: PackageInformation | null = this.findPackageByName(pName);
+        if (lPackageDirectory === null) {
+            throw `Package "${pName}" not found.`;
+        }
+
+        return lPackageDirectory;
+    }
+
+    /**
+     * Check if package exists.
+     * @param pName - Package or project name name.
+     */
+    public packageExists(pName: string): boolean {
+        const lPackageDirectory: PackageInformation | null = this.findPackageByName(pName);
+        return lPackageDirectory !== null;
+    }
+
+    /**
      * Convert package name to project name.
+     * 
      * @param pPackageName - Package name.
      */
-    public convertToProjectName(pPackageName: string): string {
+    public packageToIdName(pPackageName: string): string {
         let lConvertedPackageName: string = pPackageName;
 
         // Empty packae name.
@@ -111,7 +146,7 @@ export class Project {
             return `${pCurrentValue}.${pNextValue.charAt(0).toUpperCase() + pNextValue.slice(1)}`;
         }, '').slice(1);
 
-        // Upercase every starting word.
+        // Uppercase every starting word.
         // Split '_' and join again with '_' but uppercase every parts starting character.
         // Slice wrong added starting '_' after joining with reduce.
         lConvertedPackageName = lConvertedPackageName.split('_').reduce((pCurrentValue: string, pNextValue: string) => {
@@ -122,32 +157,9 @@ export class Project {
     }
 
     /**
-     * Read project configuration.
-     * @param pName - Project name.
-     */
-    public getPackageConfiguration(pName: string): ProjectInformation {
-        // Construct paths.
-        const lPackageDirectory: ProjectInformation | null = this.findPackageByName(pName);
-        if (lPackageDirectory === null) {
-            throw `Package "${pName}" not found.`;
-        }
-
-        return lPackageDirectory;
-    }
-
-    /**
-     * Check if package exists.
-     * @param pName - Package or project name name.
-     */
-    public packageExists(pName: string): boolean {
-        const lPackageDirectory: ProjectInformation | null = this.findPackageByName(pName);
-        return lPackageDirectory !== null;
-    }
-
-    /**
      * Read all projects of package.
      */
-    public readAllProject(): Array<ProjectInformation> {
+    public readAllProject(): Array<PackageInformation> {
         // Search all package.json files of root workspaces. Exclude node_modules.
         const lAllFiles: Array<string> = FileSystem.findFiles(this.projectRootDirectory, {
             include: { fileNames: ['package.json'] },
@@ -155,7 +167,7 @@ export class Project {
         });
 
         // Create package list.
-        const lPackageList: Array<ProjectInformation> = new Array<ProjectInformation>();
+        const lPackageList: Array<PackageInformation> = new Array<PackageInformation>();
 
         // Search all files.
         for (const lFile of lAllFiles) {
@@ -176,14 +188,25 @@ export class Project {
                 continue;
             }
 
-            const lFilledProjectInformation: ProjectInformation = this.setProjectDefaults({
+            // Ignore all packages where kg config is not set.
+            if (typeof lPackageJson['kg'] !== 'object') {
+                continue;
+            }
+
+            // Ignore root package.
+            if (lPackageJson['kg']['root']) {
+                continue;
+            }
+
+            // Read package information and fill in unset config values.
+            const lFilledPackageInformation: PackageInformation = this.setPackageDefaults({
                 packageName: lPackageJson['name'],
                 version: lPackageJson['version'],
-                directory: path.dirname(lFile),
+                directory: FileSystem.directoryOfFile(lFile),
                 workspace: lPackageJson['kg']
             });
 
-            lPackageList.push(lFilledProjectInformation);
+            lPackageList.push(lFilledPackageInformation);
         }
 
         return lPackageList;
@@ -194,15 +217,15 @@ export class Project {
      * @param pName - Name of project.
      * @param pConfigInformation - Project information.
      */
-    public updateProjectConfiguration(pName: string, pConfigInformation: DeepPartial<ProjectInformation>): void {
+    public updateProjectConfiguration(pName: string, pConfigInformation: DeepPartial<PackageInformation>): void {
         // Construct paths.
-        const lPackageInformation: ProjectInformation | null = this.findPackageByName(pName);
+        const lPackageInformation: PackageInformation | null = this.findPackageByName(pName);
         if (lPackageInformation === null) {
             throw `Package "${pName}" not found.`;
         }
 
         // Read and parse package.json
-        const lPackageJsonPath: string = path.resolve(lPackageInformation.directory, 'package.json');
+        const lPackageJsonPath: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'package.json');
         const lFile: string = FileSystem.read(lPackageJsonPath);
         const lJson: any = JSON.parse(lFile);
 
@@ -210,7 +233,7 @@ export class Project {
         pConfigInformation.packageName = lPackageInformation.packageName;
 
         // Fill in unset project settings.
-        const lFilledProjectInformation: Partial<ProjectInformation> = this.setProjectDefaults(pConfigInformation);
+        const lFilledProjectInformation: Partial<PackageInformation> = this.setPackageDefaults(pConfigInformation);
 
         // Read project config.
         lJson['name'] = lFilledProjectInformation.packageName;
@@ -222,32 +245,38 @@ export class Project {
     }
 
     /**
-     * Find root path to project name. 
-     * @param pName - Project name. Can be a package name too.
+     * Find package information of name. 
+     * 
+     * @param pName - Package id name. Can be the package name too.
+     * 
+     * @returns - Package information or null if not found.
      */
-    private findPackageByName(pName: string): ProjectInformation | null {
-        const lProjectName: string = this.convertToProjectName(pName);
-        const lProjectInformation = this.readAllProject().find(pProject => pProject.workspace.name === lProjectName);
+    private findPackageByName(pName: string): PackageInformation | null {
+        // Converts package name to id name. When it is already the id name, the convert does nothing.
+        const lPackageIdName: string = this.packageToIdName(pName);
 
-        return lProjectInformation ?? null;
+        // Read all available packages and find the package with the provided id name.
+        const lPackageInformation = this.readAllProject().find(pPackage => pPackage.workspace.name === lPackageIdName);
+
+        return lPackageInformation ?? null;
     }
 
     /**
      * Default all unset project informations.
-     * @param pProjectInformation - Partial project information.
+     * @param pPackageInformation - Partial project information.
      */
-    private setProjectDefaults(pProjectInformation: DeepPartial<ProjectInformation>): ProjectInformation {
-        const lPackageName: string | null = pProjectInformation.packageName ?? null;
+    private setPackageDefaults(pPackageInformation: DeepPartial<PackageInformation>): PackageInformation {
+        const lPackageName: string | null = pPackageInformation.packageName ?? null;
         // Exit with error message.
         if (!lPackageName) {
-            throw `Package name couldn't be found. At least "name" must be set to package.json. \n Tried to update: ${JSON.stringify(pProjectInformation)}`;
+            throw `Package name couldn't be found. At least "name" must be set to package.json. \n Tried to update: ${JSON.stringify(pPackageInformation)}`;
         }
 
         // Convert package name.
-        const lProjectName: string = this.convertToProjectName(lPackageName);
+        const lPackageIdName: string = this.packageToIdName(lPackageName);
 
         // Find or parse directory
-        const lProjectDirectory: string = pProjectInformation.directory ?? path.resolve(this.projectRootDirectory, 'packages', lPackageName.toLowerCase());
+        const lProjectDirectory: string = pPackageInformation.directory ?? FileSystem.pathToAbsolute(this.projectRootDirectory, 'packages', lPackageName.toLowerCase());
 
         const lIsObject = (pValue: any) => {
             return typeof pValue === 'object' && pValue !== null;
@@ -275,18 +304,18 @@ export class Project {
 
         return {
             packageName: lPackageName,
-            version: pProjectInformation.version ?? '0.0.0',
+            version: pPackageInformation.version ?? '0.0.0',
             directory: lProjectDirectory,
             workspace: {
-                name: lProjectName,
+                name: lPackageIdName,
                 root: lProjectDirectory === this.projectRootDirectory,
-                config: lFillDefaults(pProjectInformation.workspace?.config ?? {}, this.mDefaultConfiguration)
+                config: lFillDefaults(pPackageInformation.workspace?.config ?? {}, this.mDefaultConfiguration)
             }
         };
     }
 }
 
-export type ProjectInformation = {
+export type PackageInformation = {
     packageName: string;
     version: string;
     directory: string;
@@ -296,8 +325,6 @@ export type ProjectInformation = {
         config: Record<string, any>;
     };
 };
-
-export type TestMode = 'unit' | 'integration' | 'ui';
 
 type DeepPartial<T> = T extends object ? {
     [P in keyof T]?: DeepPartial<T[P]>;

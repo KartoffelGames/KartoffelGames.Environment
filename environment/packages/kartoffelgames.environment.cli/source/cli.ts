@@ -1,9 +1,4 @@
-#! /usr/bin/env node
-
-import { Console, FileUtil, Parameter, Project } from '@kartoffelgames/environment.core';
-import { CliCommand } from './cli/cli-command';
-import { CliPackages } from './cli/cli-packages';
-import * as path from 'path';
+import { Console, FileSystem, ShellParameter, Project, CliPackages, CliCommand } from '@kartoffelgames/environment.core';
 
 (async () => {
     const lConsole: Console = new Console();
@@ -12,12 +7,12 @@ import * as path from 'path';
     const lCurrentWorkingDirectoryPath: string = process.cwd();
 
     // Read command parameter.
-    const lParameter: Parameter = new Parameter(['cli.js', 'kg']);
+    const lParameter: ShellParameter = new ShellParameter(['cli.js', 'kg']);
 
     // Execute command.
     try {
         // Read current version.
-        const lCliPackageJson: string = FileUtil.read(path.resolve(__dirname, '../../', 'package.json')); // Root at /library
+        const lCliPackageJson: string = FileSystem.read(FileSystem.pathToAbsolute(__dirname, '../../', 'package.json')); // Root at /library
         const lCurrentCliVersion: string = JSON.parse(lCliPackageJson)['version'];
 
         // Print execution information.

@@ -1,4 +1,5 @@
-import { FileUtil, Shell } from '@kartoffelgames/environment.core';
+import { Process } from '../process/process';
+import { FileSystem } from '../file-system';
 
 export class CliPackages {
     private readonly mCommandRootPackageDirectory: string;
@@ -16,8 +17,8 @@ export class CliPackages {
      */
     public async getCommandPackages(): Promise<Record<string, Array<string>>> {
         // Read all dependencies.
-        const lShell: Shell = new Shell(this.mCommandRootPackageDirectory);
-        const lPackageJson = await lShell.result('npm ls --json --all', true);
+        const lShell: Process = new Process(this.mCommandRootPackageDirectory);
+        const lPackageJson = await lShell.execute('npm ls --json --all', true);
 
         // Parse dependency json.
         let lPackageObject: any | null = null;
@@ -66,9 +67,9 @@ export class CliPackages {
             }
 
             // Check if cli config exists.
-            if (FileUtil.exists(lCliConfigFilePath)) {
+            if (FileSystem.exists(lCliConfigFilePath)) {
                 // Read async and parse json.
-                const lFileReadyPromise = FileUtil.readAsync(lCliConfigFilePath).then((pData) => {
+                const lFileReadyPromise = FileSystem.readAsync(lCliConfigFilePath).then((pData) => {
                     const lJson: CliConfig = JSON.parse(pData);
 
                     // Init type list.

@@ -1,9 +1,9 @@
-import { Parameter, Project } from '@kartoffelgames/environment.core';
 import { IKgCliCommand } from '../interfaces/i-kg-cli-command';
+import { ProcessParameter } from '../process/process-parameter';
+import { Project } from '../project';
 import { CliParameter } from './cli-parameter';
 
 export class CliCommand {
-    private readonly mCliPackages: Record<string, Array<string>>;
     private readonly mCommandList: Array<IKgCliCommand>;
 
     /**
@@ -18,7 +18,6 @@ export class CliCommand {
      * @param pCliPackages - Cli packages..
      */
     public constructor(pCliPackages: Record<string, Array<string>>) {
-        this.mCliPackages = pCliPackages;
         this.mCommandList = new Array<IKgCliCommand>();
 
         // Create each command package.
@@ -42,7 +41,7 @@ export class CliCommand {
      * Execute command.
      * @param pParameter - Command parameter.
      */
-    public async execute(pParameter: Parameter, pProject: Project): Promise<void> {
+    public async execute(pParameter: ProcessParameter, pProject: Project): Promise<void> {
         // Find command.
         const lCommand: IKgCliCommand | null = this.findCommandByParameter(pParameter);
         if (lCommand === null) {
@@ -76,19 +75,15 @@ export class CliCommand {
             }
         }
 
-        // Get package group.
-        const lPackageGroupName: string | null = lCommand.information.resourceGroup ?? null;
-        const lPackageGroup: Array<string> = this.mCliPackages[<string>lPackageGroupName] ?? [];
-
         // Build project handler.
-        await lCommand.run(lCliParameter, lPackageGroup, pProject);
+        await lCommand.run(lCliParameter, pProject);
     }
 
     /**
      * Find command by parameter.
      * @param pParameter - Command parameter.
      */
-    private findCommandByParameter(pParameter: Parameter): IKgCliCommand | null {
+    private findCommandByParameter(pParameter: ProcessParameter): IKgCliCommand | null {
         for (const lCommand of this.mCommandList) {
             // Split command pattern by spaces. Remove emty parts.
             let lCommandPatternParts: Array<string> = lCommand.information.command.pattern.split(' ');

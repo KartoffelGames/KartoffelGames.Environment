@@ -1,5 +1,5 @@
-import { Project } from '@kartoffelgames/environment.core';
 import { CliParameter } from '../cli/cli-parameter';
+import { Project } from '../project';
 
 export interface IKgCliCommand<TConfiguration = any> {
     /**
@@ -10,9 +10,11 @@ export interface IKgCliCommand<TConfiguration = any> {
     /**
      * Run command.
      * @param pParameter - Command parameter.
-     * @param pGroupPackages - All cli packages cli group.
+     * @param pProject - Project.
+     * 
+     * @returns - Promise that resolves when command is finished.
      */
-    run(pParameter: CliParameter, pGroupPackages: Array<string>, pPackageHandler: Project): Promise<void>;
+    run(pParameter: CliParameter, pProject: Project): Promise<void>;
 }
 
 export type KgCliCommandDescription<TConfiguration = any> = {
@@ -20,9 +22,8 @@ export type KgCliCommandDescription<TConfiguration = any> = {
         pattern: string;
         description: string;
     };
-    resourceGroup?: string;
-    configuration?: {
+    configuration: {
         name: string,
         default: TConfiguration;
-    };
+    } | null;
 };

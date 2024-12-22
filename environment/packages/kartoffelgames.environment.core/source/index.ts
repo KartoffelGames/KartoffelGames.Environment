@@ -1,7 +1,11 @@
-export { Project, ProjectInformation } from './project';
+export { Project, PackageInformation as ProjectInformation } from './project';
 export { Console } from './console';
 export { FileSystem } from './file-system';
-export { ShellParameter } from './shell/shell-parameter';
-export { Shell } from './shell/shell';
+export { ProcessParameter as ShellParameter } from './process/process-parameter';
+export { Process as Shell } from './process/process';
 export { ExecutionContext } from './execution-context';
 export { Package } from './package';
+export { IKgCliCommand, KgCliCommandDescription } from './interfaces/i-kg-cli-command';
+export { CliParameter } from './cli/cli-parameter';
+export { CliCommand } from './cli/cli-command';
+export { CliPackages } from './cli/cli-packages';

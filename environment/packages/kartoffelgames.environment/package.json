@@ -52,7 +52,7 @@
             "blueprint": "kg-main",
             "build": {
                 "pack": false,
-                "target": "server",
+                "target": "application",
                 "scope": "main"
             },
             "page": false

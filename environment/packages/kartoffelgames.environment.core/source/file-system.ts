@@ -9,8 +9,8 @@ export class FileSystem {
      * @param pOverride - If existing files should be overriden.
      */
     public static copyDirectory(pSource: string, pDestination: string, pOverride?: boolean, pOptions?: FileSearchOptions): void {
-        const lSourcePath: string = path.resolve(pSource);
-        const lDestinationPath: string = path.resolve(pDestination);
+        const lSourcePath: string = FileSystem.pathToAbsolute(pSource);
+        const lDestinationPath: string = FileSystem.pathToAbsolute(pDestination);
 
         // Read all files.
         const lSourceFileList: Array<string> = this.findFiles(pSource, pOptions);
@@ -23,7 +23,7 @@ export class FileSystem {
 
             // Remove source path from source file, to append destination path instead of it.
             const lSourceItem: string = lSourceFile;
-            const lDestinationItem: string = path.resolve(lDestinationPath, lRelativeItemPath);
+            const lDestinationItem: string = FileSystem.pathToAbsolute(lDestinationPath, lRelativeItemPath);
 
             // File destination status. Check if override.
             const lDestinationExists = filereader.existsSync(lDestinationItem);
@@ -54,6 +54,17 @@ export class FileSystem {
     }
 
     /**
+     * Get directory part of file path.
+     * 
+     * @param pFilePath - File path.
+     * 
+     * @returns - Directory of file.
+     */
+    public static directoryOfFile(pFilePath: string): string {
+        return path.dirname(pFilePath);
+    }
+
+    /**
      * Delete every file and directory inside set directory.
      * @param pPath - Directory path.
      */
@@ -64,7 +75,7 @@ export class FileSystem {
         }
 
         for (const lFileName of filereader.readdirSync(pPath)) {
-            const lFilePath: string = path.join(pPath, lFileName);
+            const lFilePath: string = FileSystem.pathToAbsolute(pPath, lFileName);
             filereader.rmSync(lFilePath, { recursive: true, force: true });
         }
     }
@@ -91,7 +102,7 @@ export class FileSystem {
         const lExcludeFileNameList: Array<string> = pOptions?.exclude?.fileNames ?? new Array<string>();
         const lExcludeDirectoryList: Array<string> = pOptions?.exclude?.directories ?? new Array<string>();
         const lExcludeExtensionsList: Array<string> = pOptions?.exclude?.extensions ?? new Array<string>();
-        const lSearchDirection: 'outsideIn' | 'insideOut' = pOptions?.direction ?? 'outsideIn';
+        const lSearchDirection: 'reverse' | 'forward' = pOptions?.direction ?? 'forward';
 
         // Construct next search options.
         const lNextSearchOptions: FileSearchOptions = {
@@ -109,19 +120,19 @@ export class FileSystem {
             direction: lSearchDirection
         };
 
-        const lAbsoulteStartDirectory = path.resolve(pStartDirectory);
+        const lAbsoluteStartDirectory = FileSystem.pathToAbsolute(pStartDirectory);
 
         // Check if start directory is a directory.
-        const lDirectoryStatus = filereader.statSync(lAbsoulteStartDirectory);
+        const lDirectoryStatus = filereader.statSync(lAbsoluteStartDirectory);
         if (!lDirectoryStatus.isDirectory()) {
-            throw `"${lAbsoulteStartDirectory}" is not a directory.`;
+            throw `"${lAbsoluteStartDirectory}" is not a directory.`;
         }
 
         const lResultList: Array<string> = new Array<string>();
 
         // Iterate over all
-        for (const lChildItemName of filereader.readdirSync(lAbsoulteStartDirectory)) {
-            const lItemPath = path.join(lAbsoulteStartDirectory, lChildItemName);
+        for (const lChildItemName of filereader.readdirSync(lAbsoluteStartDirectory)) {
+            const lItemPath = FileSystem.pathToAbsolute(lAbsoluteStartDirectory, lChildItemName);
             const lItemStatus = filereader.statSync(lItemPath);
 
             // Directory handling.
@@ -129,7 +140,7 @@ export class FileSystem {
                 const lNextDirectoryName = path.parse(lItemPath).name;
 
                 // Only search in child directory on outside in search.
-                if (lSearchDirection !== 'outsideIn') {
+                if (lSearchDirection !== 'forward') {
                     continue;
                 }
 
@@ -178,8 +189,8 @@ export class FileSystem {
         }
 
         // Go Backwards on inside out search.
-        if (lSearchDirection === 'insideOut') {
-            const lBackwardsPath: string = path.dirname(lAbsoulteStartDirectory);
+        if (lSearchDirection === 'reverse') {
+            const lBackwardsPath: string = FileSystem.directoryOfFile(lAbsoluteStartDirectory);
             const lNextDirectoryName = path.parse(lBackwardsPath).name;
 
             // Check search depth.
@@ -215,6 +226,29 @@ export class FileSystem {
      */
     public static isEmpty(pPath: string): boolean {
         return filereader.readdirSync(pPath).length === 0;
+    }
+
+    /**
+     * Joins and resolves path parts to an absolute path.
+     * 
+     * @param pPathParts - Path parts to join.
+     *  
+     * @returns - Joined absolute path. 
+     */
+    public static pathToAbsolute(...pPathParts: Array<string>): string {
+        return path.resolve(...pPathParts);
+    }
+
+    /**
+     * Convert an absolute path to a relative path.
+     * 
+     * @param pBasePath - Base path of the relative path.
+     * @param pPath - Path to convert to relative.
+     * 
+     * @returns relative path. 
+     */
+    public static pathToRelative(pBasePath: string, pPath: string): string {
+        return path.relative(pBasePath, pPath);
     }
 
     /**
@@ -254,14 +288,25 @@ export class FileSystem {
 export type FileSearchOptions = {
     depth?: number;
     include?: {
+        /**
+         * File names to include without extension.
+         */
         fileNames?: Array<string>;
         directories?: Array<string>;
         extensions?: Array<string>;
     },
     exclude?: {
+        /**
+         * File names to exclude without extension.
+         */
         fileNames?: Array<string>;
         directories?: Array<string>;
         extensions?: Array<string>;
     };
-    direction?: 'outsideIn' | 'insideOut';
+    /**
+     * Search direction from staring directory.
+     * Reverse searches in parent directories instead of child directories.
+     * Default: 'forward'
+     */
+    direction?: 'forward' | 'reverse';
 };

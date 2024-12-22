@@ -32,7 +32,7 @@ export class KgCliCommand implements IKgCliCommand {
 
         // Update package kg configuration.
         lConsole.writeLine('Sync package configuration...');
-        this.updatePackageVersion(lPackageList, pProjectHandler);
+        this.updatePackageConfigurations(lPackageList, pProjectHandler);
 
         lConsole.writeLine('Sync completed');
     }
@@ -42,7 +42,7 @@ export class KgCliCommand implements IKgCliCommand {
      * @param pProjectList - Local project list.
      * @param pProjectHander - Project handler.
      */
-    private updatePackageVersion(pProjectList: Array<ProjectInformation>, pProjectHander: Project): void {
+    private updatePackageConfigurations(pProjectList: Array<ProjectInformation>, pProjectHander: Project): void {
         for (const lProject of pProjectList) {
             pProjectHander.updateProjectConfiguration(lProject.packageName, lProject);
         }

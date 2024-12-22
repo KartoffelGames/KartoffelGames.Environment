@@ -1,10 +1,10 @@
 import { exec, execSync } from 'child_process';
 
 /**
- * Shell execution.
- * Function to execute shell commands and return result.
+ * Process execution.
+ * Function to execute commands in a new process and return result.
  */
-export class Shell {
+export class Process {
     private readonly mWorkingDirectory: string;
 
     /**
