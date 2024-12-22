@@ -31,7 +31,7 @@ export class CliCommand implements ICliCommand {
 
         // Update package kg configuration.
         lConsole.writeLine('Sync package configuration...');
-        this.updatePackageConfigurations(lPackageList, pProjectHandler);
+        await this.updatePackageConfigurations(lPackageList, pProjectHandler);
 
         lConsole.writeLine('Sync completed');
     }
@@ -41,10 +41,16 @@ export class CliCommand implements ICliCommand {
      * @param pProjectList - Local project list.
      * @param pProject - Project handler.
      */
-    private updatePackageConfigurations(pProjectList: Array<PackageInformation>, pProject: Project): void {
+    private async updatePackageConfigurations(pProjectList: Array<PackageInformation>, pProject: Project): Promise<void> {
+        const lUpdateWaiterList: Array<Promise<void>> = new Array<Promise<void>>();
+
+        // Update all package configurations
         for (const lProject of pProjectList) {
-            pProject.updatePackageConfiguration(lProject.packageName);
+            lUpdateWaiterList.push(pProject.updatePackageConfiguration(lProject.packageName));
         }
+
+        // Wait for all updates to finish.
+        await Promise.all(lUpdateWaiterList);
     }
 
     /**

@@ -195,7 +195,7 @@ export class Project {
      * 
      * @param pPackageName - Name of project.
      */
-    public updatePackageConfiguration(pPackageName: string): void {
+    public async updatePackageConfiguration(pPackageName: string): Promise<void> {
         // Construct paths.
         const lPackageInformation: PackageInformation | null = this.findPackageByName(pPackageName);
         if (lPackageInformation === null) {
@@ -211,7 +211,7 @@ export class Project {
         lJson['kg'] = lPackageInformation.workspace;
 
         // Read package cli configuration.
-        lJson['kg']['configuration'] = this.readPackageConfiguration(lPackageInformation);
+        lJson['kg']['config'] = await this.readPackageConfiguration(lPackageInformation);
 
         // Create path to package.json.
         const lPackageJsonPath: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'package.json');
@@ -250,7 +250,12 @@ export class Project {
         let lConfigurationObject: Record<string, any> = {};
 
         for (const [, lCliPackageInformation] of await this.mCliPackages.getCommandPackages()) {
-            const lCliPackageConfiguration: Record<string, any> | null = this.readPackageConfigurationForCliPackage(pPackageInformation, lCliPackageInformation);
+            // Skip packages without configuration.
+            if (!lCliPackageInformation.configuration.commandEntyClass) {
+                continue;
+            }
+
+            const lCliPackageConfiguration: Record<string, any> | null = await this.readPackageConfigurationForCliPackage(pPackageInformation, lCliPackageInformation);
             if (!lCliPackageConfiguration) {
                 continue;
             }
@@ -312,12 +317,22 @@ export class Project {
         const lPackageConfigurationKey: string | undefined = lPackageInstance.information.configuration.name;
 
         // Read current available configuration of package.
-        const lCurrentConfiguration: Record<string, any> = pPackageInformation.packageJson['kg']?.['config']?.[lPackageConfigurationKey] ?? {};
+        const lCurrentConfiguration: Record<string, any> = (() => {
+            // Return empty object if no configuration is set.
+            if (pPackageInformation.packageJson['kg']?.['config']?.[lPackageConfigurationKey] ?? null === null) {
+                return {};
+            }
+
+            // Wrap configuration in object.
+            return {
+                [lPackageConfigurationKey]: pPackageInformation.packageJson['kg']['config'][lPackageConfigurationKey]
+            };
+        })();
 
         // Fill in and return default values.
-        return {
-            [lPackageConfigurationKey]: lFillDefaults(lCurrentConfiguration, lPackageInstance.information.configuration!.default)
-        };
+        return lFillDefaults(lCurrentConfiguration, {
+            [lPackageConfigurationKey]: lPackageInstance.information.configuration.default
+        });
     }
 
     /**
