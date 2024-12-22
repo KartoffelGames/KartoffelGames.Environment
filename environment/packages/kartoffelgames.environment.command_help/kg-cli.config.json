@@ -1,3 +1,4 @@
 {
-    "group": "command"
+    "name": "help",
+    "commandEntyClass": "KgCliCommand"
 }

@@ -1,3 +1,5 @@
 {
-    "group": "blueprint"
+    "name": "kg-main-blueprint",
+    "projectBlueprints": ["blueprints/project-blueprint.zip"],
+    "packageBlueprints": ["blueprints/package-blueprint.zip"]
 }

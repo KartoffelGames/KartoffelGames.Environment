@@ -61,7 +61,7 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext }
 
             // Print all projects.
             lConsole.writeLine(`Project-Packages:`, 'green');
-            for (const lProjectInformation of lProject.readAllProject()) {
+            for (const lProjectInformation of lProject.readAllPackages()) {
                 lConsole.writeLine(`    ${lProjectInformation.packageName} -- ${lProjectInformation.version}`, 'green');
             }
         }

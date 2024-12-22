@@ -12,7 +12,7 @@ export class Project {
         const lAllFiles: Array<string> = FileSystem.findFiles(pCurrentPath, {
             direction: 'reverse',
             include: {
-                fileNames: ['package'],
+                fileNames: ['package.json'],
                 extensions: ['json']
             }
         });
@@ -161,12 +161,12 @@ export class Project {
     /**
      * Read all projects of package.
      */
-    public readAllProject(): Array<PackageInformation> {
+    public readAllPackages(): Array<PackageInformation> {
         // Search all package.json files of root workspaces. Exclude node_modules.
         const lAllFiles: Array<string> = FileSystem.findFiles(this.projectRootDirectory, {
             depth: 2, // ./packages/{package_name}/Package.json
             include: {
-                fileNames: ['package'],
+                fileNames: ['package.json'],
                 extensions: ['json']
             },
             exclude: { directories: ['node_modules'] }
@@ -232,7 +232,7 @@ export class Project {
         const lPackageIdName: string = this.packageToIdName(pName);
 
         // Read all available packages and find the package with the provided id name.
-        const lPackageInformation = this.readAllProject().find(pPackage => pPackage.workspace.name === lPackageIdName);
+        const lPackageInformation = this.readAllPackages().find(pPackage => pPackage.workspace.name === lPackageIdName);
 
         return lPackageInformation ?? null;
     }
