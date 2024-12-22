@@ -26,11 +26,15 @@ export class CliPackages {
      * @returns - Cli Command instance. 
      */
     public async createPackageInstance(pPackage: CliPackageInformation): Promise<ICliCommand> {
+        if (!pPackage.configuration.commandEntyClass) {
+            throw new Error(`Can't initialize command ${pPackage.configuration.name}. No command entry class defined.`);
+        }
+
         // Catch any create errors for malfunctioning packages.
         try {
             // Import package and get command constructor.
             const lPackageImport: any = await Package.import(pPackage.packageName);
-            const lPackageCliCommandConstructor: KgCliCommandConstructor = lPackageImport[pPackage.configuration.commandEntyClass!] as KgCliCommandConstructor;
+            const lPackageCliCommandConstructor: KgCliCommandConstructor = lPackageImport[pPackage.configuration.commandEntyClass] as KgCliCommandConstructor;
 
             // Create command instance
             return new lPackageCliCommandConstructor();

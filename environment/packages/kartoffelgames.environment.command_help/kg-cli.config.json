@@ -1,4 +1,4 @@
 {
     "name": "help",
-    "commandEntyClass": "KgCliCommand"
+    "commandEntyClass": "CliCommand"
 }

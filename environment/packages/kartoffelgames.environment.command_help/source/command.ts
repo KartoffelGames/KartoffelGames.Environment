@@ -1,17 +1,16 @@
-import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console } from '@kartoffelgames/environment.core';
+import { CliCommandDescription, CliPackages, CliParameter, Console, ICliCommand, Project } from '@kartoffelgames/environment.core';
 
-export class KgCliCommand implements IKgCliCommand {
+export class CliCommand implements ICliCommand {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription {
+    public get information(): CliCommandDescription {
         return {
             command: {
                 description: 'Show command list',
                 pattern: 'help'
             },
-            resourceGroup: 'command'
+            configuration: null
         };
     }
 
@@ -20,20 +19,37 @@ export class KgCliCommand implements IKgCliCommand {
      * @param _pParameter - Command parameter.
      * @param pCommandPackages - All cli packages grouped by type.
      */
-    public async run(_pParameter: CliParameter, pCommandPackages: Array<string>): Promise<void> {
-        const lCommandList: Array<IKgCliCommand> = new Array<IKgCliCommand>();
+    public async run(_pParameter: CliParameter, pProject: Project): Promise<void> {
+        // Cli packages.
+        const lCliPackages: CliPackages = new CliPackages(pProject.projectRootDirectory);
+
+        // Create each package async.
+        const lPackageInstancePromiseList: Array<Promise<ICliCommand | null>> = new Array<Promise<ICliCommand | null>>();
 
         // Create each command package.
-        for (const lPackage of pCommandPackages) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const lCommandConstructor: KgCliCommandConstructor = require(lPackage).KgCliCommand;
+        for (const [, lPackageInformation] of await lCliPackages.getCommandPackages()) {
+            // Skip any packages without a command entry class.
+            if (!lPackageInformation.configuration.commandEntyClass) {
+                continue;
+            }
 
-            // Add command class to list.
-            lCommandList.push(new lCommandConstructor());
+            // Add command class to list. Skip any failed package creations.
+            lPackageInstancePromiseList.push(lCliPackages.createPackageInstance(lPackageInformation).catch((pError: Error) => {
+                // eslint-disable-next-line no-console
+                console.warn(pError);
+                return null;
+            }));
         }
 
+        // Wait for all packages to be created.
+        const lCommandList: Array<ICliCommand | null> = await Promise.all(lPackageInstancePromiseList);
+
         // Find max length of commands.
-        const lMaxLength: number = lCommandList.reduce((pCurrent: number, pNext: IKgCliCommand) => {
+        const lMaxLength: number = lCommandList.reduce((pCurrent: number, pNext: ICliCommand | null) => {
+            if (!pNext) {
+                return pCurrent;
+            }
+
             return pNext.information.command.pattern.length > pCurrent ? pNext.information.command.pattern.length : pCurrent;
         }, 0);
 
@@ -41,11 +57,11 @@ export class KgCliCommand implements IKgCliCommand {
         const lConsole: Console = new Console();
         lConsole.writeLine('Available commands:');
         for (const lCommand of lCommandList) {
+            if (!lCommand) {
+                continue;
+            }
+
             lConsole.writeLine(`kg ${lCommand.information.command.pattern.padEnd(lMaxLength, ' ')} - ${lCommand.information.command.description}`);
         }
     }
 }
-
-type KgCliCommandConstructor = {
-    new(): IKgCliCommand;
-};
