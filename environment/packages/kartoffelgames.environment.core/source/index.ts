@@ -1,10 +1,10 @@
-export { Project, PackageInformation } from './project';
-export { Console } from './console';
-export { FileSystem } from './file-system';
+export { Project, PackageInformation } from './project/project';
+export { Console } from './system/console';
+export { FileSystem } from './system/file-system';
 export { ProcessParameter } from './process/process-parameter';
 export { Process } from './process/process';
-export { ExecutionContext } from './execution-context';
-export { Package } from './package';
+export { ProcessContext } from './process/process-context';
+export { Package } from './project/package';
 export { IKgCliCommand, KgCliCommandDescription } from './interfaces/i-kg-cli-command';
 export { CliParameter } from './cli/cli-parameter';
 export { CliCommand } from './cli/cli-command';

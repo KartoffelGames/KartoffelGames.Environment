@@ -1,7 +1,7 @@
 import { Process } from '../process/process';
-import { FileSystem } from '../file-system';
+import { FileSystem } from '../system/file-system';
 import { ProcessParameter } from '../process/process-parameter';
-import { Package } from '../package';
+import { Package } from '../project/package';
 
 /**
  * Cli packages. Resolves all available cli packages.

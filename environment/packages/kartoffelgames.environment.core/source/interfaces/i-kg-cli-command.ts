@@ -1,5 +1,5 @@
 import { CliParameter } from '../cli/cli-parameter';
-import { Project } from '../project';
+import { Project } from '../project/project';
 
 export interface IKgCliCommand<TConfiguration = any> {
     /**

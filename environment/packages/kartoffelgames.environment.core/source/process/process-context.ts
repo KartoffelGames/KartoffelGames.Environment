@@ -1,4 +1,4 @@
-export class ExecutionContext {
+export class ProcessContext {
     /**
      * Command parameter of current execution.
      */

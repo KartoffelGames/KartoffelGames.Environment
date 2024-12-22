@@ -1,6 +1,6 @@
 import { IKgCliCommand } from '../interfaces/i-kg-cli-command';
-import { Package } from '../package';
-import { Project } from '../project';
+import { Package } from '../project/package';
+import { Project } from '../project/project';
 import { CliPackageInformation, CliPackages } from './cli-packages';
 import { CliParameter } from './cli-parameter';
 

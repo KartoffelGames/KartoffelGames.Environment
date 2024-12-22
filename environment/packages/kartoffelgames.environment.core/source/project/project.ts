@@ -1,4 +1,4 @@
-import { FileSystem } from './file-system';
+import { FileSystem } from '../system/file-system';
 
 export class Project {
     /**
