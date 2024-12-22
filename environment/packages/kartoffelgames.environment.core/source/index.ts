@@ -5,7 +5,7 @@ export { ProcessParameter } from './process/process-parameter';
 export { Process } from './process/process';
 export { ProcessContext } from './process/process-context';
 export { Package } from './project/package';
-export { IKgCliCommand, KgCliCommandDescription } from './interfaces/i-kg-cli-command';
+export { ICliCommand, CliCommandDescription } from './cli/i-cli-command.interface';
 export { CliParameter } from './cli/cli-parameter';
 export { CliCommand } from './cli/cli-command';
 export { CliPackages, CliPackageConfiguration, CliPackageInformation } from './cli/cli-packages';

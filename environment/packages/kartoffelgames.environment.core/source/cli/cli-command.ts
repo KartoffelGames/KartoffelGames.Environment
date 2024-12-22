@@ -1,4 +1,4 @@
-import { IKgCliCommand } from '../interfaces/i-kg-cli-command';
+import { ICliCommand } from './i-cli-command.interface';
 import { Package } from '../project/package';
 import { Project } from '../project/project';
 import { CliPackageInformation, CliPackages } from './cli-packages';
@@ -60,7 +60,7 @@ export class CliCommand {
         }
 
         // Create command constructor.
-        const lCommand: IKgCliCommand = await (async () => {
+        const lCommand: ICliCommand = await (async () => {
             // Catch any create errors for malfunctioning packages.
             try {
                 // Import package and get command constructor.
@@ -85,7 +85,7 @@ export class CliCommand {
      * Find command by parameter.
      * @param pParameter - Command parameter.
      */
-    private convertCommandParameter(pCliCommand: IKgCliCommand, pParameter: Array<string>): CliParameter {
+    private convertCommandParameter(pCliCommand: ICliCommand, pParameter: Array<string>): CliParameter {
         // Split command pattern by spaces. Remove emty parts.
         let lCommandPatternParts: Array<string> = pCliCommand.information.command.pattern.split(' ');
         lCommandPatternParts = lCommandPatternParts.filter(pPart => pPart !== '');
@@ -215,5 +215,5 @@ export class CliCommand {
 }
 
 type KgCliCommandConstructor = {
-    new(): IKgCliCommand;
+    new(): ICliCommand;
 };

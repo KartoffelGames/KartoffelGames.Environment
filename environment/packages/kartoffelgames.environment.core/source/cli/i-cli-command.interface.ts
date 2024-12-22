@@ -1,11 +1,11 @@
-import { CliParameter } from '../cli/cli-parameter';
+import { CliParameter } from './cli-parameter';
 import { Project } from '../project/project';
 
-export interface IKgCliCommand<TConfiguration = any> {
+export interface ICliCommand<TConfiguration = any> {
     /**
      * Command description.
      */
-    information: KgCliCommandDescription<TConfiguration>;
+    information: CliCommandDescription<TConfiguration>;
 
     /**
      * Run command.
@@ -17,7 +17,7 @@ export interface IKgCliCommand<TConfiguration = any> {
     run(pParameter: CliParameter, pProject: Project): Promise<void>;
 }
 
-export type KgCliCommandDescription<TConfiguration = any> = {
+export type CliCommandDescription<TConfiguration = any> = {
     command: {
         pattern: string;
         description: string;
