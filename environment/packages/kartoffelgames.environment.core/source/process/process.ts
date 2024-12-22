@@ -1,37 +1,25 @@
 import { exec, execSync } from 'child_process';
+import { ProcessParameter } from './process-parameter';
 
 /**
  * Process execution.
  * Function to execute commands in a new process and return result.
  */
 export class Process {
-    private readonly mWorkingDirectory: string;
-
-    /**
-     * Current working directory.
-     */
-    public get workingDirectory(): string {
-        return this.mWorkingDirectory;
-    }
-
     /**
      * Constructor.
-     * Inherits current working directory when no working directory is provided.
-     * 
-     * @param pWorkingDirectory - Shell working directory.
      */
-    public constructor(pWorkingDirectory?: string) {
-        this.mWorkingDirectory = pWorkingDirectory ?? process.cwd();
-    }
+    public constructor() {}
 
     /**
      * Call command and return result.
+     * 
      * @param pCommand - Command.
      */
-    public async execute(pCommand: string, pIgnoreError: boolean = false): Promise<string> {
+    public async execute(pCommand: ProcessParameter, pIgnoreError: boolean = false): Promise<string> {
         return new Promise<string>((pResolve, pReject) => {
             // Call command.
-            exec(pCommand, { cwd: this.mWorkingDirectory }, (pError, pStdout) => {
+            exec(pCommand.commandList.join(' '), { cwd: pCommand.workingDirectory }, (pError, pStdout) => {
                 if (pError && !pIgnoreError) {
                     pReject(pError);
                 } else {
@@ -43,9 +31,10 @@ export class Process {
 
     /**
      * Execute command and output result and errors into console.
+     * 
      * @param pCommand - Command.
      */
-    public async executeInConsole(pCommand: string): Promise<void> {
-        execSync(pCommand, { stdio: [0, 1, 2], cwd: this.mWorkingDirectory });
+    public async executeInConsole(pCommand: ProcessParameter): Promise<void> {
+        execSync(pCommand.commandList.join(' '), { stdio: [0, 1, 2], cwd: pCommand.workingDirectory });
     }
 }

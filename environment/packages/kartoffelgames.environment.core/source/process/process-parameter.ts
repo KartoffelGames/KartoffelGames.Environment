@@ -1,102 +1,32 @@
+/**
+ * Process parameter for starting a new process.
+ */
 export class ProcessParameter {
-    private readonly mFullPath: Array<string>;
-    private readonly mParameters: Map<string, CommandParameter>;
-    private readonly mPath: Array<string>;
-
+    private readonly mCommandList: Array<string>;
+    private readonly mWorkingDirectory: string;
+    
     /**
-     * Get full path.
+     * Get command list.
      */
-    public get fullPath(): Array<string> {
-        return this.mFullPath;
+    public get commandList(): Array<string> {
+        return this.mCommandList;
     }
 
     /**
-     * Get parameters.
+     * Get working directory.
      */
-    public get parameter(): Map<string, CommandParameter> {
-        return this.mParameters;
-    }
-
-    /**
-     * Get path.
-     */
-    public get path(): Array<string> {
-        return this.mPath;
+    public get workingDirectory(): string {
+        return this.mWorkingDirectory;
     }
 
     /**
      * Constructor.
-     * @param pStartingCommand - Starting command path part. Part of a command that initializes the real command start.
+     * 
+     * @param pWorkingDirectory - Working directory.
+     * @param pCommands - Command list.
      */
-    public constructor(pStartingCommands: Array<string>) {
-        this.mParameters = new Map<string, CommandParameter>();
-        this.mPath = new Array<string>();
-        this.mFullPath = new Array<string>();
-
-        const lParameterName: RegExp = /^--(.+)$/;
-
-        // Next parameter buffer.
-        let lNextParameterIsValue: boolean = false;
-        let lNextParameterName: string = '';
-
-        // Read parameter.
-        let lCommandStarted: boolean = false;
-        let lCommandParameterStarted: boolean = false;
-        process.argv.forEach((pValue: string) => {
-            // Process command only when starting command is reached.
-            if (!lCommandStarted) {
-                // Check if path started.
-                for(const lPossibleCommandStart of pStartingCommands){
-                    if (pValue.toLowerCase().endsWith(lPossibleCommandStart.toLowerCase())) {
-                        lCommandStarted = true;
-                        return;
-                    }
-                }
-
-                return;
-            } else {
-                if (lParameterName.test(pValue)) {
-                    // Set area as parameter started.
-                    lCommandParameterStarted = true;
-
-                    // Process as parameter name.
-                    const lParameterNameMatch = <RegExpExecArray>lParameterName.exec(pValue);
-                    lNextParameterName = lParameterNameMatch[1]; // First group. Name without "--"
-                    lNextParameterIsValue = true;
-
-                    // Set empty parameter.
-                    this.mParameters.set(lNextParameterName, {
-                        name: lNextParameterName,
-                        value: null
-                    });
-                } else if (lNextParameterIsValue) {
-                    // Slice optional ""
-                    let lParameterValue: string = pValue;
-                    if (pValue.startsWith('"') && pValue.endsWith('"')) {
-                        lParameterValue = lParameterValue.slice(1, lParameterValue.length - 1);
-                    }
-
-                    // Process parameter value.
-                    (<CommandParameter>this.mParameters.get(lNextParameterName)).value = lParameterValue;
-
-                    // Reset parameter flags.
-                    lNextParameterIsValue = false;
-                    lNextParameterName = '';
-                } else if (!lCommandParameterStarted) {
-                    // Process as path.
-                    this.mPath.push(pValue);
-                } else {
-                    throw 'Wrong command syntax';
-                }
-
-                // Add value to full path.
-                this.mFullPath.push(pValue);
-            }
-        });
+    public constructor(pWorkingDirectory: string, pCommands: Array<string>) {
+        this.mWorkingDirectory = pWorkingDirectory;
+        this.mCommandList = pCommands;
     }
 }
-
-type CommandParameter = {
-    name: string;
-    value: string | null;
-};

@@ -1,6 +1,11 @@
 import { Process } from '../process/process';
 import { FileSystem } from '../file-system';
+import { ProcessParameter } from '../process/process-parameter';
+import { Package } from '../package';
 
+/**
+ * Cli packages. Resolves all available cli packages.
+ */
 export class CliPackages {
     private readonly mCommandRootPackageDirectory: string;
 
@@ -14,11 +19,16 @@ export class CliPackages {
 
     /**
      * Get all KG_Cli command packages sorted by cli package type.
+     * Skip early when the provided package name is found.
+     * 
+     * @param pNameFilter - Filter for package name.
+     * 
+     * @returns Map of available cli packages.
      */
-    public async getCommandPackages(): Promise<Record<string, Array<string>>> {
-        // Read all dependencies.
-        const lShell: Process = new Process(this.mCommandRootPackageDirectory);
-        const lPackageJson = await lShell.execute('npm ls --json --all', true);
+    public async getCommandPackages(pNameFilter: string = ''): Promise<Map<string, CliPackageInformation>> {
+        // Create process parameter to read all all dependencies and execute.
+        const lProcessParameters: ProcessParameter = new ProcessParameter(this.mCommandRootPackageDirectory, ['npm', 'ls', '--json', '--all']);
+        const lPackageJson = await new Process().execute(lProcessParameters, true);
 
         // Parse dependency json.
         let lPackageObject: any | null = null;
@@ -35,10 +45,10 @@ export class CliPackages {
 
                 // Index all dependencies.
                 for (const lDependency of Object.entries(lDependencies)) {
-                    const [lName, lConfiguration] = lDependency;
+                    const [lPackageName, lConfiguration] = lDependency;
 
                     // Index packages and find inner dependencies of package.
-                    pPackageList.push(lName);
+                    pPackageList.push(lPackageName);
                     lListPackages(lConfiguration, pPackageList);
                 }
             }
@@ -47,54 +57,84 @@ export class CliPackages {
         };
 
         // List all packages and distinct list.
-        const lPackageList: Array<string> = [...new Set(lListPackages(lPackageObject))];
+        const lPackageNameList: Array<string> = [...new Set(lListPackages(lPackageObject))];
 
-        // Filter packages for existsing cli config.
-        const lCliPackages: Record<string, Array<string>> = {};
-        const lFileReadingList: Array<Promise<void>> = new Array<Promise<void>>();
-        for (const lPackage of lPackageList) {
-            // Try to find cli config.
-            let lCliConfigFilePath: string | null = null;
-            try {
-                lCliConfigFilePath = require.resolve(`${lPackage}/kg-cli.config.json`);
-            } catch (_pError) {
-                // Nothing.
+        // New promise that resolves eighter when package with the given name is found or all packages are checked.
+        return new Promise<Map<string, CliPackageInformation>>((pResolve) => {
+            // Flag to skip searching after a result was aready resolved.
+            let lAlreadyResolved: boolean = false;
+
+            // Filter packages for existsing cli config.
+            const lCliPackages: Map<string, CliPackageInformation> = new Map<string, CliPackageInformation>();
+            const lFileReadingList: Array<Promise<void>> = new Array<Promise<void>>();
+            for (const lPackageName of lPackageNameList) {
+                // Try to find cli configuration file from package root directory.
+                let lCliConfigFilePath: string | null = null;
+                try {
+                    lCliConfigFilePath = Package.resolveToPath(`${lPackageName}/kg-cli.config.json`);
+                } catch (_pError) {
+                    // Nothing.
+                }
+
+                // Config not found.
+                if (lCliConfigFilePath === null) {
+                    continue;
+                }
+
+                // Check if cli configuration exists.
+                if (FileSystem.exists(lCliConfigFilePath)) {
+                    // Read async and parse json.
+                    const lFileReadyPromise = FileSystem.readAsync(lCliConfigFilePath).then((pData) => {
+                        // Skip processing when the searched package was already found.
+                        if (lAlreadyResolved) {
+                            return;
+                        }
+
+                        // Parse cli package configuration.
+                        const lCliPackageConfiguration: CliPackageConfiguration = JSON.parse(pData);
+
+                        // Add dependency to type list.
+                        lCliPackages.set(lCliPackageConfiguration.name, {
+                            packageName: lPackageName,
+                            configuration: lCliPackageConfiguration
+                        });
+
+                        // Resolve early when package was found.
+                        if (pNameFilter === lCliPackageConfiguration.name) {
+                            lAlreadyResolved = true;
+                            pResolve(lCliPackages);
+                        }
+                    }).catch(() => {
+                        // eslint-disable-next-line no-console
+                        console.warn(`Error reading cli config "${lPackageName}"`);
+                    });
+
+                    lFileReadingList.push(lFileReadyPromise);
+                }
             }
 
-            // Config not found.
-            if (lCliConfigFilePath === null) {
-                continue;
-            }
+            // Wait for all file readings to finish.
+            Promise.all(lFileReadingList).then(() => {
+                // Dont resolve twice.
+                if (lAlreadyResolved) {
+                    return;
+                }
 
-            // Check if cli config exists.
-            if (FileSystem.exists(lCliConfigFilePath)) {
-                // Read async and parse json.
-                const lFileReadyPromise = FileSystem.readAsync(lCliConfigFilePath).then((pData) => {
-                    const lJson: CliConfig = JSON.parse(pData);
-
-                    // Init type list.
-                    if (!(lJson.group in lCliPackages)) {
-                        lCliPackages[lJson.group] = new Array<string>();
-                    }
-
-                    // Add dependency to type list.
-                    lCliPackages[lJson.group].push(lPackage);
-                }).catch(() => {
-                    // eslint-disable-next-line no-console
-                    console.warn(`Error reading cli config "${lPackage}"`);
-                });
-
-                lFileReadingList.push(lFileReadyPromise);
-            }
-        }
-
-        // Wait for all file readings to finish.
-        await Promise.all(lFileReadingList);
-
-        return lCliPackages;
+                // Resolve all packages.
+                pResolve(lCliPackages);
+            });
+        });
     }
 }
 
-type CliConfig = {
-    group: string;
+export type CliPackageConfiguration = {
+    name: string;
+    commandEntyClass?: string;
+    projectBlueprints?: Array<string>;
+    packageBlueprints?: Array<string>;
+};
+
+export type CliPackageInformation = {
+    packageName: string;
+    configuration: CliPackageConfiguration;
 };
