@@ -1,4 +1,4 @@
-import { CliCommandDescription, CliPackageInformation, CliPackages, CliParameter, Console, ICliCommand, FileSystem, ICliPackageBlueprintResolver, Package, PackageInformation, Process, ProcessParameter, Project } from '@kartoffelgames/environment.core';
+import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliCommand, ICliPackageBlueprintResolver, Package, PackageInformation, Process, ProcessParameter, Project } from '@kartoffelgames/environment.core';
 
 export class KgCliCommand implements ICliCommand<string> {
     /**
@@ -66,7 +66,7 @@ export class KgCliCommand implements ICliCommand<string> {
         }
 
         // Create blueprint.
-        const lNewPackageDirectory: string = await this.createBlueprint(lNewPackageName, lBlueprint, pParameter, pProject);
+        const lNewPackageDirectory: string = await this.createBlueprint(lNewPackageName, lBlueprint, pProject);
 
         // Update vs code workspaces.
         lConsole.writeLine('Add VsCode Workspace...');
@@ -99,13 +99,12 @@ export class KgCliCommand implements ICliCommand<string> {
      * @param pCommandParameter - Command parameter.
      * @returns 
      */
-    private async createBlueprint(pPackageName: string, pBlueprint: Blueprint, pCommandParameter: CliParameter, pProject: Project): Promise<string> {
+    private async createBlueprint(pPackageName: string, pBlueprint: Blueprint, pProject: Project): Promise<string> {
         const lConsole = new Console();
 
         // Get source and target path of blueprint files.
         const lProjectName: string = pProject.packageToIdName(pPackageName);
-        const lSourcePath: string = path.resolve(pBlueprint.information.blueprintDirectory);
-        const lTargetPath: string = path.resolve(pProject.projectRootDirectory, 'packages', lProjectName.toLowerCase());
+        const lTargetPath: string = FileSystem.pathToAbsolute(pProject.projectRootDirectory, 'packages', lProjectName.toLowerCase());
 
         // Check if package already exists.
         if (pProject.packageExists(pPackageName)) {
@@ -117,22 +116,33 @@ export class KgCliCommand implements ICliCommand<string> {
             throw `Target directory "${lTargetPath}" already exists.`;
         }
 
+        // Create blueprint resolver instance.
+        const lPackageResolver: ICliPackageBlueprintResolver = await new CliPackages(pProject.projectRootDirectory).createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
+
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const lDecompress: (pTargetFile: string, pSourceDirectory: string) => Promise<void> = require('decompress');
+
         // Rollback on error.
         try {
             // Copy files.
             lConsole.writeLine('Copy files...');
-            FileUtil.createDirectory(lTargetPath);
-            FileUtil.copyDirectory(lSourcePath, lTargetPath, true);
+
+            // Create target directory.
+            FileSystem.createDirectory(lTargetPath);
+
+            // Wait for decompression.
+            await lDecompress(Package.resolveToPath(pBlueprint.blueprintFilePath), lTargetPath);
 
             // Create package parameter.
-            const lPackageParameter: PackageParameter = new PackageParameter(pPackageName, lProjectName);
-            for (const [lParameterName, lParameterValue] of pCommandParameter.parameter.entries()) {
-                lPackageParameter.parameter.set(lParameterName, lParameterValue);
-            }
+            const lPackageParameter: CliPackageBlueprintParameter = {
+                packageName: pPackageName,
+                packageIdName: lProjectName,
+                packageDirectory: lTargetPath
+            };
 
             // Execute blueprint after copy handler.
-            lConsole.writeLine('Execute blueprint handler...');
-            await pBlueprint.afterCopy(lTargetPath, lPackageParameter, pProject);
+            lConsole.writeLine('Execute blueprint resolver...');
+            await lPackageResolver.afterCopy(lPackageParameter, pProject);
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
 
@@ -163,9 +173,9 @@ export class KgCliCommand implements ICliCommand<string> {
             // Convert all available blueprints to an absolute path.
             for (const [lBlueprintPackageName, lBlueprintPackagePath] of Object.entries(lPackage.configuration.packageBlueprints.packages)) {
                 lAvailableBlueprint.set(lBlueprintPackageName, {
-                    packageName: lPackage.packageName,
+                    packageInformation: lPackage,
                     resolverClass: lPackage.configuration.packageBlueprints.resolveClass,
-                    path: Package.resolveToPath(lPackage.packageName + `/` + lBlueprintPackagePath)
+                    blueprintFilePath: Package.resolveToPath(lPackage.packageName + `/` + lBlueprintPackagePath)
                 });
             }
         }
@@ -175,7 +185,7 @@ export class KgCliCommand implements ICliCommand<string> {
 }
 
 type Blueprint = {
-    packageName: string;
+    packageInformation: CliPackageInformation;
     resolverClass: string;
-    path: string;
+    blueprintFilePath: string;
 };
