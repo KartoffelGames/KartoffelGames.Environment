@@ -1,4 +1,4 @@
 {
     "name": "page",
-    "commandEntyClass": "KgCliCommand"
+    "commandEntryClass": "KgCliCommand"
 }

@@ -1,4 +1,4 @@
 {
     "name": "sync",
-    "commandEntyClass": "CliCommand"
+    "commandEntryClass": "CliCommand"
 }

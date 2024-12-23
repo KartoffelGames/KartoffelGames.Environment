@@ -29,7 +29,7 @@ export class CliCommand implements ICliCommand {
         // Create each command package.
         for (const [, lPackageInformation] of await lCliPackages.getCommandPackages()) {
             // Skip any packages without a command entry class.
-            if (!lPackageInformation.configuration.commandEntyClass) {
+            if (!lPackageInformation.configuration.commandEntryClass) {
                 continue;
             }
 

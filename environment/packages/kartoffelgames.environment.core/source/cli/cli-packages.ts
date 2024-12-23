@@ -28,7 +28,7 @@ export class CliPackages {
      * @returns - Cli Command instance. 
      */
     public async createPackageCommandInstance(pPackage: CliPackageInformation): Promise<ICliCommand> {
-        if (!pPackage.configuration.commandEntyClass) {
+        if (!pPackage.configuration.commandEntryClass) {
             throw new Error(`Can't initialize command ${pPackage.configuration.name}. No entry class defined.`);
         }
 
@@ -36,7 +36,7 @@ export class CliPackages {
         try {
             // Import package and get command constructor.
             const lPackageImport: any = await Package.import(pPackage.packageName);
-            const lPackageCliCommandConstructor: CliCommandConstructor = lPackageImport[pPackage.configuration.commandEntyClass] as CliCommandConstructor;
+            const lPackageCliCommandConstructor: CliCommandConstructor = lPackageImport[pPackage.configuration.commandEntryClass] as CliCommandConstructor;
 
             // Create command instance
             return new lPackageCliCommandConstructor();
@@ -208,7 +208,7 @@ export class CliPackages {
 
 export type CliPackageConfiguration = {
     name: string;
-    commandEntyClass?: string;
+    commandEntryClass?: string;
     projectBlueprints?: {
         resolveClass: string;
         packages: Record<string, string>;

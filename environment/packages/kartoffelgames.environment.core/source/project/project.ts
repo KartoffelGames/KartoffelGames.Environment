@@ -340,7 +340,7 @@ export class Project {
 
         for (const [, lCliPackageInformation] of await this.mCliPackages.getCommandPackages()) {
             // Skip packages without configuration.
-            if (!lCliPackageInformation.configuration.commandEntyClass) {
+            if (!lCliPackageInformation.configuration.commandEntryClass) {
                 continue;
             }
 

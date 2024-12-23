@@ -54,7 +54,7 @@ export class CliCommand {
         }
 
         // Check if cli package has an available command entry.
-        if (!lCliPackageConfiguration.configuration.commandEntyClass) {
+        if (!lCliPackageConfiguration.configuration.commandEntryClass) {
             throw `CLI package "${lCliPackageConfiguration.configuration.name}" has no entry class`;
         }
 
