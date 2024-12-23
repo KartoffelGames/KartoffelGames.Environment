@@ -299,7 +299,8 @@ export class Project {
 
         // Update package json information.
         lJson['kg'] = pPackageInformation.workspace;
-        lJson['kg']['config'] = lPackageConfiguration;
+        lJson['kg']['config'] ??= {};
+        lJson['kg']['config'][pCommand.information.configuration!.name] = lPackageConfiguration;
 
         // Create path to package.json.
         const lPackageJsonPath: string = FileSystem.pathToAbsolute(pPackageInformation.directory, 'package.json');
