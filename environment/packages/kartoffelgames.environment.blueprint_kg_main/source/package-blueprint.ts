@@ -24,8 +24,8 @@ export class CliPackageBlueprint implements ICliPackageBlueprintResolver {
             lFileContent = lFileContent
                 .replaceAll('{{PACKAGE_ID_NAME}}', pParameter.packageIdName)
                 .replaceAll('{{PACKAGE_NAME}}', pParameter.packageName)
-                .replaceAll('{{PROJECT_FOLDER}}', lPackageFolderName)
-                .replaceAll('{{ROOT_PROJECT_FOLDER}}', lRootProjectName);
+                .replaceAll('{{PACKAGE_FOLDER}}', lPackageFolderName)
+                .replaceAll('{{PROJECT_FOLDER}}', lRootProjectName);
 
             // Write changed content.
             FileSystem.write(lFilePath, lFileContent);
