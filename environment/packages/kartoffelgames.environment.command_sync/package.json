@@ -16,7 +16,6 @@
         "@types/mocha": "^5.2.7"
     },
     "dependencies": {
-        "@kartoffelgames/environment.cli": "^2.0.4",
         "@kartoffelgames/environment.core": "^2.0.4"
     },
     "scripts": {
