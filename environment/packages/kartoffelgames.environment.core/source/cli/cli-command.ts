@@ -80,9 +80,7 @@ export class CliCommand {
         // Read all required parameter names starting with < or any letter from command pattern.
         const lRequiredParameterPatternList: Array<string> = new Array<string>();
         for (const lCommandPatternPart of lCommandPatternParts) {
-            if (lCommandPatternPart.startsWith('<')) {
-                lRequiredParameterPatternList.push(lCommandPatternPart.substring(1, lCommandPatternPart.length - 1).toLowerCase());
-            } else if (lCommandPatternPart.match(/^[a-zA-Z0-9]/)) {
+            if (lCommandPatternPart.startsWith('<') || lCommandPatternPart.match(/^[a-zA-Z0-9]/)) {
                 lRequiredParameterPatternList.push(lCommandPatternPart.toLowerCase());
             }
         }
@@ -136,7 +134,7 @@ export class CliCommand {
         }
 
         // Convert and check all optional unnamed parameters.
-        for (const lOptionalUnnamedParameter of lOptionalUnnamedParameterPatternList) {
+        for (const lOptionalUnnamedParameterName of lOptionalUnnamedParameterPatternList) {
             // Read next parameter. Needn't to be existent.
             let lParameter: string | undefined = lUncheckedParameters.at(0);
             if (!lParameter) {
@@ -157,8 +155,7 @@ export class CliCommand {
             }
 
             // Set optional unnamed parameter.
-            const lParameterName: string = lOptionalUnnamedParameter.substring(1, lOptionalUnnamedParameter.length - 1);
-            lCliParameter.parameter.set(lParameterName, lParameter);
+            lCliParameter.parameter.set(lOptionalUnnamedParameterName, lParameter);
         }
 
         // Convert and check all optional named parameters.
