@@ -1,6 +1,4 @@
 import { CliPackageBlueprintParameter, FileSystem, ICliPackageBlueprintResolver, Project } from '@kartoffelgames/environment.core';
-import * as path from 'path';
-
 
 export class CliPackageBlueprint implements ICliPackageBlueprintResolver {
     /**
@@ -13,10 +11,10 @@ export class CliPackageBlueprint implements ICliPackageBlueprintResolver {
         const lPackageFileList: Array<string> = FileSystem.findFiles(pParameter.packageDirectory);
 
         // Get only folder name of directory.
-        const lPackageFolderName = path.parse(pParameter.packageDirectory).name;
+        const lPackageFolderName: string = pParameter.packageDirectory.split(/\/|\\/g).pop()!;
 
         // Get root project directory name.
-        const lRootProjectName = path.parse(pProjectHandler.projectRootDirectory).base;
+        const lRootProjectName: string = pProjectHandler.projectRootDirectory.split(/\/|\\/g).pop()!;
 
         // Check all files.
         for (const lFilePath of lPackageFileList) {
