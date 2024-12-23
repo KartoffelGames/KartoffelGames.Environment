@@ -1,2 +1,2 @@
-export { KgCliProjectBlueprint } from './project-blueprint';
-export { KgCliPackageBlueprint } from './package-blueprint';
+export { CliPackageBlueprint } from './package-blueprint';
+export { CliProjectBlueprint } from './project-blueprint';
