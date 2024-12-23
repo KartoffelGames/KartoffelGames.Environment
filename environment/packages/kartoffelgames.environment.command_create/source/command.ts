@@ -84,6 +84,9 @@ export class KgCliCommand implements ICliCommand<string> {
             return lBlueprintName;
         });
 
+        // Update missing information.
+        pProject.updatePackageConfiguration(lPackageInformation.packageName);
+
         // Create process parameter to install all dependencies.
         const lProcessParameters: ProcessParameter = new ProcessParameter(pProject.projectRootDirectory, ['npm', 'install']);
 

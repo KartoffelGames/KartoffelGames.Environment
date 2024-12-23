@@ -2,55 +2,55 @@
     "folders": [
         {
             "name": "Kartoffelgames.Environment",
-            "path": "environment\\packages\\kartoffelgames.environment"
+            "path": "packages\\kartoffelgames.environment"
         },
         {
             "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
-            "path": "environment\\packages\\kartoffelgames.environment.blueprint_kg_main"
+            "path": "packages\\kartoffelgames.environment.blueprint_kg_main"
         },
         {
             "name": "Kartoffelgames.Environment.Cli",
-            "path": "environment\\packages\\kartoffelgames.environment.cli"
+            "path": "packages\\kartoffelgames.environment.cli"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Build",
-            "path": "environment\\packages\\kartoffelgames.environment.command_build"
+            "path": "packages\\kartoffelgames.environment.command_build"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Create",
-            "path": "environment\\packages\\kartoffelgames.environment.command_create"
+            "path": "packages\\kartoffelgames.environment.command_create"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Help",
-            "path": "environment\\packages\\kartoffelgames.environment.command_help"
+            "path": "packages\\kartoffelgames.environment.command_help"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Init",
-            "path": "environment\\packages\\kartoffelgames.environment.command_init"
+            "path": "packages\\kartoffelgames.environment.command_init"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Page",
-            "path": "environment\\packages\\kartoffelgames.environment.command_page"
+            "path": "packages\\kartoffelgames.environment.command_page"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Scratchpad",
-            "path": "environment\\packages\\kartoffelgames.environment.command_scratchpad"
+            "path": "packages\\kartoffelgames.environment.command_scratchpad"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Sync",
-            "path": "environment\\packages\\kartoffelgames.environment.command_sync"
+            "path": "packages\\kartoffelgames.environment.command_sync"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Test",
-            "path": "environment\\packages\\kartoffelgames.environment.command_test"
+            "path": "packages\\kartoffelgames.environment.command_test"
         },
         {
             "name": "Kartoffelgames.Environment.Core",
-            "path": "environment\\packages\\kartoffelgames.environment.core"
+            "path": "packages\\kartoffelgames.environment.core"
         },
         {
             "name": "_ROOT",
-            "path": "."
+            "path": ".."
         }
     ],
     "settings": {
