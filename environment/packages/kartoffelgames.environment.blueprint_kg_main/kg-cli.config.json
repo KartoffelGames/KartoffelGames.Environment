@@ -1,6 +1,6 @@
 {
     "name": "kg-main-blueprint",
-    "projectBlueprint": {
+    "projectBlueprints": {
         "resolveClass": "CliProjectBlueprint",
         "packages": {
             "kg-main": "blueprints/project-blueprint.zip"

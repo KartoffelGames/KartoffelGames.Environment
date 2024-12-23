@@ -96,8 +96,8 @@ export class CliCommand implements ICliCommand<string> {
         const lTargetPath: string = FileSystem.pathToAbsolute(ProcessContext.workingDirectory);
 
         // Check existing target directory.
-        if (FileSystem.exists(lTargetPath)) {
-            throw `Target directory "${lTargetPath}" already exists.`;
+        if (FileSystem.exists(lTargetPath) && FileSystem.findFiles(lTargetPath).length > 0) {
+            throw `Target directory "${lTargetPath}" is not empty.`;
         }
 
         // Create blueprint resolver instance.
