@@ -80,7 +80,9 @@ export class CliCommand {
         // Read all required parameter names starting with < or any letter from command pattern.
         const lRequiredParameterPatternList: Array<string> = new Array<string>();
         for (const lCommandPatternPart of lCommandPatternParts) {
-            if (lCommandPatternPart.startsWith('<') || lCommandPatternPart.match(/^[a-zA-Z0-9]/)) {
+            if (lCommandPatternPart.startsWith('<')) {
+                lRequiredParameterPatternList.push(lCommandPatternPart.substring(1, lCommandPatternPart.length - 1).toLowerCase());
+            } else if (lCommandPatternPart.match(/^[a-zA-Z0-9]/)) {
                 lRequiredParameterPatternList.push(lCommandPatternPart.toLowerCase());
             }
         }
@@ -89,7 +91,7 @@ export class CliCommand {
         const lOptionalUnnamedParameterPatternList: Array<string> = new Array<string>();
         for (const lCommandPatternPart of lCommandPatternParts) {
             if (lCommandPatternPart.startsWith('[')) {
-                lOptionalUnnamedParameterPatternList.push(lCommandPatternPart.toLowerCase());
+                lOptionalUnnamedParameterPatternList.push(lCommandPatternPart.substring(1, lCommandPatternPart.length - 1).toLowerCase());
             }
         }
 
@@ -97,7 +99,7 @@ export class CliCommand {
         const lOptionalNamedParameterPatternList: Set<string> = new Set<string>();
         for (const lCommandPatternPart of lCommandPatternParts) {
             if (lCommandPatternPart.startsWith('--')) {
-                lOptionalNamedParameterPatternList.add(lCommandPatternPart.toLowerCase());
+                lOptionalNamedParameterPatternList.add(lCommandPatternPart.substring(2).toLowerCase());
             }
         }
 

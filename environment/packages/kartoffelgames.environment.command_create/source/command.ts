@@ -7,7 +7,7 @@ export class KgCliCommand implements ICliCommand<string> {
     public get information(): CliCommandDescription<string> {
         return {
             command: {
-                pattern: 'create <blueprint_name> [package_name] --list',
+                pattern: 'create [blueprint_name] [package_name] --list',
                 description: 'Create new package.',
             },
             configuration: {
@@ -24,9 +24,6 @@ export class KgCliCommand implements ICliCommand<string> {
      */
     public async run(pParameter: CliParameter, pProject: Project): Promise<void> {
         const lConsole = new Console();
-
-        // Read required parameter.
-        const lBlueprintName: string = <string>pParameter.parameter.get('blueprint_name')?.toLowerCase();
 
         // Read all available cli packages.
         const lCliPackageList: Array<CliPackageInformation> = Array.from((await new CliPackages(pProject.projectRootDirectory).getCommandPackages()).values());
@@ -46,6 +43,12 @@ export class KgCliCommand implements ICliCommand<string> {
 
         // Output heading.
         lConsole.writeLine('Create Package');
+
+        // Read required parameter.
+        let lBlueprintName: string = pParameter.parameter.get('blueprint_name')?.toLowerCase() ?? '';
+        if (lBlueprintName === '') {
+            lBlueprintName = await lConsole.promt('Package Name: ', /^[a-z0-9-]$/);
+        }
 
         // Find blueprint by name.
         const lBlueprint: Blueprint | undefined = lBlueprintList.get(lBlueprintName);
