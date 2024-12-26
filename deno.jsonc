@@ -1,0 +1,13 @@
+{
+    "workspace": [
+        "./packages/*"
+    ],
+    "tasks": {
+        "lint": "deno run -A npm:eslint --config eslint.config.js"
+    },
+    "imports": {
+    },
+    "kg": {
+        "root": true
+    }
+}
