@@ -54,7 +54,7 @@
         },
         {
             "name": "_ROOT",
-            "path": ".."
+            "path": "."
         }
     ],
     "settings": {
