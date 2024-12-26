@@ -1,13 +1,35 @@
 {
-    "workspace": [
-        "./packages/*"
+  "workspace": [
+    "./packages/*"
+  ],
+  "tasks": {
+    "lint": "deno run -A npm:eslint --config eslint.config.js"
+  },
+  "imports": {},
+  "compilerOptions": {
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,
+    "experimentalDecorators": true,
+    "lib": [
+      "ES2021",
+      "DOM"
     ],
-    "tasks": {
-        "lint": "deno run -A npm:eslint --config eslint.config.js"
-    },
-    "imports": {
-    },
-    "kg": {
-        "root": true
-    }
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedParameters": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "useUnknownInCatchVariables": true
+  },
+  "unstable": [
+    "sloppy-imports"
+  ],
+  "kg": {
+    "root": true
+  }
 }

@@ -1,11 +1,11 @@
 import tsPlugin from 'npm:@typescript-eslint/eslint-plugin@^8.18.2';
 import tsPluginParser from 'npm:@typescript-eslint/parser@^8.18.2';
-import tseslint from 'npm:typescript-eslint@^8.18.2';
+import typescriptlint from 'npm:typescript-eslint@^8.18.2';
 import javascriptlint from "npm:@eslint/js";
 
 export default [
     javascriptlint.configs.recommended,
-    ...tseslint.configs.recommended,
+    ...typescriptlint.configs.recommended,
     {
         "languageOptions": {
             "parser": tsPluginParser,
