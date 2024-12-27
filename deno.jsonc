@@ -26,6 +26,11 @@
     "strictPropertyInitialization": true,
     "useUnknownInCatchVariables": true
   },
+  "lint": {
+    "exclude": [
+      "**/*"
+    ]
+  },
   "unstable": [
     "sloppy-imports"
   ],

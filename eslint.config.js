@@ -1,11 +1,17 @@
 import tsPlugin from 'npm:@typescript-eslint/eslint-plugin@^8.18.2';
 import tsPluginParser from 'npm:@typescript-eslint/parser@^8.18.2';
 import typescriptlint from 'npm:typescript-eslint@^8.18.2';
-import javascriptlint from "npm:@eslint/js";
 
-export default [
-    javascriptlint.configs.recommended,
-    ...typescriptlint.configs.recommended,
+export default typescriptlint.config(
+    {
+        "ignores": [
+            "**/*.d.ts",
+            "**/*.js",
+            "**/*.cjs",
+            "**/*.mjs"
+        ]
+    },
+    typescriptlint.configs.recommended,
     {
         "languageOptions": {
             "parser": tsPluginParser,
@@ -17,19 +23,10 @@ export default [
         "plugins": {
             "@typescript-eslint": tsPlugin,
         },
-        files: [
-            "source/**/*.ts",
-            "page/**/*.ts",
-            "test/**/*.ts"
-        ],
-        "ignores": [
-            "node_modules/",
-            "library/",
-            "scratchpad/",
-            "**/*.js",
-            "**/*.mjs",
-            "**/*.cjs",
-            "**/*.d.ts"
+        "files": [
+            "packages/*/source/**/*.ts",
+            "packages/*/page/**/*.ts",
+            "packages/*/test/**/*.ts"
         ],
         "rules": {
             "no-return-await": "warn",
@@ -295,4 +292,4 @@ export default [
             "@typescript-eslint/no-explicit-any": "off"
         }
     }
-];
+);
