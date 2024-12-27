@@ -1,40 +1,47 @@
 {
-  "workspace": [
-    "./packages/*"
-  ],
-  "tasks": {
-    "lint": "deno run -A npm:eslint --config eslint.config.js"
-  },
-  "imports": {},
-  "compilerOptions": {
-    "allowUnreachableCode": false,
-    "exactOptionalPropertyTypes": true,
-    "experimentalDecorators": true,
-    "lib": [
-      "ES2021",
-      "DOM"
+    "workspace": [
+        "./packages/*"
     ],
-    "noImplicitAny": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUnusedParameters": true,
-    "strictBindCallApply": true,
-    "strictFunctionTypes": true,
-    "strictNullChecks": true,
-    "strictPropertyInitialization": true,
-    "useUnknownInCatchVariables": true
-  },
-  "lint": {
-    "exclude": [
-      "**/*"
-    ]
-  },
-  "unstable": [
-    "sloppy-imports"
-  ],
-  "kg": {
-    "root": true
-  }
+    "tasks": {
+        "lint": "deno run -A npm:eslint --config eslint.config.js"
+    },
+    "imports": {},
+    "compilerOptions": {
+        "allowUnreachableCode": false,
+        "exactOptionalPropertyTypes": true,
+        "lib": [
+            "ES2021",
+            "DOM",
+            "deno.ns"
+        ],
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUnusedParameters": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "useUnknownInCatchVariables": true
+    },
+    "fmt": {
+        "useTabs": false,
+        "indent-width": 4,
+        "line-width": 9999,
+        "semiColons": true,
+        "singleQuote": true
+    },
+    // Disable deno linter
+    "lint": {
+
+        "exclude": [
+            "**/*"
+        ]
+    },
+    // KG specific settings
+    "kg": {
+        "root": true
+    }
 }

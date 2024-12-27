@@ -1,0 +1,24 @@
+{
+    "name": "@kartoffelgames/environment-core",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {},
+    "exports": "./source/index.ts",
+    "publish": {
+        "include": [
+            "source/",
+            "deno.jsonc"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Core",
+        "root": false,
+        "config": {
+            "package_blueprint": "kg-main",
+            "tests": [
+                "unit"
+            ],
+            "page": false
+        }
+    }
+}

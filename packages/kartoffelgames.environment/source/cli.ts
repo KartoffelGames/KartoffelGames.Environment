@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S deno run --allow-write --allow-read --allow-net
 
 import { Process, Package, ProcessParameter, ProcessContext } from '@kartoffelgames/environment.core';
 

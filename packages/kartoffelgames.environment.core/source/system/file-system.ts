@@ -1,6 +1,3 @@
-import * as path from 'path';
-import * as filereader from 'fs';
-
 export class FileSystem {
     /**
      * Copy directory with all files into destination.
@@ -26,13 +23,13 @@ export class FileSystem {
             const lDestinationItem: string = FileSystem.pathToAbsolute(lDestinationPath, lRelativeItemPath);
 
             // File destination status. Check if override.
-            const lDestinationExists = filereader.existsSync(lDestinationItem);
+            const lDestinationExists = FileSystem.exists(lDestinationItem);
             if (!lDestinationExists || pOverride) {
                 // Create directory.
                 this.createDirectory(path.dirname(lDestinationItem));
 
                 // Copy file.
-                filereader.copyFileSync(lSourceItem, lDestinationItem);
+                Deno.copyFileSync(lSourceItem, lDestinationItem);
             }
         }
     }
@@ -42,7 +39,7 @@ export class FileSystem {
      * @param pPath - Path.
      */
     public static createDirectory(pPath: string): void {
-        filereader.mkdirSync(pPath, { recursive: true });
+        Deno.mkdirSync(pPath, { recursive: true });
     }
 
     /**
@@ -50,7 +47,7 @@ export class FileSystem {
      * @param pPath - Directory path.
      */
     public static deleteDirectory(pPath: string): void {
-        filereader.rmSync(pPath, { recursive: true, force: true });
+        Deno.removeSync(pPath, { recursive: true });
     }
 
     /**
@@ -74,9 +71,10 @@ export class FileSystem {
             return;
         }
 
-        for (const lFileName of filereader.readdirSync(pPath)) {
-            const lFilePath: string = FileSystem.pathToAbsolute(pPath, lFileName);
-            filereader.rmSync(lFilePath, { recursive: true, force: true });
+        // Remove every file and directory inside set directory.
+        for (const lFile of Deno.readDirSync(pPath)) {
+            const lFilePath: string = FileSystem.pathToAbsolute(pPath, lFile.name);
+            Deno.removeSync(lFilePath, { recursive: true });
         }
     }
 
@@ -85,7 +83,7 @@ export class FileSystem {
      * @param pPath - Path.
      */
     public static exists(pPath: string): boolean {
-        return filereader.existsSync(pPath);
+        return Deno.existsSync(pPath);
     }
 
     /**
@@ -123,20 +121,19 @@ export class FileSystem {
         const lAbsoluteStartDirectory = FileSystem.pathToAbsolute(pStartDirectory);
 
         // Check if start directory is a directory.
-        const lDirectoryStatus = filereader.statSync(lAbsoluteStartDirectory);
-        if (!lDirectoryStatus.isDirectory()) {
+        const lDirectoryStatus = Deno.statSync(lAbsoluteStartDirectory);
+        if (!lDirectoryStatus.isDirectory) {
             throw `"${lAbsoluteStartDirectory}" is not a directory.`;
         }
 
         const lResultList: Array<string> = new Array<string>();
 
         // Iterate over all
-        for (const lChildItemName of filereader.readdirSync(lAbsoluteStartDirectory)) {
-            const lItemPath = FileSystem.pathToAbsolute(lAbsoluteStartDirectory, lChildItemName);
-            const lItemStatus = filereader.statSync(lItemPath);
+        for (const lChildItem of Deno.readDirSync(lAbsoluteStartDirectory)) {
+            const lItemPath = FileSystem.pathToAbsolute(lAbsoluteStartDirectory, lChildItem.name);
 
             // Directory handling.
-            if (lItemStatus.isDirectory()) {
+            if (lChildItem.isDirectory) {
                 const lNextDirectoryName = path.parse(lItemPath).name;
 
                 // Only search in child directory on outside in search.
@@ -161,10 +158,10 @@ export class FileSystem {
 
                 lResultList.push(...this.findFiles(lItemPath, lNextSearchOptions));
             } else {
-                const lFileExtension: string = lChildItemName.split('.').pop() ?? '';
+                const lFileExtension: string = lChildItem.name.split('.').pop() ?? '';
 
                 // Check file inclusion. 
-                if (lIncludeFileNameList.length > 0 && !lIncludeFileNameList.includes(lChildItemName)) {
+                if (lIncludeFileNameList.length > 0 && !lIncludeFileNameList.includes(lChildItem.name)) {
                     continue;
                 }
 
@@ -174,7 +171,7 @@ export class FileSystem {
                 }
 
                 // Check file exclusion. 
-                if (lExcludeFileNameList.length > 0 && lExcludeFileNameList.includes(lChildItemName)) {
+                if (lExcludeFileNameList.length > 0 && lExcludeFileNameList.includes(lChildItem.name)) {
                     continue;
                 }
 
@@ -225,15 +222,15 @@ export class FileSystem {
      * @param pPath - Directory.
      */
     public static isEmpty(pPath: string): boolean {
-        return filereader.readdirSync(pPath).length === 0;
+        return Array.from(Deno.readDirSync(pPath)).length === 0;
     }
 
     /**
      * Joins and resolves path parts to an absolute path.
-     * 
+     *
      * @param pPathParts - Path parts to join.
-     *  
-     * @returns - Joined absolute path. 
+     *
+     * @returns - Joined absolute path.
      */
     public static pathToAbsolute(...pPathParts: Array<string>): string {
         return path.resolve(...pPathParts);
@@ -241,11 +238,11 @@ export class FileSystem {
 
     /**
      * Convert an absolute path to a relative path.
-     * 
+     *
      * @param pBasePath - Base path of the relative path.
      * @param pPath - Path to convert to relative.
-     * 
-     * @returns relative path. 
+     *
+     * @returns relative path.
      */
     public static pathToRelative(pBasePath: string, pPath: string): string {
         return path.relative(pBasePath, pPath);
@@ -256,7 +253,12 @@ export class FileSystem {
      * @param pPath - Path to file.
      */
     public static read(pPath: string): string {
-        return filereader.readFileSync(pPath, { encoding: 'utf8' });
+        // Create text decoder to decode file data to text.
+        const lTextDecoder: TextDecoder = new TextDecoder("utf-8");
+
+        // Read file data and decode binary to text.
+        const lFileData: Uint8Array = Deno.readFileSync(pPath);
+        return lTextDecoder.decode(lFileData);
     }
 
     /**
@@ -264,24 +266,23 @@ export class FileSystem {
      * @param pPath - Path to file.
      */
     public static async readAsync(pPath: string): Promise<string> {
-        return new Promise<string>((pResolve, pReject) => {
-            filereader.readFile(pPath, { encoding: 'utf8' }, (pError, pFileData) => {
-                if (pError) {
-                    pReject(pError);
-                    return;
-                }
-                pResolve(pFileData);
-            });
-        });
+        // Create text decoder to decode file data to text.
+        const lTextDecoder: TextDecoder = new TextDecoder("utf-8");
+
+        // Read file data and decode binary to text.
+        const lFileData: Uint8Array = await Deno.readFile(pPath);
+        return lTextDecoder.decode(lFileData);
     }
 
     /**
      * Read file content.
+     * Overrides content.
+     *
      * @param pPath - Path to file.
      * @param pContent - File content.
      */
     public static write(pPath: string, pContent: string): void {
-        filereader.writeFileSync(pPath, pContent, { encoding: 'utf8' });
+        Deno.writeTextFile(pPath, pContent);
     }
 }
 

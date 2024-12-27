@@ -1,0 +1,13 @@
+{
+    "name": "@kartoffelgames/environment",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {},
+    "exports": "./source/index.ts",
+    "publish": {
+        "include": [
+            "source/",
+            "deno.jsonc"
+        ]
+    }
+}
