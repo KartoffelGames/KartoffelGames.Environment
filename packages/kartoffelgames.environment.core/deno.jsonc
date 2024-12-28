@@ -2,7 +2,9 @@
     "name": "@kartoffelgames/environment-core",
     "version": "0.0.1",
     "tasks": {},
-    "imports": {},
+    "imports": {
+        "@std/path": "jsr:@std/path"
+    },
     "exports": "./source/index.ts",
     "publish": {
         "include": [

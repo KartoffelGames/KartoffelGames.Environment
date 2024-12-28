@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-write --allow-read --allow-net
 
-import { Process, Package, ProcessParameter, ProcessContext } from '@kartoffelgames/environment.core';
+import { Process, Package, ProcessParameter, ProcessContext } from '@kartoffelgames/environment-core';
 
 // TODO: Deno-rework
 (() => {

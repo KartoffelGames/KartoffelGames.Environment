@@ -1,3 +1,5 @@
+import * as path from '@std/path';
+
 export class FileSystem {
     /**
      * Copy directory with all files into destination.
@@ -83,7 +85,14 @@ export class FileSystem {
      * @param pPath - Path.
      */
     public static exists(pPath: string): boolean {
-        return Deno.existsSync(pPath);
+        try {
+            // Throws error if path does not exist.
+            Deno.statSync(pPath);
+
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     /**
