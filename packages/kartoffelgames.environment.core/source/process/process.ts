@@ -1,5 +1,4 @@
-import { exec, execSync } from 'child_process';
-import { ProcessParameter } from './process-parameter';
+import { ProcessParameter } from "./process-parameter.ts";
 
 /**
  * Process execution.
@@ -9,24 +8,40 @@ export class Process {
     /**
      * Constructor.
      */
-    public constructor() {}
+    public constructor() { }
 
     /**
      * Call command and return result.
      * 
      * @param pCommand - Command.
+     * @param pIgnoreError - Ignore error.
      */
     public async execute(pCommand: ProcessParameter, pIgnoreError: boolean = false): Promise<string> {
-        return new Promise<string>((pResolve, pReject) => {
-            // Call command.
-            exec(pCommand.commandList.join(' '), { cwd: pCommand.workingDirectory }, (pError, pStdout) => {
-                if (pError && !pIgnoreError) {
-                    pReject(pError);
-                } else {
-                    pResolve(pStdout);
-                }
-            });
+        // Construct command.
+        const lCommand: Deno.Command = new Deno.Command(pCommand.commandList.join(' '), {
+            cwd: pCommand.workingDirectory,
+            stderr: 'piped',
+            stdout: 'piped',
+            stdin: 'piped'
         });
+
+        // Start process.
+        const lChildProcess: Deno.ChildProcess = lCommand.spawn();
+
+        // Wait for process to finish.
+        const lProcessOutput: Deno.CommandOutput = await lChildProcess.output();
+        const lProcessStatus: Deno.CommandStatus = await lChildProcess.status;
+
+        // Decode for text output.
+        const lTextDecoder = new TextDecoder();
+
+        // Throw when childprocess has an error.
+        if (!lProcessStatus.success && !pIgnoreError) {
+            throw new Error(lTextDecoder.decode(lProcessOutput.stderr));
+        }
+
+        // Return output.
+        return lTextDecoder.decode(lProcessOutput.stdout);
     }
 
     /**
@@ -35,6 +50,18 @@ export class Process {
      * @param pCommand - Command.
      */
     public async executeInConsole(pCommand: ProcessParameter): Promise<void> {
-        execSync(pCommand.commandList.join(' '), { stdio: [0, 1, 2], cwd: pCommand.workingDirectory });
+        // Construct command.
+        const lCommand: Deno.Command = new Deno.Command(pCommand.commandList.join(' '), {
+            cwd: pCommand.workingDirectory,
+            stderr: 'inherit',
+            stdout: 'inherit',
+            stdin: 'inherit'
+        });
+
+        // Start process.
+        const lChildProcess: Deno.ChildProcess = lCommand.spawn();
+
+        // Wait for process to finish.
+        await lChildProcess.status;
     }
 }

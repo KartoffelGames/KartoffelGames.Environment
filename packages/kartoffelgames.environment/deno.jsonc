@@ -2,11 +2,17 @@
     "name": "@kartoffelgames/environment",
     "version": "0.0.1",
     "tasks": {},
-    "imports": {},
-    "exports": "./source/index.ts",
+    "imports": {
+        "@zip-js/zip-js": "jsr:@zip-js/zip-js"
+    },
+    "exports": {
+		".": "./source/index.ts",
+		"./blueprint": "./blueprint"
+	},
     "publish": {
         "include": [
             "source/",
+            "blueprint/",
             "deno.jsonc"
         ]
     }

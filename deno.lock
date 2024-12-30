@@ -2,6 +2,7 @@
   "version": "4",
   "specifiers": {
     "jsr:@std/path@*": "1.0.8",
+    "jsr:@zip-js/zip-js@*": "2.7.54",
     "npm:@eslint/js@*": "9.17.0",
     "npm:@kartoffelgames/environment.core@^2.0.4": "2.0.4",
     "npm:@kartoffelgames/environment.workspace-essentials@^1.4.1": "1.4.1",
@@ -27,6 +28,9 @@
   "jsr": {
     "@std/path@1.0.8": {
       "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
+    },
+    "@zip-js/zip-js@2.7.54": {
+      "integrity": "a28b93b56a6cb2ed0f613355b2e9120ea9f6e9703dd6ae1bbc0088cfa3fef692"
     }
   },
   "npm": {
@@ -3308,6 +3312,9 @@
   "workspace": {
     "members": {
       "packages/kartoffelgames.environment": {
+        "dependencies": [
+          "jsr:@zip-js/zip-js@*"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:@kartoffelgames/environment.blueprint-kg-main@^2.0.4",
@@ -3447,6 +3454,11 @@
             "npm:nyc@17"
           ]
         }
+      },
+      "packages/kartoffelgames.environment.core": {
+        "dependencies": [
+          "jsr:@std/path@*"
+        ]
       }
     }
   }

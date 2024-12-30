@@ -35,7 +35,6 @@
     },
     // Disable deno linter
     "lint": {
-
         "exclude": [
             "**/*"
         ]

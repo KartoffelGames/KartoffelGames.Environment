@@ -10,7 +10,7 @@ export class Package {
      * @returns imported package. 
      */
     public static async import(pImportPath: string): Promise<any> {
-        return require(pImportPath);
+        return import(pImportPath);
     }
 
     /**
@@ -20,7 +20,7 @@ export class Package {
      * 
      * @returns resolved path. 
      */
-    public static resolveToPath(pImportPath: string): string {
-        return require.resolve(pImportPath);
+    public static resolveToUrl(pImportPath: string): URL {
+        return new URL(import.meta.resolve(pImportPath));
     }
 }

@@ -1,5 +1,13 @@
 export class CliParameter {
     private readonly mParameters: Map<string, string | null>;
+    private readonly mFlags: Set<string>;
+
+    /**
+     * Get flags.
+     */
+    public get flags(): Set<string> {
+        return this.mFlags;
+    }
 
     /**
      * Get parameters.
@@ -13,5 +21,6 @@ export class CliParameter {
      */
     public constructor() {
         this.mParameters = new Map<string, string | null>();
+        this.mFlags = new Set<string>();
     }
 }

@@ -1,7 +1,7 @@
-import { Project } from '../project/project';
-import { CliPackageInformation, CliPackages } from './cli-packages';
-import { CliParameter } from './cli-parameter';
-import { ICliCommand } from './i-cli-command.interface';
+import { Project } from '../project/project.ts';
+import { CliPackageInformation, CliPackages } from './cli-packages.ts';
+import { CliParameter } from './cli-parameter.ts';
+import { ICliCommand } from './i-cli-command.interface.ts';
 
 /**
  * Command line interface command that can be executed.
@@ -72,9 +72,11 @@ export class CliCommand {
      * Find command by parameter.
      * @param pParameter - Command parameter.
      */
-    private convertCommandParameter(pCliCommand: ICliCommand, pParameter: Array<string>): CliParameter {
+    private convertCommandParameter(_pCliCommand: ICliCommand, pParameter: Array<string>): CliParameter {
+        // TODO: Needs a rework too.
+
         // Split command pattern by spaces. Remove emty parts.
-        let lCommandPatternParts: Array<string> = pCliCommand.information.command.pattern.split(' ');
+        let lCommandPatternParts: Array<string> = [];//pCliCommand.information.command.pattern.split(' ');
         lCommandPatternParts = lCommandPatternParts.filter(pPart => pPart !== '');
 
         // Read all required parameter names starting with < or any letter from command pattern.

@@ -1,10 +1,9 @@
-import { Process } from '../process/process';
-import { ProcessParameter } from '../process/process-parameter';
-import { Package } from '../project/package';
-import { FileSystem } from '../system/file-system';
-import { ICliCommand } from './i-cli-command.interface';
-import { ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface';
-import { ICliProjectBlueprintResolver } from './i-cli-project-blueprint-resolver.interface';
+import { ProcessParameter } from '../process/process-parameter.ts';
+import { Process } from '../process/process.ts';
+import { Package } from '../project/package.ts';
+import { FileSystem } from '../system/file-system.ts';
+import { ICliCommand } from './i-cli-command.interface.ts';
+import { ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface.ts';
 
 /**
  * Cli packages. Resolves all available cli packages.
@@ -71,32 +70,6 @@ export class CliPackages {
     }
 
     /**
-     * Create a new instance of a project blueprint resolver.
-     * 
-     * @param pPackage - Package information.
-     * 
-     * @returns - Cli project resolver instance. 
-     */
-    public async createPackageProjectBlueprintResolverInstance(pPackage: CliPackageInformation): Promise<ICliProjectBlueprintResolver> {
-        if (!pPackage.configuration.projectBlueprints?.resolveClass) {
-            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
-        }
-
-        // Catch any create errors for malfunctioning packages.
-        try {
-            // Import package and get command constructor.
-            const lPackageImport: any = await Package.import(pPackage.packageName);
-            const lPackageCliConstructor: CliProjectBlueprintResolverConstructor = lPackageImport[pPackage.configuration.projectBlueprints?.resolveClass] as CliProjectBlueprintResolverConstructor;
-
-            // Create command instance
-            return new lPackageCliConstructor();
-        } catch (e) {
-            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
-        }
-    }
-
-
-    /**
      * Get all KG_Cli command packages sorted by cli package type.
      * Skip early when the provided package name is found.
      * 
@@ -105,6 +78,11 @@ export class CliPackages {
      * @returns Map of available cli packages.
      */
     public async getCommandPackages(pNameFilter: string = ''): Promise<Map<string, CliPackageInformation>> {
+        // TODO: NEEDS A FUCKING FULL REWORK. But i will habe fun.
+        // Read the current deno.jsonc or deno.json file.
+        // Read from kg the command map ("jsr-package" to "command name")
+        // Read available package kg-cli configs and proceed as usual.
+
         // Create process parameter to read all all dependencies and execute.
         const lProcessParameters: ProcessParameter = new ProcessParameter(this.mCommandRootPackageDirectory, ['npm', 'ls', '--json', '--all']);
         const lPackageJson = await new Process().execute(lProcessParameters, true);
@@ -150,7 +128,7 @@ export class CliPackages {
                 // Try to find cli configuration file from package root directory.
                 let lCliConfigFilePath: string | null = null;
                 try {
-                    lCliConfigFilePath = Package.resolveToPath(`${lPackageName}/kg-cli.config.json`);
+                    lCliConfigFilePath = "";// Package.resolveToPath(`${lPackageName}/kg-cli.config.json`);
                 } catch (_pError) {
                     // Nothing.
                 }
@@ -230,8 +208,4 @@ type CliCommandConstructor = {
 
 type CliPackageBlueprintResolverConstructor = {
     new(): ICliPackageBlueprintResolver;
-};
-
-type CliProjectBlueprintResolverConstructor = {
-    new(): ICliProjectBlueprintResolver;
 };

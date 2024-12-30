@@ -1,5 +1,5 @@
-import { CliParameter } from './cli-parameter';
-import { Project } from '../project/project';
+import { Project } from '../project/project.ts';
+import { CliParameter } from './cli-parameter.ts';
 
 export interface ICliCommand<TConfiguration = any> {
     /**
@@ -19,8 +19,10 @@ export interface ICliCommand<TConfiguration = any> {
 
 export type CliCommandDescription<TConfiguration = any> = {
     command: {
-        pattern: string;
         description: string;
+        name: string;
+        parameters: Array<string>;
+        flags: Array<string>;
     };
     configuration: {
         name: string,

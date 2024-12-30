@@ -1,4 +1,4 @@
-import { CliCommandDescription, CliPackageInformation, CliPackages, CliParameter, CliProjectBlueprintParameter, Console, FileSystem, ICliCommand, ICliProjectBlueprintResolver, Package, Process, ProcessContext, ProcessParameter, Project } from '@kartoffelgames/environment.core';
+import { CliCommandDescription, CliPackageInformation, CliPackages, CliParameter, CliProjectBlueprintParameter, Console, FileSystem, ICliCommand, ICliProjectBlueprintResolver, Package, Process, ProcessContext, ProcessParameter, Project } from '@kartoffelgames/environment-core';
 
 export class CliCommand implements ICliCommand<string> {
     /**
