@@ -293,6 +293,15 @@ export class FileSystem {
     public static write(pPath: string, pContent: string): void {
         Deno.writeTextFile(pPath, pContent);
     }
+
+    /**
+     * Write binary data to file.
+     * @param pPath - Path to file.
+     * @param pData - Binary data.
+     */
+    public static writeBinary(pPath: string, pData: Uint8Array): void {
+        Deno.writeFileSync(pPath, pData);
+    }
 }
 
 export type FileSearchOptions = {

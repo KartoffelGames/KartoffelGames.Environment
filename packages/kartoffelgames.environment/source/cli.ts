@@ -3,4 +3,4 @@
 import { Command } from "./command.ts";
 
 // create and run command
-await new Command().run();;
+await new Command().run();

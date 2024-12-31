@@ -1,5 +1,5 @@
 import { CliCommandDescription, Console, FileSystem, ICliCommand, Package, ProcessContext } from '@kartoffelgames/environment-core';
-import { BlobReader, ZipReader } from '@zip-js/zip-js';
+import { BlobReader, ZipReader , Uint8ArrayWriter} from '@zip-js/zip-js';
 
 export class Command implements ICliCommand<string> {
     /**
@@ -74,7 +74,26 @@ export class Command implements ICliCommand<string> {
             FileSystem.createDirectory(lTargetPath);
 
             // Decompress blueprint into target directory.
-            for await(const lZipEntry of lZipReader.getEntriesGenerator()) {
+            for await (const lZipEntry of lZipReader.getEntriesGenerator()) {
+                // Skip directories.
+                if (lZipEntry.directory) {
+                    continue;
+                }
+
+                const lTargetFilePath: string = FileSystem.pathToAbsolute(lTargetPath, lZipEntry.filename);
+
+                // Read Directory part of target file path.
+                const lTargetFileDirectoryPath: string = FileSystem.directoryOfFile(lTargetFilePath);
+
+                // Create directory if it does not exist.
+                if (!FileSystem.exists(lTargetFileDirectoryPath)) {
+                    FileSystem.createDirectory(lTargetFileDirectoryPath);
+                }
+
+                // Read zipped file.
+                const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter())
+                FileSystem.writeBinary(lTargetFilePath, lZipFileData);
+
                 console.log(lZipEntry.directory, lZipEntry.filename);
             }
         } catch (lError) {
