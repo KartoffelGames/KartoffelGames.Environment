@@ -1,1 +1,0 @@
-export { CliCommand } from './command';

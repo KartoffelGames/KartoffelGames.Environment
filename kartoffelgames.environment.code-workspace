@@ -29,10 +29,6 @@
             "path": "packages\\kartoffelgames.environment.command_help"
         },
         {
-            "name": "Kartoffelgames.Environment.Command_Init",
-            "path": "packages\\kartoffelgames.environment.command_init"
-        },
-        {
             "name": "Kartoffelgames.Environment.Command_Page",
             "path": "packages\\kartoffelgames.environment.command_page"
         },
