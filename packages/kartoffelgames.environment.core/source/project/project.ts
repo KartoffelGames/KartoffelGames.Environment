@@ -128,14 +128,14 @@ export class Project {
         }
 
         // Split packagename by /, -, _ and .
-        let lSplitPackageName: Array<string> = pPackageName.split(/[\/-_\.]/g);
+        let lSplitPackageNamePartList: Array<string> = pPackageName.split(/[\/\-_\.]/g);
 
         // Remove empty strings and remove any other symbols, anything to lowercase.
-        lSplitPackageName = lSplitPackageName.filter(pValue => pValue !== '');
-        lSplitPackageName = lSplitPackageName.map(pValue => pValue.replace(/[^\w]/g, '').toLowerCase());
+        lSplitPackageNamePartList = lSplitPackageNamePartList.filter(pValue => pValue !== '');
+        lSplitPackageNamePartList = lSplitPackageNamePartList.map(pValue => pValue.replace(/[^\w]/g, '').toLowerCase());
 
         // Return nothing when nothing is left.
-        if (lSplitPackageName.length === 0) {
+        if (lSplitPackageNamePartList.length === 0) {
             return '';
         }
 
@@ -145,23 +145,23 @@ export class Project {
         };
 
         // Pop the first entry and use it as project name.
-        let lPackageNameId: string = lLeadingToUppercase(lSplitPackageName.shift()!);
+        let lPackageNameId: string = lLeadingToUppercase(lSplitPackageNamePartList.shift()!);
 
         // On empty return result.
-        if (lSplitPackageName.length === 0) {
+        if (lSplitPackageNamePartList.length === 0) {
             return lPackageNameId;
         }
 
         // Add next part as project namespace.
-        lPackageNameId += `.${lLeadingToUppercase(lSplitPackageName.shift()!)}`;
+        lPackageNameId += `.${lLeadingToUppercase(lSplitPackageNamePartList.shift()!)}`;
 
         // On empty return result.
-        if (lSplitPackageName.length === 0) {
+        if (lSplitPackageNamePartList.length === 0) {
             return lPackageNameId;
         }
 
         // Append the remaining parts as package name with hyphen.
-        lPackageNameId += `.${lSplitPackageName.map(pValue => lLeadingToUppercase(pValue)).join('-')}`;
+        lPackageNameId += `.${lSplitPackageNamePartList.map(pValue => lLeadingToUppercase(pValue)).join('_')}`;
 
         return lPackageNameId;
     }
