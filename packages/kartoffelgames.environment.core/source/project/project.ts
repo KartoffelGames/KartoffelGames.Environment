@@ -122,40 +122,48 @@ export class Project {
      * @param pPackageName - Package name.
      */
     public packageToIdName(pPackageName: string): string {
-        let lConvertedPackageName: string = pPackageName;
-
         // Empty packae name.
-        if (!lConvertedPackageName) {
+        if (!pPackageName) {
             return '';
         }
 
-        // Replace '/' with '.'.
-        lConvertedPackageName = lConvertedPackageName.replaceAll('/', '.');
+        // Split packagename by /, -, _ and .
+        let lSplitPackageName: Array<string> = pPackageName.split(/[\/-_\.]/g);
 
-        // Replace every symbol with ''
-        lConvertedPackageName = lConvertedPackageName.replaceAll(/[^\w.-]/g, '');
+        // Remove empty strings and remove any other symbols, anything to lowercase.
+        lSplitPackageName = lSplitPackageName.filter(pValue => pValue !== '');
+        lSplitPackageName = lSplitPackageName.map(pValue => pValue.replace(/[^\w]/g, '').toLowerCase());
 
-        // Replace '-' with '_'.
-        lConvertedPackageName = lConvertedPackageName.replaceAll('-', '_');
+        // Return nothing when nothing is left.
+        if (lSplitPackageName.length === 0) {
+            return '';
+        }
 
-        // Lowercase everything.
-        lConvertedPackageName = lConvertedPackageName.toLowerCase();
+        // Convert first letter to uppercase.
+        const lLeadingToUppercase = (pValue: string) => {
+            return pValue.charAt(0).toUpperCase() + pValue.slice(1);
+        };
 
-        // Upercase every starting word.
-        // Split '.' and join again with '.' but uppercase every parts starting character.
-        // Slice wrong added starting '.' after joining with reduce.
-        lConvertedPackageName = lConvertedPackageName.split('.').reduce((pCurrentValue: string, pNextValue: string) => {
-            return `${pCurrentValue}.${pNextValue.charAt(0).toUpperCase() + pNextValue.slice(1)}`;
-        }, '').slice(1);
+        // Pop the first entry and use it as project name.
+        let lPackageNameId: string = lLeadingToUppercase(lSplitPackageName.shift()!);
 
-        // Uppercase every starting word.
-        // Split '_' and join again with '_' but uppercase every parts starting character.
-        // Slice wrong added starting '_' after joining with reduce.
-        lConvertedPackageName = lConvertedPackageName.split('_').reduce((pCurrentValue: string, pNextValue: string) => {
-            return `${pCurrentValue}_${pNextValue.charAt(0).toUpperCase() + pNextValue.slice(1)}`;
-        }, '').slice(1);
+        // On empty return result.
+        if (lSplitPackageName.length === 0) {
+            return lPackageNameId;
+        }
 
-        return lConvertedPackageName;
+        // Add next part as project namespace.
+        lPackageNameId += `.${lLeadingToUppercase(lSplitPackageName.shift()!)}`;
+
+        // On empty return result.
+        if (lSplitPackageName.length === 0) {
+            return lPackageNameId;
+        }
+
+        // Append the remaining parts as package name with hyphen.
+        lPackageNameId += `.${lSplitPackageName.map(pValue => lLeadingToUppercase(pValue)).join('-')}`;
+
+        return lPackageNameId;
     }
 
     /**
@@ -423,7 +431,6 @@ export class Project {
             directory: lPackageDirectory,
             workspace: {
                 name: lPackageIdName,
-                root: false
             },
             packageJson: lPackageJson
         };
@@ -436,7 +443,7 @@ export type PackageInformation = {
     directory: string;
     workspace: {
         name: string;
-        root: boolean,
+        root?: boolean,
     };
     packageJson: Record<string, any>;
 };
