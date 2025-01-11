@@ -1,5 +1,5 @@
 {
-    "name": "kg-main-blueprint",
+    "name": "blueprint",
     "packageBlueprints": {
         "resolveClass": "CliPackageBlueprint",
         "packages": {

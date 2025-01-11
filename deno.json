@@ -45,7 +45,7 @@
             "@kartoffelgames/environment-command-help",
             "@kartoffelgames/environment-command-sync",
             "@kartoffelgames/environment-command-create",
-            "@kartoffelgames/environment-blueprint-kg-main"
+            "@kartoffelgames/environment-blueprint"
         ]
     }
 }

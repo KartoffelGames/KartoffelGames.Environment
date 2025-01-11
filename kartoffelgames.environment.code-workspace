@@ -5,8 +5,8 @@
             "path": "packages\\kartoffelgames.environment"
         },
         {
-            "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
-            "path": "packages\\kartoffelgames.environment.blueprint_kg_main"
+            "name": "Kartoffelgames.Environment.Blueprint",
+            "path": "packages\\kartoffelgames.environment.blueprint"
         },
         {
             "name": "Kartoffelgames.Environment.Build",
