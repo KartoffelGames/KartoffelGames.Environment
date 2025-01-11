@@ -3,9 +3,12 @@
         "./packages/*"
     ],
     "tasks": {
-        "lint": "deno run -A npm:eslint --config eslint.config.js"
+        "lint": "deno run -A npm:eslint --config eslint.config.js",
+        "kg": "deno run -A packages/kartoffelgames.environment.cli/source/cli.ts"
     },
-    "imports": {},
+    "imports": {
+        "kg": "./packages/kartoffelgames.environment.cli/source/index.ts"
+    },
     "compilerOptions": {
         "allowUnreachableCode": false,
         "exactOptionalPropertyTypes": true,
@@ -41,7 +44,8 @@
     "kg": {
         "root": true,
         "cli": [
-            "@kartoffelgames/environment-command-help"
+            "@kartoffelgames/environment-command-help",
+            "@kartoffelgames/environment-command-sync"
         ]
     }
 }

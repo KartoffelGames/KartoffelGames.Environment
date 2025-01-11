@@ -71,7 +71,7 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
         }
 
         // Execute command.
-        lConsole.write('Execute command...\n');
+        lConsole.writeLine('Execute command...\n');
         await lCliCommandHandler.execute(lProject);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');

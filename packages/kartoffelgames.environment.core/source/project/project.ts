@@ -275,7 +275,7 @@ export class Project {
         lJson['kg']['config'] = lPackageConfiguration;
 
         // Create path to package.json.
-        const lPackageJsonPath: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'package.json');
+        const lPackageJsonPath: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'deno.json');
 
         // Save packag.json.
         FileSystem.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));

@@ -41,22 +41,14 @@ export class Console {
     }
 
     /**
-     * Output text.
+     * Output text end with newline.
      * @param pText - Output text. 
      */
-    public write(pText: string, pColor?: string): void {
+    public writeLine(pText: string, pColor?: string): void {
         if (pColor) {
             console.log(`%c${pText}`, `color: ${pColor}`);
         } else {
             console.log(pText);
         }
-    }
-
-    /**
-     * Output text end with newline.
-     * @param pText - Output text. 
-     */
-    public writeLine(pText: string, pColor?: string): void {
-        this.write(pText + '\n', pColor);
     }
 }
