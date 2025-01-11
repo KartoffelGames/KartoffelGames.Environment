@@ -104,7 +104,6 @@ export class CliPackages {
 
             // Try to read all packages.
             for (const lPackageImport of lPackageImports) {
-                console.log(`${lPackageImport}/kg-cli.config.json`);
                 // Import "kg-cli.config.json" from package.
                 const lCliConfigFilePath: URL = Package.resolveToUrl(`${lPackageImport}/kg-cli.config.json`);
 
