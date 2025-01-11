@@ -1,2 +1,1 @@
-export { CliPackageBlueprint } from './package-blueprint';
-export { CliProjectBlueprint } from './project-blueprint';
+export { CliPackageBlueprint } from './package-blueprint.ts';

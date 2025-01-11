@@ -1,21 +1,23 @@
 {
-    "name": "@kartoffelgames/environment-command-help",
+    "name": "@kartoffelgames/environment-blueprint-kg-main",
     "version": "0.0.1",
     "tasks": {},
     "imports": {},
     "exports": {
-        ".": "./source/index.ts",
-        "./kg-cli.config.json": "./kg-cli.config.json"
-    },
+		".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json",
+		"./blueprint": "./blueprint"
+	},
     "publish": {
         "include": [
             "source/",
             "deno.json",
-            "kg-cli.config.json"
+            "kg-cli.config.json",
+            "blueprint/"
         ]
     },
     "kg": {
-        "name": "Kartoffelgames.Environment.Command_Help",
+        "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
         "config": {
             "blueprint": "kg-main",
             "pack": false,

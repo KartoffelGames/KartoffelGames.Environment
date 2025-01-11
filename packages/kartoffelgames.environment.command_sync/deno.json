@@ -10,7 +10,7 @@
     "publish": {
         "include": [
             "source/",
-            "deno.jsonc",
+            "deno.json",
             "kg-cli.config.json"
         ]
     },

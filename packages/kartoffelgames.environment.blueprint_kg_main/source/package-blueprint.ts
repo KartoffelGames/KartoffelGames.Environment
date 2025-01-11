@@ -1,4 +1,4 @@
-import { CliPackageBlueprintParameter, FileSystem, ICliPackageBlueprintResolver, Project } from '@kartoffelgames/environment.core';
+import { CliPackageBlueprintParameter, FileSystem, ICliPackageBlueprintResolver, Project } from '@kartoffelgames/environment-core';
 
 export class CliPackageBlueprint implements ICliPackageBlueprintResolver {
     /**

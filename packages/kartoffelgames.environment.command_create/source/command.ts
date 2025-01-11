@@ -28,12 +28,14 @@ export class KgCliCommand implements ICliCommand<string> {
     public async run(pParameter: CliParameter, pProject: Project): Promise<void> {
         const lConsole = new Console();
 
+        console.log('aaa')
+
         // Read all available cli packages.
         const lCliPackageList: Array<CliPackageInformation> = Array.from((await new CliPackages(pProject.projectRootDirectory).getCommandPackages()).values());
-
+        console.log('aaa')
         // Read all KG_Cli_Blueprint packages informations.
         const lBlueprintList: Map<string, Blueprint> = this.readBlueprintList(lCliPackageList);
-
+        console.log('aaa')
         // List blueprints on --list parameter and exit command.
         if (pParameter.parameter.has('list')) {
             // Output all commands.

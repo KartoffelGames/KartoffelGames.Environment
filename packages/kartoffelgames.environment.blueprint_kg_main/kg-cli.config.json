@@ -1,11 +1,5 @@
 {
     "name": "kg-main-blueprint",
-    "projectBlueprints": {
-        "resolveClass": "CliProjectBlueprint",
-        "packages": {
-            "kg-main": "blueprints/project-blueprint.zip"
-        }
-    },
     "packageBlueprints": {
         "resolveClass": "CliPackageBlueprint",
         "packages": {
