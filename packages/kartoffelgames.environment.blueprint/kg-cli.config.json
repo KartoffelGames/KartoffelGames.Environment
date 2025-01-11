@@ -3,7 +3,7 @@
     "packageBlueprints": {
         "resolveClass": "CliPackageBlueprint",
         "packages": {
-            "kg-main": "blueprints/package-blueprint.zip"
+            "kg-main": "blueprint/package-blueprint.zip"
         }
     }
 }

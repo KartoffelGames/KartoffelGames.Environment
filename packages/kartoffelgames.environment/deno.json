@@ -7,7 +7,7 @@
     },
     "exports": {
 		".": "./source/index.ts",
-		"./blueprint": "./blueprint"
+		"./blueprint/project-blueprint.zip": "./blueprint/project-blueprint.zip"
 	},
     "publish": {
         "include": [

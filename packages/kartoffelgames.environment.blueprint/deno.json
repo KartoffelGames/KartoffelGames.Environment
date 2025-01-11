@@ -5,11 +5,13 @@
     "imports": {},
     "exports": {
         ".": "./source/index.ts",
-        "./kg-cli.config.json": "./kg-cli.config.json"
+        "./kg-cli.config.json": "./kg-cli.config.json",
+        "./blueprint/package-blueprint.zip": "./blueprint/package-blueprint.zip"
     },
     "publish": {
         "include": [
             "source/",
+            "blueprint/",
             "deno.json",
             "kg-cli.config.json"
         ]
