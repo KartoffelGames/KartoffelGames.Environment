@@ -97,7 +97,7 @@ export class CliCommand {
         // Read all optional parameter names starting with -- from command pattern.
         const lOptionalNamedParameterPatternList: Set<string> = new Set<string>();
         for (const lCommandPatternPart of pCliCommand.information.command.flags) {
-            lOptionalNamedParameterPatternList.add(lCommandPatternPart.substring(2).toLowerCase());
+            lOptionalNamedParameterPatternList.add(lCommandPatternPart);
         }
 
         // Create cli parameter and copy specified parameter.
