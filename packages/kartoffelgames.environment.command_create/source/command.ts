@@ -1,4 +1,5 @@
-import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliCommand, ICliPackageBlueprintResolver, Package, PackageInformation, Process, ProcessParameter, Project } from '@kartoffelgames/environment.core';
+import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliCommand, ICliPackageBlueprintResolver, Package, PackageInformation, Process, ProcessParameter, Project } from '@kartoffelgames/environment-core';
+import { BlobReader, ZipReader , Uint8ArrayWriter} from '@zip-js/zip-js';
 
 export class KgCliCommand implements ICliCommand<string> {
     /**
@@ -7,8 +8,10 @@ export class KgCliCommand implements ICliCommand<string> {
     public get information(): CliCommandDescription<string> {
         return {
             command: {
-                pattern: 'create [blueprint_name] [package_name] --list',
                 description: 'Create new package.',
+                name: 'create',
+                parameters: ['[blueprint_name]', '[package_name]'],
+                flags: ['list']
             },
             configuration: {
                 name: 'package-blueprint',
@@ -125,8 +128,14 @@ export class KgCliCommand implements ICliCommand<string> {
         // Create blueprint resolver instance.
         const lPackageResolver: ICliPackageBlueprintResolver = await new CliPackages(pProject.projectRootDirectory).createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
 
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const lDecompress: (pTargetFile: string, pSourceDirectory: string) => Promise<void> = require('decompress');
+        // Get url path of project blueprint and fetch it.
+        const lProjectBlueprintZipUrl: URL = pBlueprint.blueprintFileUrl;
+        const lProjectBlueprintZipRequest: Response = await fetch(lProjectBlueprintZipUrl);
+        const lProjectBlueprintZipBlob: Blob = await lProjectBlueprintZipRequest.blob();
+
+        // Create zip reader from zip blob.
+        const lZipBlobReader: BlobReader = new BlobReader(lProjectBlueprintZipBlob);
+        const lZipReader: ZipReader<unknown> = new ZipReader(lZipBlobReader);
 
         // Rollback on error.
         try {
@@ -136,8 +145,29 @@ export class KgCliCommand implements ICliCommand<string> {
             // Create target directory.
             FileSystem.createDirectory(lTargetPath);
 
-            // Wait for decompression.
-            await lDecompress(Package.resolveToPath(pBlueprint.blueprintFilePath), lTargetPath);
+            // Decompress blueprint into target directory.
+            for await (const lZipEntry of lZipReader.getEntriesGenerator()) {
+                // Skip directories.
+                if (lZipEntry.directory) {
+                    continue;
+                }
+
+                const lTargetFilePath: string = FileSystem.pathToAbsolute(lTargetPath, lZipEntry.filename);
+
+                // Read Directory part of target file path.
+                const lTargetFileDirectoryPath: string = FileSystem.directoryOfFile(lTargetFilePath);
+
+                // Create directory if it does not exist.
+                if (!FileSystem.exists(lTargetFileDirectoryPath)) {
+                    FileSystem.createDirectory(lTargetFileDirectoryPath);
+                }
+
+                // Read zipped file.
+                const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter())
+                FileSystem.writeBinary(lTargetFilePath, lZipFileData);
+
+                console.log(lZipEntry.directory, lZipEntry.filename);
+            }
 
             // Create package parameter.
             const lPackageParameter: CliPackageBlueprintParameter = {
@@ -181,7 +211,7 @@ export class KgCliCommand implements ICliCommand<string> {
                 lAvailableBlueprint.set(lBlueprintPackageName, {
                     packageInformation: lPackage,
                     resolverClass: lPackage.configuration.packageBlueprints.resolveClass,
-                    blueprintFilePath: Package.resolveToPath(lPackage.packageName + `/` + lBlueprintPackagePath)
+                    blueprintFileUrl: Package.resolveToUrl(lPackage.packageName + `/` + lBlueprintPackagePath)
                 });
             }
         }
@@ -193,5 +223,5 @@ export class KgCliCommand implements ICliCommand<string> {
 type Blueprint = {
     packageInformation: CliPackageInformation;
     resolverClass: string;
-    blueprintFilePath: string;
+    blueprintFileUrl: URL;
 };

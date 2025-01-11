@@ -1,0 +1,27 @@
+{
+    "name": "@kartoffelgames/environment-command-create",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {
+        "@zip-js/zip-js": "jsr:@zip-js/zip-js"
+    },
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "deno.jsonc",
+            "kg-cli.config.json"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Help",
+        "config": {
+            "blueprint": "kg-main",
+            "pack": false,
+            "page": false
+        }
+    }
+}

@@ -6,9 +6,7 @@
         "lint": "deno run -A npm:eslint --config eslint.config.js",
         "kg": "deno run -A packages/kartoffelgames.environment.cli/source/cli.ts"
     },
-    "imports": {
-        "kg": "./packages/kartoffelgames.environment.cli/source/index.ts"
-    },
+    "imports": {},
     "compilerOptions": {
         "allowUnreachableCode": false,
         "exactOptionalPropertyTypes": true,
@@ -45,7 +43,8 @@
         "root": true,
         "cli": [
             "@kartoffelgames/environment-command-help",
-            "@kartoffelgames/environment-command-sync"
+            "@kartoffelgames/environment-command-sync",
+            "@kartoffelgames/environment-command-create"
         ]
     }
 }
