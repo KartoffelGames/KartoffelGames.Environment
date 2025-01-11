@@ -3397,16 +3397,6 @@
           ]
         }
       },
-      "packages/kartoffelgames.environment.command_init": {
-        "packageJson": {
-          "dependencies": [
-            "npm:@kartoffelgames/environment.cli@^2.0.4",
-            "npm:@kartoffelgames/environment.core@^2.0.4",
-            "npm:@types/chai@^4.3.3",
-            "npm:@types/mocha@^5.2.7"
-          ]
-        }
-      },
       "packages/kartoffelgames.environment.command_page": {
         "packageJson": {
           "dependencies": [

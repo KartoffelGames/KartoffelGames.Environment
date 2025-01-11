@@ -12,7 +12,7 @@ export class Project {
         const lAllFiles: Array<string> = FileSystem.findFiles(pCurrentPath, {
             direction: 'reverse',
             include: {
-                fileNames: ['package.json'],
+                fileNames: ['deno.json'],
                 extensions: ['json']
             }
         });
@@ -166,7 +166,7 @@ export class Project {
         const lAllFiles: Array<string> = FileSystem.findFiles(this.projectRootDirectory, {
             depth: 2, // ./packages/{package_name}/Package.json
             include: {
-                fileNames: ['package.json'],
+                fileNames: ['deno.json'],
                 extensions: ['json']
             },
             exclude: { directories: ['node_modules'] }

@@ -15,5 +15,13 @@
             "blueprint/",
             "deno.jsonc"
         ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment",
+        "config": {
+            "blueprint": "kg-main",
+            "pack": false,
+            "page": false
+        }
     }
 }

@@ -72,16 +72,15 @@ export class CliCommand {
      * Find command by parameter.
      * @param pParameter - Command parameter.
      */
-    private convertCommandParameter(_pCliCommand: ICliCommand, pParameter: Array<string>): CliParameter {
-        // TODO: Needs a rework too.
+    private convertCommandParameter(pCliCommand: ICliCommand, pParameter: Array<string>): CliParameter {
+        // All required parameter.
+        const lRequiredParameterPatternList: Array<string> = new Array<string>();
 
-        // Split command pattern by spaces. Remove emty parts.
-        let lCommandPatternParts: Array<string> = [];//pCliCommand.information.command.pattern.split(' ');
-        lCommandPatternParts = lCommandPatternParts.filter(pPart => pPart !== '');
+        // Add command name to required parameter list.
+        lRequiredParameterPatternList.push(pCliCommand.information.command.name);
 
         // Read all required parameter names starting with < or any letter from command pattern.
-        const lRequiredParameterPatternList: Array<string> = new Array<string>();
-        for (const lCommandPatternPart of lCommandPatternParts) {
+        for (const lCommandPatternPart of pCliCommand.information.command.parameters) {
             if (lCommandPatternPart.startsWith('<') || lCommandPatternPart.match(/^[a-zA-Z0-9]/)) {
                 lRequiredParameterPatternList.push(lCommandPatternPart.toLowerCase());
             }
@@ -89,7 +88,7 @@ export class CliCommand {
 
         // Read all optional parameter names starting with -- from command pattern.
         const lOptionalUnnamedParameterPatternList: Array<string> = new Array<string>();
-        for (const lCommandPatternPart of lCommandPatternParts) {
+        for (const lCommandPatternPart of pCliCommand.information.command.parameters) {
             if (lCommandPatternPart.startsWith('[')) {
                 lOptionalUnnamedParameterPatternList.push(lCommandPatternPart.substring(1, lCommandPatternPart.length - 1).toLowerCase());
             }
@@ -97,10 +96,8 @@ export class CliCommand {
 
         // Read all optional parameter names starting with -- from command pattern.
         const lOptionalNamedParameterPatternList: Set<string> = new Set<string>();
-        for (const lCommandPatternPart of lCommandPatternParts) {
-            if (lCommandPatternPart.startsWith('--')) {
-                lOptionalNamedParameterPatternList.add(lCommandPatternPart.substring(2).toLowerCase());
-            }
+        for (const lCommandPatternPart of pCliCommand.information.command.flags) {
+            lOptionalNamedParameterPatternList.add(lCommandPatternPart.substring(2).toLowerCase());
         }
 
         // Create cli parameter and copy specified parameter.

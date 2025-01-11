@@ -1,0 +1,25 @@
+{
+    "name": "@kartoffelgames/environment-command-help",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {},
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "deno.jsonc",
+            "kg-cli.config.json"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Help",
+        "config": {
+            "blueprint": "kg-main",
+            "pack": false,
+            "page": false
+        }
+    }
+}

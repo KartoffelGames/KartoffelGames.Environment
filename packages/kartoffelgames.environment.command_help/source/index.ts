@@ -1,1 +1,1 @@
-export { CliCommand } from './command';
+export { CliCommand } from './command.ts';

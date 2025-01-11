@@ -1,4 +1,4 @@
-import { CliCommandDescription, CliPackages, CliParameter, Console, ICliCommand, Project } from '@kartoffelgames/environment.core';
+import { CliCommandDescription, CliPackages, CliParameter, Console, ICliCommand, Project } from '@kartoffelgames/environment-core';
 
 export class CliCommand implements ICliCommand {
     /**
@@ -8,7 +8,9 @@ export class CliCommand implements ICliCommand {
         return {
             command: {
                 description: 'Show command list',
-                pattern: 'help'
+                name: 'help',
+                parameters: [],
+                flags: []
             },
             configuration: null
         };
@@ -44,24 +46,35 @@ export class CliCommand implements ICliCommand {
         // Wait for all packages to be created.
         const lCommandList: Array<ICliCommand | null> = await Promise.all(lPackageInstancePromiseList);
 
-        // Find max length of commands.
-        const lMaxLength: number = lCommandList.reduce((pCurrent: number, pNext: ICliCommand | null) => {
-            if (!pNext) {
-                return pCurrent;
-            }
-
-            return pNext.information.command.pattern.length > pCurrent ? pNext.information.command.pattern.length : pCurrent;
-        }, 0);
-
-        // Output all commands.
-        const lConsole: Console = new Console();
-        lConsole.writeLine('Available commands:');
+        // Convert command list into command/description map.
+        const lCommandMap: Map<string, string> = new Map<string, string>();
         for (const lCommand of lCommandList) {
             if (!lCommand) {
                 continue;
             }
 
-            lConsole.writeLine(`kg ${lCommand.information.command.pattern.padEnd(lMaxLength, ' ')} - ${lCommand.information.command.description}`);
+            // Convert pattern information into pattern string.
+            let lCommandPattern: string = `${lCommand.information.command.name} ${lCommand.information.command.parameters.join(' ')} `;
+            lCommandPattern += lCommand.information.command.flags.map((pFlag) => { return `--${pFlag}`; }).join(' ');
+
+            // Add command to map.
+            lCommandMap.set(lCommandPattern, lCommand.information.command.description);
+        }
+
+        // Find max length of commands.
+        const lMaxLength: number = lCommandMap.keys().reduce((pCurrent: number, pNext: string | null) => {
+            if (!pNext) {
+                return pCurrent;
+            }
+
+            return pNext.length > pCurrent ? pNext.length : pCurrent;
+        }, 0);
+
+        // Output all commands.
+        const lConsole: Console = new Console();
+        lConsole.writeLine('Available commands:');
+        for (const [lCommandPattern, lCommandDescription] of lCommandMap) {
+            lConsole.writeLine(`kg ${lCommandPattern.padEnd(lMaxLength, ' ')} - ${lCommandDescription}`);
         }
     }
 }

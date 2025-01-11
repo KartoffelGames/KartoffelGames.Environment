@@ -1,6 +1,6 @@
-#!/usr/bin/env node
+#!/usr/bin/env deno
 
-import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext } from '@kartoffelgames/environment.core';
+import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, Package } from '@kartoffelgames/environment-core';
 
 // TODO: Deno-Rework __dirname
 (async () => {
@@ -9,7 +9,7 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext }
     // Read parameter and cut before cli.js parameter.
     const lParameter: Array<string> = (() => {
         const lCliCommandStartIndex: number = ProcessContext.parameters.findIndex((pParameter) => {
-            return pParameter.toLowerCase().endsWith('cli.js');
+            return pParameter.toLowerCase().endsWith(FileSystem.fileOfPath(import.meta.filename!));
         });
         return ProcessContext.parameters.slice(lCliCommandStartIndex + 1);
     })();
@@ -28,8 +28,10 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext }
     // Execute command.
     try {
         // Read current version.
-        const lCliPackageJson: string = FileSystem.read(FileSystem.pathToAbsolute(__dirname, '../../', 'package.json')); // Root at /library
-        const lCurrentCliVersion: string = JSON.parse(lCliPackageJson)['version'];
+        const lCliPackageJsonUrl: URL = Package.resolveToUrl(import.meta.url + '/../../' + 'deno.json');
+        const lCliPackageJsonRequest: Response = await fetch(lCliPackageJsonUrl);
+        const lCliPackageJson: any = await lCliPackageJsonRequest.json();
+        const lCurrentCliVersion: string = lCliPackageJson['version'];
 
         // Print execution information.
         lConsole.writeLine(`KG-CLI [${lCurrentCliVersion}]: "kg ${lParameter.join(' ')}"`, 'yellow');
@@ -56,7 +58,7 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext }
 
             // Print all packages.
             lConsole.writeLine(`CLI-Packages:`, 'green');
-            for(const [lPackageName, lPackageConfig] of await lCliPackages.getCommandPackages()){
+            for (const [lPackageName, lPackageConfig] of await lCliPackages.getCommandPackages()) {
                 lConsole.writeLine(`    ${lPackageName}:`, 'green');
                 lConsole.writeLine(`        ${JSON.stringify(lPackageConfig)}:`, 'green');
             }
@@ -79,8 +81,8 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext }
             lConsole.writeLine((<Error>e)?.stack ?? '', 'red');
         }
 
-        process.exit(1);
+        Deno.exit(1);
     }
 
-    process.exit(0);
+    Deno.exit(0);
 })();

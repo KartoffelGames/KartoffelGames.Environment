@@ -1,0 +1,23 @@
+{
+    "name": "@kartoffelgames/environment-cli",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {},
+    "exports": {
+		".": "./source/index.ts"
+	},
+    "publish": {
+        "include": [
+            "source/",
+            "deno.jsonc"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Cli",
+        "config": {
+            "blueprint": "kg-main",
+            "pack": false,
+            "page": false
+        }
+    }
+}

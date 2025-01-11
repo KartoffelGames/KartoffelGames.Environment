@@ -33,14 +33,15 @@
         "semiColons": true,
         "singleQuote": true
     },
-    // Disable deno linter
     "lint": {
         "exclude": [
             "**/*"
         ]
     },
-    // KG specific settings
     "kg": {
-        "root": true
+        "root": true,
+        "cli": [
+            "@kartoffelgames/environment-command-help"
+        ]
     }
 }

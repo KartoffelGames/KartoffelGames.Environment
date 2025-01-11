@@ -96,6 +96,17 @@ export class FileSystem {
     }
 
     /**
+     * Get file part of file path.
+     * 
+     * @param pPath - File path.
+     * 
+     * @returns - File of path
+     */
+    public static fileOfPath(pPath: string): string {
+        return path.basename(pPath);
+    }
+
+    /**
      * Search files.
      * @param pStartDirectory - Starting directory.
      * @param pOptions - [Optional] Search options
