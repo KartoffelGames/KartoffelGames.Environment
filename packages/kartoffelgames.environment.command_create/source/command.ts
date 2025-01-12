@@ -60,7 +60,7 @@ export class KgCliCommand implements ICliCommand<string> {
         }
 
         // Find name. Get from command parameter on promt user.
-        const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+        const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-]+\/)?[a-z0-9-]*$/;
         let lNewPackageName: string = pParameter.parameter.get('package_name') ?? '';
         if (lNewPackageName === '') {
             lNewPackageName = await lConsole.promt('Package Name: ', lPackageNameValidation);
@@ -68,7 +68,7 @@ export class KgCliCommand implements ICliCommand<string> {
 
         // Validate packag name again or for the first time.
         if (!lPackageNameValidation.test(lNewPackageName)) {
-            throw 'Package name does not match NPM package name convention';
+            throw 'Package name does not match JSR package name convention';
         }
 
         // Create blueprint.
@@ -81,7 +81,7 @@ export class KgCliCommand implements ICliCommand<string> {
         // Read package information of newly created package.
         const lPackageInformation: PackageInformation = pProject.getPackageInformation(lNewPackageName);
 
-        // Add package information to package.json.
+        // Add package information to deno.json.
         lConsole.writeLine('Set package configuration...');
         pProject.writeCliPackageConfiguration(lPackageInformation, this, () => {
             return lBlueprintName;
