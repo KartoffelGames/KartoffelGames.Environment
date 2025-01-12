@@ -170,9 +170,9 @@ export class Project {
      * Read all projects of package.
      */
     public readAllPackages(): Array<PackageInformation> {
-        // Search all package.json files of root workspaces. Exclude node_modules.
+        // Search all deno.json files of root workspaces. Exclude node_modules.
         const lAllFiles: Array<string> = FileSystem.findFiles(this.projectRootDirectory, {
-            depth: 2, // ./packages/{package_name}/Package.json
+            depth: 2, // ./packages/{package_name}/deno.json
             include: {
                 fileNames: ['deno.json'],
                 extensions: ['json']
@@ -199,7 +199,7 @@ export class Project {
     }
 
     /**
-     * Write project kg information into package.json.
+     * Write project kg information into deno.json.
      * 
      * @param pPackageName - Name of project.
      * @param pUpdater - Update function.
@@ -259,7 +259,7 @@ export class Project {
     }
 
     /**
-     * Update project kg information in package.json.
+     * Update project kg information in deno.json.
      * 
      * @param pPackageName - Name of project.
      */
@@ -273,7 +273,7 @@ export class Project {
         // Read package configuration before updating package json.
         const lPackageConfiguration: Record<string, any> = await this.readPackageConfiguration(lPackageInformation);
 
-        // Read and parse package.json
+        // Read and parse deno.json
         const lJson: Record<string, any> = lPackageInformation.packageJson;
 
         // Read package config.
@@ -282,7 +282,7 @@ export class Project {
         lJson['kg'] = lPackageInformation.workspace;
         lJson['kg']['config'] = lPackageConfiguration;
 
-        // Create path to package.json.
+        // Create path to deno.json.
         const lPackageJsonPath: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'deno.json');
 
         // Save packag.json.
@@ -290,7 +290,7 @@ export class Project {
     }
 
     /**
-     * Write project kg information into package.json.
+     * Write project kg information into deno.json.
      * 
      * @param pPackageName - Name of project.
      * @param pUpdater - Update function.
@@ -302,7 +302,7 @@ export class Project {
         // Call update callback.
         lPackageConfiguration = pUpdater(lPackageConfiguration);
 
-        // Read and parse package.json
+        // Read and parse deno.json
         const lJson: Record<string, any> = pPackageInformation.packageJson;
 
         // Update package json information.
@@ -310,10 +310,10 @@ export class Project {
         lJson['kg']['config'] ??= {};
         lJson['kg']['config'][pCommand.information.configuration!.name] = lPackageConfiguration;
 
-        // Create path to package.json.
-        const lPackageJsonPath: string = FileSystem.pathToAbsolute(pPackageInformation.directory, 'package.json');
+        // Create path to deno.json.
+        const lPackageJsonPath: string = FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json');
 
-        // Save packag.json.
+        // Save deno.json.
         FileSystem.write(lPackageJsonPath, JSON.stringify(lJson, null, 4));
     }
 
@@ -376,7 +376,7 @@ export class Project {
     }
 
     /**
-     * Read package informations from package.json.
+     * Read package informations from deno.json.
      * 
      * @param pPackageName - Package name or name id.
      */
@@ -390,7 +390,7 @@ export class Project {
             return null;
         }
 
-        // Read and parse package.json
+        // Read and parse deno.json
         const lFileContent: string = FileSystem.read(lPackageJsonFile);
 
         let lPackageJson: any;
