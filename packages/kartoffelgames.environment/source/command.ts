@@ -1,5 +1,5 @@
 import { CliCommandDescription, Console, FileSystem, ICliCommand, Package, ProcessContext } from '@kartoffelgames/environment-core';
-import { BlobReader, ZipReader , Uint8ArrayWriter} from '@zip-js/zip-js';
+import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
 
 export class Command implements ICliCommand<string> {
     /**
@@ -90,11 +90,12 @@ export class Command implements ICliCommand<string> {
                     FileSystem.createDirectory(lTargetFileDirectoryPath);
                 }
 
-                // Read zipped file.
-                const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter())
-                FileSystem.writeBinary(lTargetFilePath, lZipFileData);
+                // Output copy information.
+                lConsole.writeLine("Copy " + lZipEntry.filename);
 
-                console.log(lZipEntry.directory, lZipEntry.filename);
+                // Read zipped file.
+                const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());
+                FileSystem.writeBinary(lTargetFilePath, lZipFileData);
             }
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
