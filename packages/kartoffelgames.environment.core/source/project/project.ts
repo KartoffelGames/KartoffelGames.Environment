@@ -69,28 +69,49 @@ export class Project {
      */
     public addWorkspace(pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
-        const lWorkspaceFilePath: string = FileSystem.findFiles(this.projectRootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
-        const lFileText = FileSystem.read(lWorkspaceFilePath);
-        const lPackageJson = JSON.parse(lFileText);
+        const lVsWorkspaceFilePath: string = FileSystem.findFiles(this.projectRootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
+        const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
+        const lVsWorkspaceFileJson = JSON.parse(lVsWorkspaceFileText);
 
-        // Add new folder to folder list.Y
-        const lWorkspaceDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
-        const lFolderList: Array<{ name: string, path: string; }> = lPackageJson['folders'];
-        lFolderList.push({
+        // Add new folder to folder list.
+        const lPackageDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
+        const lPackageDirectoryList: Array<{ name: string, path: string; }> = lVsWorkspaceFileJson['folders'];
+        lPackageDirectoryList.push({
             name: this.packageToIdName(pPackageName),
-            path: lWorkspaceDirectory
+            path: lPackageDirectory
         });
 
         // Sort folder alphabeticaly.
-        lFolderList.sort((pFirst, pSecond) => {
+        lPackageDirectoryList.sort((pFirst, pSecond) => {
             if (pFirst.name < pSecond.name) { return -1; }
             if (pFirst.name > pSecond.name) { return 1; }
             return 0;
         });
 
         // Update workspace file.
-        const lPackageJsonText = JSON.stringify(lPackageJson, null, 4);
-        FileSystem.write(lWorkspaceFilePath, lPackageJsonText);
+        const lAlteredVsWorkspaceFileText = JSON.stringify(lVsWorkspaceFileJson, null, 4);
+        FileSystem.write(lVsWorkspaceFilePath, lAlteredVsWorkspaceFileText);
+
+        // The same for Deno.json
+        const lWorkspaceDenoFilePath: string = FileSystem.pathToAbsolute(this.projectRootDirectory, 'deno.json');
+        const lWorkspaceDenoFileText = FileSystem.read(lWorkspaceDenoFilePath);
+        const lWorkspaceDenoFileJson = JSON.parse(lWorkspaceDenoFileText);
+
+        // Convert to a relative path from the workspace root.
+        const lRelativePackageDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
+
+        // Read or create workspaces list.
+        const lWorkspaceDenoFileJsonWorkspaceList: Array<string> = lWorkspaceDenoFileJson['workspaces'] ?? new Array<string>();
+
+        // Add new workspace folder.
+        lWorkspaceDenoFileJsonWorkspaceList.push(lRelativePackageDirectory);
+
+        // Update deno json file.
+        lWorkspaceDenoFileJson['workspaces'] = lWorkspaceDenoFileJsonWorkspaceList;
+
+        // Write deno.json file.
+        const lAlteredWorkspaceDenoFileText = JSON.stringify(lWorkspaceDenoFileJson, null, 4);
+        FileSystem.write(lWorkspaceDenoFilePath, lAlteredWorkspaceDenoFileText);
     }
 
     /**

@@ -2,7 +2,6 @@
 
 import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, Package } from '@kartoffelgames/environment-core';
 
-// TODO: Deno-Rework __dirname
 (async () => {
     const lConsole: Console = new Console();
 
