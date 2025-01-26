@@ -50,7 +50,7 @@ export class KgCliCommand implements ICliCommand<string> {
         // Read required parameter.
         let lBlueprintName: string = pParameter.parameter.get('blueprint_name')?.toLowerCase() ?? '';
         if (lBlueprintName === '') {
-            lBlueprintName = await lConsole.promt('Bluprint name: ', /^[a-z0-9-]$/);
+            lBlueprintName = await lConsole.promt('Bluprint name: ', /^[a-z0-9-]+$/);
         }
 
         // Find blueprint by name.
@@ -60,7 +60,7 @@ export class KgCliCommand implements ICliCommand<string> {
         }
 
         // Find name. Get from command parameter on promt user.
-        const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-]+\/)?[a-z0-9-]*$/;
+        const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-]+\/)?[a-z0-9-]+$/;
         let lNewPackageName: string = pParameter.parameter.get('package_name') ?? '';
         if (lNewPackageName === '') {
             lNewPackageName = await lConsole.promt('Package Name: ', lPackageNameValidation);
