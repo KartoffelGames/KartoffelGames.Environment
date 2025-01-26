@@ -81,6 +81,24 @@ export class FileSystem {
     }
 
     /**
+     * Get path information.
+     * 
+     * @param pPath - Path to file.
+     * 
+     * @returns - Information about path. 
+     */
+    public static pathInformation(pPath: string): PathInformation {
+        const lParsedPath: path.ParsedPath = path.parse(pPath);
+
+        return {
+            basename: lParsedPath.base,
+            directory: lParsedPath.dir,
+            extension: lParsedPath.ext,
+            filename: lParsedPath.name
+        };
+    }
+
+    /**
      * Check path or file existance.
      * @param pPath - Path.
      */
@@ -339,4 +357,11 @@ export type FileSearchOptions = {
      * Default: 'forward'
      */
     direction?: 'forward' | 'reverse';
+};
+
+export type PathInformation = {
+    basename: string;
+    directory: string;
+    extension: string;
+    filename: string;
 };

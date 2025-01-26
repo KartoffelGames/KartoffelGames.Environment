@@ -9,8 +9,8 @@
             "path": "packages\\kartoffelgames.environment.blueprint"
         },
         {
-            "name": "Kartoffelgames.Environment.Build",
-            "path": "packages\\kartoffelgames.environment.build"
+            "name": "Kartoffelgames.Environment.Bundle",
+            "path": "packages\\kartoffelgames.environment.bundle"
         },
         {
             "name": "Kartoffelgames.Environment.Cli",

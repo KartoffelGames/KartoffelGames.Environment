@@ -9,4 +9,4 @@ export { ProcessParameter } from './process/process-parameter.ts';
 export { Package } from './project/package.ts';
 export { type PackageInformation, Project } from './project/project.ts';
 export { Console } from './system/console.ts';
-export { FileSystem } from './system/file-system.ts';
+export { FileSystem, type FileSearchOptions, type PathInformation } from './system/file-system.ts';

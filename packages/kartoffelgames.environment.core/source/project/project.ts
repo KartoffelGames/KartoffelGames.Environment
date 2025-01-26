@@ -99,12 +99,12 @@ export class Project {
      */
     public getPackageInformation(pName: string): PackageInformation {
         // Construct paths.
-        const lPackageDirectory: PackageInformation | null = this.findPackageByName(pName);
-        if (lPackageDirectory === null) {
+        const lPackageInformation: PackageInformation | null = this.findPackageByName(pName);
+        if (lPackageInformation === null) {
             throw `Package "${pName}" not found.`;
         }
 
-        return lPackageDirectory;
+        return lPackageInformation;
     }
 
     /**
@@ -242,7 +242,7 @@ export class Project {
         // Read current available configuration of package.
         const lCurrentConfiguration: Record<string, any> = (() => {
             // Return empty object if no configuration is set.
-            if (pPackageInformation.packageJson['kg']?.['config']?.[lPackageConfigurationKey] ?? null === null) {
+            if ((pPackageInformation.packageJson['kg']?.['config']?.[lPackageConfigurationKey] ?? null) === null) {
                 return {};
             }
 
@@ -427,6 +427,7 @@ export class Project {
 
         return {
             packageName: lPackageName,
+            idName: lPackageIdName,
             version: lPackageVersion,
             directory: lPackageDirectory,
             workspace: {
@@ -439,6 +440,7 @@ export class Project {
 
 export type PackageInformation = {
     packageName: string;
+    idName: string;
     version: string;
     directory: string;
     workspace: {

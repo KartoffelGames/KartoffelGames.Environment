@@ -1,6 +1,17 @@
 {
     "workspace": [
-        "./packages/*"
+        "./packages/kartoffelgames.environment",
+        "./packages/kartoffelgames.environment.blueprint",
+        "./packages/kartoffelgames.environment.bundle",
+        "./packages/kartoffelgames.environment.cli",
+        "./packages/kartoffelgames.environment.command_build",
+        "./packages/kartoffelgames.environment.command_create",
+        "./packages/kartoffelgames.environment.command_help",
+        "./packages/kartoffelgames.environment.command_page",
+        "./packages/kartoffelgames.environment.command_scratchpad",
+        "./packages/kartoffelgames.environment.command_sync",
+        "./packages/kartoffelgames.environment.command_test",
+        "./packages/kartoffelgames.environment.core"
     ],
     "tasks": {
         "lint": "deno run -A npm:eslint --config eslint.config.js",
@@ -45,7 +56,8 @@
             "@kartoffelgames/environment-command-help",
             "@kartoffelgames/environment-command-sync",
             "@kartoffelgames/environment-command-create",
-            "@kartoffelgames/environment-blueprint"
+            "@kartoffelgames/environment-blueprint",
+            "@kartoffelgames/environment-command-build"
         ]
     }
 }

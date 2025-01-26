@@ -1,0 +1,30 @@
+{
+    "name": "@kartoffelgames/environment-bundle",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {
+        "esbuild": "https://deno.land/x/esbuild@v0.24.2/mod.js",
+        "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@^0.11.1"
+    },
+    "exports": "./source/index.ts",
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Bundle",
+        "root": false,
+        "config": {
+            "package_blueprint": "kg-main",
+            "tests": [
+                "unit"
+            ],
+            "page": false,
+            "bundle": {
+                "enabled": false
+            } 
+        }
+    }
+}
