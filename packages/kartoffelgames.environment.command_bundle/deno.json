@@ -1,5 +1,5 @@
 {
-    "name": "@kartoffelgames/environment-command-build",
+    "name": "@kartoffelgames/environment-command-bundle",
     "version": "0.0.1",
     "tasks": {},
     "imports": {},
@@ -15,7 +15,7 @@
         ]
     },
     "kg": {
-        "name": "Kartoffelgames.Environment.Command_Build",
+        "name": "Kartoffelgames.Environment.Command_Bundle",
         "config": {
             "blueprint": "kg-main",
             "pack": false,

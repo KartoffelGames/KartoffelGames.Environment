@@ -4,7 +4,7 @@
         "./packages/kartoffelgames.environment.blueprint",
         "./packages/kartoffelgames.environment.bundle",
         "./packages/kartoffelgames.environment.cli",
-        "./packages/kartoffelgames.environment.command_build",
+        "./packages/kartoffelgames.environment.command_bundle",
         "./packages/kartoffelgames.environment.command_create",
         "./packages/kartoffelgames.environment.command_help",
         "./packages/kartoffelgames.environment.command_page",
@@ -57,7 +57,7 @@
             "@kartoffelgames/environment-command-sync",
             "@kartoffelgames/environment-command-create",
             "@kartoffelgames/environment-blueprint",
-            "@kartoffelgames/environment-command-build"
+            "@kartoffelgames/environment-command-bundle"
         ]
     }
 }

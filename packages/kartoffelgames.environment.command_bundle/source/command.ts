@@ -8,8 +8,8 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
     public get information(): CliCommandDescription<BundleConfiguration> {
         return {
             command: {
-                description: 'Build package',
-                name: 'build',
+                description: 'Bundle package',
+                name: 'bundle',
                 parameters: ['<package_name>'],
                 flags: ['force'],
             },
@@ -28,7 +28,6 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
      * Execute command.
      * 
      * @param pParameter - Command parameter.
-     * @param _pPackages - All cli packages grouped by type.
      * @param pProjectHandler - Project handling.
      */
     public async run(pParameter: CliParameter, pProjectHandler: Project): Promise<void> {

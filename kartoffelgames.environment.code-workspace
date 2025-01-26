@@ -17,8 +17,8 @@
             "path": "packages\\kartoffelgames.environment.cli"
         },
         {
-            "name": "Kartoffelgames.Environment.Command_Build",
-            "path": "packages\\kartoffelgames.environment.command_build"
+            "name": "Kartoffelgames.Environment.Command_Bundle",
+            "path": "packages\\kartoffelgames.environment.command_bundle"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Create",
