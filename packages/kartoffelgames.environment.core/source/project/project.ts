@@ -97,8 +97,9 @@ export class Project {
         const lWorkspaceDenoFileText = FileSystem.read(lWorkspaceDenoFilePath);
         const lWorkspaceDenoFileJson = JSON.parse(lWorkspaceDenoFileText);
 
-        // Convert to a relative path from the workspace root.
-        const lRelativePackageDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
+        // Convert to a relative path from the workspace root replace double backslashes with single backslashes and leading with a dot slash.
+        let lRelativePackageDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
+        lRelativePackageDirectory = `./${lRelativePackageDirectory.replace(/\\/g, '/')}`;
 
         // Read or create workspaces list.
         const lWorkspaceDenoFileJsonWorkspaceList: Array<string> = lWorkspaceDenoFileJson['workspace'] ?? new Array<string>();
