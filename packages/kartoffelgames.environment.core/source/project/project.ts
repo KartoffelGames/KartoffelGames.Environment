@@ -101,13 +101,13 @@ export class Project {
         const lRelativePackageDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
 
         // Read or create workspaces list.
-        const lWorkspaceDenoFileJsonWorkspaceList: Array<string> = lWorkspaceDenoFileJson['workspaces'] ?? new Array<string>();
+        const lWorkspaceDenoFileJsonWorkspaceList: Array<string> = lWorkspaceDenoFileJson['workspace'] ?? new Array<string>();
 
         // Add new workspace folder.
         lWorkspaceDenoFileJsonWorkspaceList.push(lRelativePackageDirectory);
 
         // Update deno json file.
-        lWorkspaceDenoFileJson['workspaces'] = lWorkspaceDenoFileJsonWorkspaceList;
+        lWorkspaceDenoFileJson['workspace'] = lWorkspaceDenoFileJsonWorkspaceList;
 
         // Write deno.json file.
         const lAlteredWorkspaceDenoFileText = JSON.stringify(lWorkspaceDenoFileJson, null, 4);
