@@ -94,7 +94,7 @@ export class FileSystem {
             basename: lParsedPath.base,
             directory: lParsedPath.dir,
             extension: lParsedPath.ext,
-            filename: lParsedPath.name
+            filename: lParsedPath.name,
         };
     }
 
