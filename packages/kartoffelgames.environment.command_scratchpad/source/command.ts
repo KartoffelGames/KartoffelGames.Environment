@@ -1,5 +1,6 @@
 import { EnvironmentBundle, EnvironmentBundleOutput, EnvironmentSettingFiles } from '@kartoffelgames/environment-bundle';
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { HttpServer } from "./http-server.ts";
 
 export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
     /**
@@ -51,14 +52,14 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         this.initScratchpadFiles(lPackageInformation);
 
         const lSourceDirectory: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'scratchpad');
-        this.startWebserver(lPackageConfiguration.port, lSourceDirectory);
 
-        // Start watcher.
-        await this.startWatcher(lWatchPaths, () => {
-            // TODO: Currently nothing.
-        });
+        // Start http server.
+        const lHttpServer: HttpServer = new HttpServer(lWatchPaths, lPackageConfiguration.port, lSourceDirectory);
+        lConsole.writeLine("Starting scratchpad server...");
+        lHttpServer.start();
 
-
+        // Keep process alive.
+        await new Promise(() => { });
     }
 
     /***
@@ -107,76 +108,9 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         }
     }
 
-    /**
-     * Initialize watcher for scratchpad files.
-     * 
-     * @param pWatchPaths - Watch paths.
-     * @param pWatchCallback - Watch callback.
-     */
-    public async startWatcher(pWatchPaths: Array<string>, pWatchCallback: () => void): Promise<void> {
-        // Init watcher.
-        const lWatcher: Deno.FsWatcher = Deno.watchFs(pWatchPaths, { recursive: true });
+    
 
-        // Init debounce timer.
-        let lDebounceTimer: number = 0;
 
-        // Start watcher loop asyncron.
-        for await (const lWatchEvent of lWatcher) {
-            // Reset debounce timer.
-            clearTimeout(lDebounceTimer);
-
-            console.log(lWatchEvent);
-
-            // Set new debounce timer.
-            lDebounceTimer = setTimeout(() => {
-                pWatchCallback();
-            }, 100);
-        }
-    }
-
-    public startWebserver(pPort: number, pRootPath: string): void {
-        // Start webserver on defined port.
-        Deno.serve({ port: pPort, hostname: '127.0.0.1' }, async (pReqest): Promise<Response> => {
-            const lFilePathName: string = new URL(pReqest.url).pathname;
-            const lFilePath: string = FileSystem.pathToAbsolute(pRootPath, '.' + lFilePathName);
-
-            // Send file when it is in fact a file path.
-            if (FileSystem.exists(lFilePath)) {
-                let lExistigFilePath: string = lFilePath;
-
-                // Read path information to check if it is a directory.
-                const lFileInformation = FileSystem.pathInformation(lFilePath);
-                if (lFileInformation.extension === '') {
-                    lExistigFilePath = FileSystem.pathToAbsolute(lFilePath, 'index.html');
-                }
-
-                // Check if file exists again, just in case the file path was extended.
-                if (FileSystem.exists(lExistigFilePath)) {
-                    const file = await Deno.open(lExistigFilePath, { read: true });
-                    return new Response(file.readable);
-                }
-            }
-
-            // Send cached buidl scratchpad.js for a special path.
-            if (lFilePathName.toLowerCase() === '/scratchpad.js') {
-                // TODO:
-                return new Response('console.log("Hello World!!!")');
-            }
-
-            // Special case for build directory.
-            if (lFilePathName.toLowerCase().startsWith('/build/')) {
-                const lBuildFilePath: string = FileSystem.pathToAbsolute(pRootPath, '..', 'library', lFilePathName.substring(7));
-                console.log(lBuildFilePath);
-
-                if (FileSystem.exists(lBuildFilePath)) {
-                    const file = await Deno.open(lBuildFilePath, { read: true });
-                    return new Response(file.readable);
-                }
-            }
-
-            return new Response("404 Not Found", { status: 404 });
-        });
-    }
 }
 
 type ScratchpadRunConfiguration = {

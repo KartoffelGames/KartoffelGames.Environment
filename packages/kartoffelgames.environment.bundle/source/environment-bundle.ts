@@ -10,7 +10,7 @@ export class EnvironmentBundle {
      *  
      * @returns Build output of webpack build. 
      */
-    public async bundle(pProject: Project, pPackageInformation: PackageInformation, pSettingFiles: EnvironmentSettingFiles): Promise<EnvironmentBundleOutput> {
+    public async bundleProject(pProject: Project, pPackageInformation: PackageInformation, pSettingFiles: EnvironmentSettingFiles): Promise<EnvironmentBundleOutput> {
         // Load local bundle settings.
         const lBundleSettings: EnvironmentBundleSettings = await (async () => {
             if (pSettingFiles.bundleSettingsFilePath) {

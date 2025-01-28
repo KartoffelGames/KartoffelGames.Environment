@@ -85,7 +85,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
         }
 
         // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await new EnvironmentBundle().bundle(pProjectHandler, lPackageInformation, lEnvironmentSettingFiles);
+        const lBundleResult: EnvironmentBundleOutput = await new EnvironmentBundle().bundleProject(pProjectHandler, lPackageInformation, lEnvironmentSettingFiles);
 
         // Output build warn console.
         for (const lOutput of lBundleResult.console.errors) {
