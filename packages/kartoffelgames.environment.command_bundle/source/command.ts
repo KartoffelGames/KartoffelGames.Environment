@@ -1,6 +1,5 @@
-import { EnvironmentBundle, EnvironmentBundleOutput, EnvironmentBundleSettings, EnvironmentSettingFiles } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleOutput, EnvironmentBundleSettings } from '@kartoffelgames/environment-bundle';
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, Package, Project } from '@kartoffelgames/environment-core';
-import { EnvironmentBundleExtentionLoader } from "../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
 
 export class KgCliCommand implements ICliCommand<BundleConfiguration> {
     /**
@@ -57,25 +56,8 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
         // Construct paths.
         const lPackagePath = lPackageInformation.directory;
 
-        // Create empty EnvironmentSettingFiles.
-        const lEnvironmentSettingFiles: EnvironmentSettingFiles = {
-            moduleDeclarationFilePath: null,
-            bundleSettingsFilePath: null
-        };
-
         // Create environment bundle object.
         const lEnvironmentBundle = new EnvironmentBundle();
-
-        // Set module declaration file path if exists.
-        const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.moduleDeclaration);
-        if (lPackageConfiguration.moduleDeclaration.trim() !== '') {
-            // Check for file exists.
-            if (!FileSystem.exists(lModuleDeclarationFilePath)) {
-                throw new Error(`Module declaration file not found: ${lModuleDeclarationFilePath}`);
-            }
-
-            lEnvironmentSettingFiles.moduleDeclarationFilePath = lModuleDeclarationFilePath;
-        }
 
         // Load local resolver from module declaration
         let lLoader: EnvironmentBundleExtentionLoader = (() => {
@@ -128,7 +110,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
         })();
 
         // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundleProject(lPackageInformation, lBundleSettings, lLoader);
+        const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackage(lPackageInformation, lBundleSettings, lLoader);
 
         // Output build warn console.
         for (const lOutput of lBundleResult.console.errors) {
@@ -152,7 +134,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
 
             // Write map file.
             const lMapFilePath = FileSystem.pathToAbsolute(lBuildOutput, `${lOutput.fileName}.map`);
-            FileSystem.writeBinary(lMapFilePath, lOutput.soureMap);
+            FileSystem.writeBinary(lMapFilePath, lOutput.sourceMap);
         }
 
         lConsole.writeLine('Bundle successful');

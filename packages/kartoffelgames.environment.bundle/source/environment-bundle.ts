@@ -4,13 +4,14 @@ import { denoPlugins } from "@luca/esbuild-deno-loader";
 
 export class EnvironmentBundle {
     /**
+     * Bundle package with set settings and loader.
      * 
      * @param pProject - Project.
      * @param pPackageInformation - Package information.
      *  
      * @returns Build output of webpack build. 
      */
-    public async bundleProject(pPackageInformation: PackageInformation, pBundleSettings: EnvironmentBundleSettings, lLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
+    public async bundlePackage(pPackageInformation: PackageInformation, pBundleSettings: EnvironmentBundleSettings, lLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
         // Replace <packagename> with package name and convert entry point path into absolute file path url.
         pBundleSettings.inputFiles = pBundleSettings.inputFiles.map((pInputFile) => {
             return {
@@ -43,7 +44,7 @@ export class EnvironmentBundle {
 
             // Optimization.
             minify: true,
-            sourcemap: 'external',
+            sourcemap: true,
             treeShaking: true,
 
             // Write to memory.
@@ -90,7 +91,7 @@ export class EnvironmentBundle {
             if (lOutFileInformation.extension === '.js') {
                 lFileOutputEntry.content = lOutFile.contents;
             } else if (lOutFileInformation.extension === '.map') {
-                lFileOutputEntry.soureMap = lOutFile.contents;
+                lFileOutputEntry.sourceMap = lOutFile.contents;
             }
         }
 
@@ -109,7 +110,7 @@ export class EnvironmentBundle {
             }
 
             // Missing source map.
-            if (!lFileOutputEntry.soureMap) {
+            if (!lFileOutputEntry.sourceMap) {
                 throw new Error(`Output file map not emited for input file: ${lInputFile.basename}`);
             }
 
@@ -117,7 +118,7 @@ export class EnvironmentBundle {
             lBuildOutput.files.push({
                 content: lFileOutputEntry.content,
                 fileName: `${lInputFile.basename}.${lInputFile.extension}`,
-                soureMap: lFileOutputEntry.soureMap
+                sourceMap: lFileOutputEntry.sourceMap
             });
         }
 
@@ -194,7 +195,7 @@ export type EnvironmentBundleFile = {
     /**
      * Files source map.
      */
-    soureMap: Uint8Array;
+    sourceMap: Uint8Array;
 };
 
 export type EnvironmentSettingFiles = {
