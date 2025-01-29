@@ -1,5 +1,6 @@
-import { EnvironmentBundle, EnvironmentBundleOutput, EnvironmentSettingFiles } from '@kartoffelgames/environment-bundle';
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, Project } from '@kartoffelgames/environment-core';
+import { EnvironmentBundle, EnvironmentBundleOutput, EnvironmentBundleSettings, EnvironmentSettingFiles } from '@kartoffelgames/environment-bundle';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, Package, Project } from '@kartoffelgames/environment-core';
+import { EnvironmentBundleExtentionLoader } from "../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
 
 export class KgCliCommand implements ICliCommand<BundleConfiguration> {
     /**
@@ -62,6 +63,9 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
             bundleSettingsFilePath: null
         };
 
+        // Create environment bundle object.
+        const lEnvironmentBundle = new EnvironmentBundle();
+
         // Set module declaration file path if exists.
         const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.moduleDeclaration);
         if (lPackageConfiguration.moduleDeclaration.trim() !== '') {
@@ -69,23 +73,62 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
             if (!FileSystem.exists(lModuleDeclarationFilePath)) {
                 throw new Error(`Module declaration file not found: ${lModuleDeclarationFilePath}`);
             }
-            
+
             lEnvironmentSettingFiles.moduleDeclarationFilePath = lModuleDeclarationFilePath;
         }
 
-        // Set bundle settings file path if exists.
-        const lBundleSettingsFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.bundleSettings);
-        if (lPackageConfiguration.bundleSettings.trim() !== '') {
-            // Check for file exists.
-            if (!FileSystem.exists(lBundleSettingsFilePath)) {
-                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+        // Load local resolver from module declaration
+        let lLoader: EnvironmentBundleExtentionLoader = (() => {
+            const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.moduleDeclaration);
+            if (lPackageConfiguration.moduleDeclaration.trim() !== '') {
+                // Check for file exists.
+                if (!FileSystem.exists(lModuleDeclarationFilePath)) {
+                    throw new Error(`Module declaration file not found: ${lModuleDeclarationFilePath}`);
+                }
+
+                // Read module declaration file content.
+                const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
+
+                // Read module declaration text from file.
+                return lEnvironmentBundle.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
             }
 
-            lEnvironmentSettingFiles.bundleSettingsFilePath = lBundleSettingsFilePath;
-        }
+            // Use empty / default loader.
+            return {};
+        })();
+
+        // Load local bundle settings.
+        const lBundleSettings: EnvironmentBundleSettings = await (async () => {
+            const lBundleSettingsFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.bundleSettings);
+            if (lPackageConfiguration.bundleSettings.trim() !== '') {
+                // Check for file exists.
+                if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                    throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+                }
+
+                // Check for file exists.
+                if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                    throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+                }
+
+                // Import bundle as js file.
+                const lBundleSettingObject: { default: EnvironmentBundleSettings; } = await Package.import(`file://${lBundleSettingsFilePath}`);
+
+                return lBundleSettingObject.default;
+            }
+
+            // Use default settings.
+            return {
+                inputFiles: [{
+                    path: './source/index.ts',
+                    basename: '<packagename>',
+                    extension: 'js'
+                }]
+            };
+        })();
 
         // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await new EnvironmentBundle().bundleProject(pProjectHandler, lPackageInformation, lEnvironmentSettingFiles);
+        const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundleProject(lPackageInformation, lBundleSettings, lLoader);
 
         // Output build warn console.
         for (const lOutput of lBundleResult.console.errors) {

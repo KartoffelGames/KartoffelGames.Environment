@@ -10,58 +10,9 @@ export class EnvironmentBundle {
      *  
      * @returns Build output of webpack build. 
      */
-    public async bundleProject(pProject: Project, pPackageInformation: PackageInformation, pSettingFiles: EnvironmentSettingFiles): Promise<EnvironmentBundleOutput> {
-        // Load local bundle settings.
-        const lBundleSettings: EnvironmentBundleSettings = await (async () => {
-            if (pSettingFiles.bundleSettingsFilePath) {
-                // Create local bundle settings file path.
-                const lBundleSettingsFilePath: string = FileSystem.pathToAbsolute(pProject.projectRootDirectory, pPackageInformation.directory, pSettingFiles.bundleSettingsFilePath);
-
-                // Check for file exists.
-                if (!FileSystem.exists(lBundleSettingsFilePath)) {
-                    throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
-                }
-
-                // Import bundle as js file.
-                const lBundleSettingObject: { default: EnvironmentBundleSettings; } = await Package.import(`file://${lBundleSettingsFilePath}`);
-
-                return lBundleSettingObject.default;
-            }
-
-            // Use default settings.
-            return {
-                inputFiles: [{
-                    path: './source/index.ts',
-                    basename: '<packagename>',
-                    extension: 'js'
-                }]
-            };
-        })();
-
-        // Load local resolver from module declaration
-        let lLoader: { [ext: string]: esbuild.Loader; } = (() => {
-            if (pSettingFiles.moduleDeclarationFilePath) {
-                // Create local module declaration file path.
-                const lModuleDeclarationFilePath: string = FileSystem.pathToAbsolute(pProject.projectRootDirectory, pPackageInformation.directory, pSettingFiles.moduleDeclarationFilePath);
-
-                // Check for file exists.
-                if (!FileSystem.exists(lModuleDeclarationFilePath)) {
-                    throw new Error(`Module declaration file not found: ${lModuleDeclarationFilePath}`);
-                }
-
-                // Read module declaration file content.
-                const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
-
-                // Read module declaration text from file.
-                return this.loadModuleExtensions(lModuleDeclarationFileContent);
-            }
-
-            // Use empty / default loader.
-            return {};
-        })();
-
+    public async bundleProject(pPackageInformation: PackageInformation, pBundleSettings: EnvironmentBundleSettings, lLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
         // Replace <packagename> with package name and convert entry point path into absolute file path url.
-        lBundleSettings.inputFiles = lBundleSettings.inputFiles.map((pInputFile) => {
+        pBundleSettings.inputFiles = pBundleSettings.inputFiles.map((pInputFile) => {
             return {
                 basename: pInputFile.basename.replace('<packagename>', pPackageInformation.idName),
                 path: 'file://' + FileSystem.pathToAbsolute(pPackageInformation.directory, pInputFile.path),
@@ -71,7 +22,7 @@ export class EnvironmentBundle {
 
         // Create custom entry point for each file.
         const lEntryPoints: { [key: string]: string; } = {};
-        for (const lInputFile of lBundleSettings.inputFiles) {
+        for (const lInputFile of pBundleSettings.inputFiles) {
             lEntryPoints[lInputFile.basename] = lInputFile.path;
         }
 
@@ -144,21 +95,21 @@ export class EnvironmentBundle {
         }
 
         // Map output files with the coresponding input files.
-        for(const lInputFile of lBundleSettings.inputFiles) {
+        for (const lInputFile of pBundleSettings.inputFiles) {
             const lFileOutputEntry: Partial<EnvironmentBundleFile> | undefined = lFileOutput[lInputFile.basename];
-            
+
             // Missing everything.
             if (!lFileOutputEntry) {
                 throw new Error(`Output file not emited for input file: ${lInputFile.basename}`);
             }
 
             // Missing content.
-            if(!lFileOutputEntry.content) {
+            if (!lFileOutputEntry.content) {
                 throw new Error(`Output file content not emited for input file: ${lInputFile.basename}`);
             }
 
             // Missing source map.
-            if(!lFileOutputEntry.soureMap) {
+            if (!lFileOutputEntry.soureMap) {
                 throw new Error(`Output file map not emited for input file: ${lInputFile.basename}`);
             }
 
@@ -179,11 +130,11 @@ export class EnvironmentBundle {
      * 
      * @returns Loader list.
      */
-    private loadModuleExtensions(pModuleDeclaration: string): { [ext: string]: esbuild.Loader; } {
+    public fetchLoaderFromModuleDeclaration(pModuleDeclaration: string): EnvironmentBundleExtentionLoader {
         const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*\{[^\}]*export\s+default\s+([a-zA-Z0-9]+)[^\}]*\}/gms;
 
         // Get all declaration informations by reading the extension and the loader information from the comment.
-        const lLoaderList: { [ext: string]: esbuild.Loader; } = {};
+        const lLoaderList: EnvironmentBundleExtentionLoader = {};
 
         // Read all module declarations.
         for (const lMatch of pModuleDeclaration.matchAll(lFileExtensionRegex)) {
@@ -192,12 +143,15 @@ export class EnvironmentBundle {
             const lLoader: string = lMatch[2];
 
             // Add found to loader list.
-            lLoaderList[lExtension] = lLoader as esbuild.Loader;
+            lLoaderList[lExtension] = lLoader as EnvironmentBundleLoader;
         }
 
         return lLoaderList;
     }
 }
+
+export type EnvironmentBundleLoader = "base64" | "dataurl" | "empty" | "js" | "json" | "text" | "ts";
+export type EnvironmentBundleExtentionLoader = { [extension: string]: EnvironmentBundleLoader; };
 
 export type EnvironmentBundleSettings = {
     inputFiles: Array<{
