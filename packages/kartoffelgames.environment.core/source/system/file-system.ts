@@ -90,7 +90,17 @@ export class FileSystem {
     public static pathInformation(pPath: string): PathInformation {
         const lParsedPath: path.ParsedPath = path.parse(pPath);
 
+        // Only check file stats if path exists.
+        let lPathStats: { isFile: boolean; isDirectory: boolean; } = { isFile: false, isDirectory: false };
+        if (FileSystem.exists(pPath)) {
+            const lStats: Deno.FileInfo = Deno.lstatSync(pPath);
+            lPathStats.isFile = lStats.isFile;
+            lPathStats.isDirectory = lStats.isDirectory;
+        }
+
         return {
+            isDirectory: lPathStats.isDirectory,
+            isFile: lPathStats.isFile,
             basename: lParsedPath.base,
             directory: lParsedPath.dir,
             extension: lParsedPath.ext,
@@ -364,4 +374,6 @@ export type PathInformation = {
     directory: string;
     extension: string;
     filename: string;
+    isDirectory: boolean;
+    isFile: boolean;
 };

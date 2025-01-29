@@ -1,5 +1,4 @@
-import { EnvironmentBundle, EnvironmentBundleOutput, EnvironmentSettingFiles } from '@kartoffelgames/environment-bundle';
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
 import { HttpServer } from "./http-server.ts";
 
 export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
@@ -18,7 +17,8 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
                 name: 'scratchpad',
                 default: {
                     buildRequired: false,
-                    port: 8088
+                    port: 8088,
+                    moduleDeclaration: ''
                 },
             }
         };
@@ -30,8 +30,6 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
      * @param pProjectHandler - Project.
      */
     public async run(pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
-        const lConsole = new Console();
-
         // Cli parameter.
         const lPackageName: string = <string>pParameter.parameter.get('package_name');
 
@@ -51,11 +49,20 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         // Init scratchpad files.
         this.initScratchpadFiles(lPackageInformation);
 
+        // Source directory of www files.
         const lSourceDirectory: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'scratchpad');
 
         // Start http server.
-        const lHttpServer: HttpServer = new HttpServer(lWatchPaths, lPackageConfiguration.port, lSourceDirectory);
-        lConsole.writeLine("Starting scratchpad server...");
+        const lHttpServer: HttpServer = new HttpServer(lPackageInformation, {
+            watchPaths: lWatchPaths,
+            port: lPackageConfiguration.port,
+            rootPath: lSourceDirectory,
+            buildRequired: lPackageConfiguration.buildRequired,
+            project: pProjectHandler,
+            moduleDeclaration: lPackageConfiguration.moduleDeclaration
+        });
+
+        // Start http server asnyc.
         lHttpServer.start();
 
         // Keep process alive.
@@ -100,25 +107,18 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         }
 
         // Init ts file in source directory.
-        const lTsFile: string = FileSystem.pathToAbsolute(lScratchpadDirectory, 'source', 'scratchpad.ts');
+        const lTsFile: string = FileSystem.pathToAbsolute(lScratchpadDirectory, 'source', 'index.ts');
         if (!FileSystem.exists(lTsFile)) {
             FileSystem.write(lTsFile,
                 `console.log('Hello World!!!');`
             );
         }
     }
-
-    
-
-
 }
 
-type ScratchpadRunConfiguration = {
-    watchPaths: Array<string>;
-
-};
 
 type ScratchpadConfiguration = {
     buildRequired: boolean;
     port: number;
+    moduleDeclaration: string;
 };

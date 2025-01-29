@@ -1,6 +1,6 @@
-import { PackageInformation, Project, FileSystem, PathInformation, Package } from '@kartoffelgames/environment-core';
-import * as esbuild from 'esbuild';
+import { FileSystem, PackageInformation, PathInformation } from '@kartoffelgames/environment-core';
 import { denoPlugins } from "@luca/esbuild-deno-loader";
+import * as esbuild from 'esbuild';
 
 export class EnvironmentBundle {
     /**
@@ -55,11 +55,7 @@ export class EnvironmentBundle {
 
         // Read all output files and convert into EnvironmentBuildedFiles.
         const lBuildOutput: EnvironmentBundleOutput = {
-            files: [],
-            console: {
-                warnings: lBuildResult.warnings.map(pWarning => pWarning.text),
-                errors: lBuildResult.errors.map(pError => pError.text)
-            }
+            files: []
         };
 
         // On any error, return an empty result.
@@ -175,10 +171,6 @@ export type EnvironmentBundleSettings = {
 
 export type EnvironmentBundleOutput = {
     files: Array<EnvironmentBundleFile>;
-    console: {
-        errors: Array<string>;
-        warnings: Array<string>;
-    };
 };
 
 export type EnvironmentBundleFile = {

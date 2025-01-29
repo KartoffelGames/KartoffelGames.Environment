@@ -1,16 +1,15 @@
-import { EnvironmentBundle, EnvironmentBundleOutput, EnvironmentSettingFiles } from '@kartoffelgames/environment-bundle';
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleOutput, EnvironmentBundleSettings } from '@kartoffelgames/environment-bundle';
+import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
+import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
 
 export class HttpServer {
-    private readonly mWatchPaths: Array<string>;
     private readonly mBuildFiles: HttpServerBuildFiles;
-    private readonly mPort: number;
-    private readonly mRootPath: string;
+    private readonly mConfiguration: HttpServerRunConfiguration;
+    private readonly mPackageInformation: PackageInformation;
 
-    public constructor(pWatchPaths: Array<string>, pPort: number, pRootPath: string) {
-        this.mWatchPaths = pWatchPaths;
-        this.mPort = pPort;
-        this.mRootPath = pRootPath;
+    public constructor(pPackageInformation: PackageInformation, pConfiguration: HttpServerRunConfiguration) {
+        this.mPackageInformation = pPackageInformation;
+        this.mConfiguration = pConfiguration;
         this.mBuildFiles = {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
@@ -22,38 +21,130 @@ export class HttpServer {
      * Refreshes build files any time a file changes in the watch paths.
      * Triggers a browser refresh after build files are updated.
      */
-    public start(): void {
-        // Standalone web server.
-        this.startWebserver(this.mPort, this.mRootPath);
-
-        this.startWatcher(this.mWatchPaths, async () => {
-            await this.rebuildBuildFiles();
-            this.triggerBrowserRefresh();
-        });
-
-    }
-
-    private async rebuildBuildFiles(): Promise<void> {
+    public async start(): Promise<void> {
         const lConsole = new Console();
 
-        // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await new EnvironmentBundle().bundle(pProjectHandler, lPackageInformation, lEnvironmentSettingFiles);
+        // Build initial build files.
+        lConsole.writeLine("Starting initial build...");
+        await this.rebuildBuildFiles();
 
-        // Output build warn console.
-        for (const lOutput of lBundleResult.console.errors) {
-            lConsole.writeLine(lOutput, 'yellow');
+        // Standalone web server.
+        lConsole.writeLine("Starting scratchpad server...");
+        this.startWebserver(this.mConfiguration.port, this.mConfiguration.rootPath);
+
+        // Start watcher to rebuild build files and trigger a browser refresh when any watched file changes.
+        lConsole.writeLine("Starting watcher...");
+        this.startWatcher(this.mConfiguration.watchPaths, async () => {
+            if (await this.rebuildBuildFiles()) {
+                this.triggerBrowserRefresh();
+            }
+        });
+    }
+
+    /**
+     * Rebuild scratchpad files.
+     * When build is required, main source is build first with the native kg bundle command.
+     */
+    private async rebuildBuildFiles(): Promise<boolean> {
+        const lConsole = new Console();
+
+        // Build native when native is required.
+        if (this.mConfiguration.buildRequired) {
+            // Create main build parameter with force flag.
+            const lMainBuildParameter: CliParameter = new CliParameter();
+            lMainBuildParameter.parameter.set('package_name', this.mPackageInformation.packageName);
+            lMainBuildParameter.flags.add('force');
+
+            // Create bundle command.
+            const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
+
+            // Try to build main source.
+            try {
+                await lMainBundleCommand.run(lMainBuildParameter, this.mConfiguration.project);
+            } catch (e) {
+                lConsole.writeLine('Failed to build main source.', 'red');
+                lConsole.writeLine((<Error>e).message, 'red');
+            }
         }
 
-        // Output build error console.
-        for (const lOutput of lBundleResult.console.errors) {
-            lConsole.writeLine(lOutput, 'red');
+        // Create default scratchpad input.
+        const lBundleSettings: EnvironmentBundleSettings = {
+            inputFiles: [
+                {
+                    path: './scratchpad/source/index.ts',
+                    basename: 'scratchpad',
+                    extension: '.js'
+                }
+            ]
+        };
+
+        // Create environment bundle.
+        const lEnvironmentBundle: EnvironmentBundle = new EnvironmentBundle();
+
+        // Load local resolver from module declaration
+        let lLoader: EnvironmentBundleExtentionLoader = (() => {
+            const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(this.mPackageInformation.directory, this.mConfiguration.moduleDeclaration);
+
+            // Check for file exists.
+            if (!FileSystem.exists(lModuleDeclarationFilePath)) {
+                lConsole.writeLine(`No module declaration found in "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
+
+                // Use empty loader to load with default loader.
+                return {};
+            }
+
+            // Check for path is a file.
+            if(!FileSystem.pathInformation(lModuleDeclarationFilePath).isFile) {
+                lConsole.writeLine(`Invalid module declaration file "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
+
+                // Use empty loader to load with default loader.
+                return {};
+            }
+
+            // Read module declaration file content.
+            const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
+
+            // Read module declaration text from file.
+            return lEnvironmentBundle.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
+        })();
+
+        // Start bundling.
+        const lBuildResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
+            try {
+                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackage(this.mPackageInformation, lBundleSettings, lLoader);
+
+                return {
+                    content: lBundleResult.files[0].content,
+                    sourcemap: lBundleResult.files[0].sourceMap
+                };
+            } catch (e) {
+                lConsole.writeLine((<Error>e).message, 'red');
+
+                return {
+                    content: new Uint8Array(0),
+                    sourcemap: new Uint8Array(0)
+                };
+            }
+        })();
+
+        // Cache build files.
+        const lTextDecoder = new TextDecoder();
+        if (lTextDecoder.decode(this.mBuildFiles.javascriptFileContent) === lTextDecoder.decode(lBuildResult.content)) {
+            // Signal build was not changed.
+            lConsole.writeLine('No changes detected in build files.', 'yellow');
+
+            return false;
         }
 
         // Cache build files.
-        this.mBuildFiles.javascriptFileContent = lBundleResult.files[0].content;
-        this.mBuildFiles.mapFileContent = lBundleResult.files[0].soureMap;
-    }
+        this.mBuildFiles.javascriptFileContent = lBuildResult.content;
+        this.mBuildFiles.mapFileContent = lBuildResult.sourcemap;
 
+        // Output build finished.
+        lConsole.writeLine('Build finished', 'green');
+
+        return true;
+    }
 
     /**
      * Start webserver.
@@ -93,7 +184,7 @@ export class HttpServer {
                 let lExistigFilePath: string = lFilePath;
 
                 // Read path information to check if it is a directory.
-                if (FileSystem.pathInformation(lFilePath).extension === '') {
+                if (FileSystem.pathInformation(lFilePath).isDirectory) {
                     lExistigFilePath = FileSystem.pathToAbsolute(lFilePath, 'index.html');
                 }
 
@@ -101,6 +192,7 @@ export class HttpServer {
                 if (FileSystem.exists(lExistigFilePath)) {
                     const lFileInformation = FileSystem.pathInformation(lExistigFilePath);
 
+                    // Open file and return response.
                     const file = await Deno.open(lExistigFilePath, { read: true });
                     return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
                 }
@@ -121,6 +213,9 @@ export class HttpServer {
     }
 
     private triggerBrowserRefresh(): void {
+        const lConsole = new Console();
+
+        lConsole.writeLine('Refreshing browser...');
         // TODO: Implement browser refresh with webpack.
     }
 
@@ -153,4 +248,13 @@ export class HttpServer {
 type HttpServerBuildFiles = {
     javascriptFileContent: Uint8Array;
     mapFileContent: Uint8Array;
+};
+
+export type HttpServerRunConfiguration = {
+    project: Project;
+    watchPaths: Array<string>;
+    port: number;
+    rootPath: string;
+    buildRequired: boolean;
+    moduleDeclaration: string;
 };

@@ -19,7 +19,11 @@
         "config": {
             "blueprint": "kg-main",
             "pack": false,
-            "page": false
+            "page": false,
+            "scratchpad": {
+                "buildRequired": true,
+                "port": 8888
+            }
         }
     }
 }
