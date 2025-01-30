@@ -50,7 +50,7 @@ export class ScratchpadHttpServer {
     /**
      * Start webserver.
      * Listens on localhost and serves files from root path.
-     * Serves build files from library directory when any /build/ path is requested.
+     * Serves bundled files from library directory when any /bundle/ path is requested.
      * Serves scratchpad.js and scratchpad.js.map from cache only on root path.
      * 
      * @param pPort - Listening port.
@@ -85,8 +85,8 @@ export class ScratchpadHttpServer {
             const lFilePathName: string = new URL(pReqest.url).pathname;
             let lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
-            // Special case for build directory.
-            if (lFilePathName.toLowerCase().startsWith('/build/')) {
+            // Special case for bundle directory.
+            if (lFilePathName.toLowerCase().startsWith('/bundle/')) {
                 lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(7));
             }
 

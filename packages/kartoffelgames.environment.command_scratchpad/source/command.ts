@@ -35,7 +35,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         // Cli parameter.
         const lPackageName: string = <string>pParameter.parameter.get('package_name');
 
-        // Read package information and build config. 
+        // Read package information and bundle config. 
         // Configuration is filled up with default information.
         const lPackageInformation: PackageInformation = pProjectHandler.getPackageInformation(lPackageName);
 
@@ -63,21 +63,21 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler(pProjectHandler, lPackageInformation, lPackageConfiguration.moduleDeclaration, lPackageConfiguration.mainBundleRequired);
 
         // Build initial build files.
-        lConsole.writeLine("Starting initial build...");
+        lConsole.writeLine("Starting initial bundle...");
         await lScratchpadBundler.bundle();
         lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
 
-        // Rebuild scratchpad files and refresh connected browsers when files have changed.
+        // Rebundle scratchpad files and refresh connected browsers when files have changed.
         lWatcher.addListener(async () => {
             // Bundle files and update server served scratchpad files once they have changed.
             if (await lScratchpadBundler.bundle()) {
                 lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
                 
-                // Output build finished.
+                // Output bundle finished.
                 lConsole.writeLine('Build finished', 'green');
             } else {
-                // Signal build was not changed.
-                lConsole.writeLine('No changes detected in build files.', 'yellow');
+                // Signal bundle was not changed.
+                lConsole.writeLine('No changes detected in bundled files.', 'yellow');
             }
 
             // Refresh connected browsers

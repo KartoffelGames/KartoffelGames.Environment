@@ -7,21 +7,21 @@ export class ScratchpadBundler {
     private readonly mCoreBundleRequired: boolean;
     private readonly mPackageInformation: PackageInformation;
     private readonly mProjectHandler: Project;
-    private readonly mBuildFiles: ScratchpadBundlerBuildedFiles;
+    private readonly mBundledFiles: ScratchpadBundlerFiles;
     private readonly mModuleDeclaration: string;
 
     /**
      * Get source file.
      */
     public get sourceFile(): Uint8Array {
-        return this.mBuildFiles.javascriptFileContent;
+        return this.mBundledFiles.javascriptFileContent;
     }
 
     /**
      * Get source map file.
      */
     public get sourceMapFile(): Uint8Array {
-        return this.mBuildFiles.mapFileContent;
+        return this.mBundledFiles.mapFileContent;
     }
 
     /**
@@ -37,32 +37,32 @@ export class ScratchpadBundler {
         this.mPackageInformation = pPackageInformation;
         this.mModuleDeclaration = pModuleDeclaration;
         this.mCoreBundleRequired = pCoreBundleRequired;
-        this.mBuildFiles = {
+        this.mBundledFiles = {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
         };
     }
 
     /**
-     * Rebuild scratchpad files.
-     * When build is required, main source is build first with the native kg bundle command.
+     * Rebundle scratchpad files.
+     * When main source bundle is required, main source is bundled first with the native kg bundle command.
      */
     public async bundle(): Promise<boolean> {
         const lConsole = new Console();
 
-        // Build native when native is required.
+        // Bundle native when native is required.
         if (this.mCoreBundleRequired) {
-            // Create main build parameter with force flag.
-            const lMainBuildParameter: CliParameter = new CliParameter();
-            lMainBuildParameter.parameter.set('package_name', this.mPackageInformation.packageName);
-            lMainBuildParameter.flags.add('force');
+            // Create main bundle parameter with force flag.
+            const lMainBundleParameter: CliParameter = new CliParameter();
+            lMainBundleParameter.parameter.set('package_name', this.mPackageInformation.packageName);
+            lMainBundleParameter.flags.add('force');
 
             // Create bundle command.
             const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
 
-            // Try to build main source.
+            // Try to bundle main source.
             try {
-                await lMainBundleCommand.run(lMainBuildParameter, this.mProjectHandler);
+                await lMainBundleCommand.run(lMainBundleParameter, this.mProjectHandler);
             } catch (e) {
                 lConsole.writeLine('Failed to bundle core source.', 'red');
                 lConsole.writeLine((<Error>e).message, 'red');
@@ -81,7 +81,7 @@ export class ScratchpadBundler {
                 "        console.log('Refresh connection established');\n" +
                 "    });\n" +
                 "    socket.addEventListener('message', (event) => {\n" +
-                "        console.log('Build finished. Start refresh');\n" +
+                "        console.log('Bundle finished. Start refresh');\n" +
                 "        if (event.data === 'REFRESH') {\n" +
                 "            window.location.reload();\n" +
                 "        }\n" +
@@ -121,12 +121,12 @@ export class ScratchpadBundler {
         })();
 
         // Start bundling.
-        const lBuildResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
+        const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
                 // Run bundle.
                 const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackageContent(this.mPackageInformation, lBundleSettings, lLoader);
 
-                // Return build result. Its allways one file.
+                // Return bundle result. Its allways one file.
                 return {
                     content: lBundleResult[0].content,
                     sourcemap: lBundleResult[0].sourceMap
@@ -135,7 +135,7 @@ export class ScratchpadBundler {
                 // Pass through error message.
                 lConsole.writeLine((<Error>e).message, 'red');
 
-                // Return empty build result on error.
+                // Return empty bundle result on error.
                 return {
                     content: new Uint8Array(0),
                     sourcemap: new Uint8Array(0)
@@ -143,22 +143,22 @@ export class ScratchpadBundler {
             }
         })();
 
-        // Cache build files.
+        // Cache bundled files.
         const lTextDecoder = new TextDecoder();
-        if (lTextDecoder.decode(this.mBuildFiles.javascriptFileContent) === lTextDecoder.decode(lBuildResult.content)) {
-            // Signal build was not changed.
+        if (lTextDecoder.decode(this.mBundledFiles.javascriptFileContent) === lTextDecoder.decode(lBundleResult.content)) {
+            // Signal bundle was not changed.
             return false;
         }
 
-        // Cache build files.
-        this.mBuildFiles.javascriptFileContent = lBuildResult.content;
-        this.mBuildFiles.mapFileContent = lBuildResult.sourcemap;
+        // Cache bundled files.
+        this.mBundledFiles.javascriptFileContent = lBundleResult.content;
+        this.mBundledFiles.mapFileContent = lBundleResult.sourcemap;
 
         return true;
     }
 }
 
-type ScratchpadBundlerBuildedFiles = {
+type ScratchpadBundlerFiles = {
     javascriptFileContent: Uint8Array;
     mapFileContent: Uint8Array;
 };
