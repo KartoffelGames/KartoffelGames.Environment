@@ -1,5 +1,5 @@
 import { CliCommandDescription, CliParameter, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
-import { HttpServer } from "./http-server.ts";
+import { ScratchpadHttpServer } from "./file_handler/scratchpad-http-server.ts";
 
 export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
     /**
@@ -53,7 +53,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         const lSourceDirectory: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'scratchpad');
 
         // Start http server.
-        const lHttpServer: HttpServer = new HttpServer(lPackageInformation, {
+        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageInformation, {
             watchPaths: lWatchPaths,
             port: lPackageConfiguration.port,
             rootPath: lSourceDirectory,

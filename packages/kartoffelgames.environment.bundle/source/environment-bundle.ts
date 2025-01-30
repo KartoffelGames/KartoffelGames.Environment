@@ -20,9 +20,12 @@ export class EnvironmentBundle {
         // Build bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
             loader: lLoader,
+
+            // For some higher reason the deno plugins does not have the correct type definition.
             plugins: [...denoPlugins({
                 configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json')
             })] as unknown as Array<esbuild.Plugin>,
+            
             entry: {
                 content: pInputContent
             }
@@ -42,11 +45,13 @@ export class EnvironmentBundle {
      * @returns Build output of webpack build. 
      */
     public async bundlePackageFiles(pPackageInformation: PackageInformation, pInputFiles: EnvironmentBundleInputFiles, pLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
-        // Replace <packagename> with package name and convert entry point path into absolute file path url.
-        pInputFiles = pInputFiles.map((pInputFile) => {
+        // Convert input files into a proper input file format the bundler command understands.
+        const lInputFile = pInputFiles.map((pInputFile) => {
             return {
+                // Replace <packagename> with package name.
                 outputBasename: pInputFile.outputBasename.replace('<packagename>', pPackageInformation.idName),
-                inputFilePath: 'file://' + FileSystem.pathToAbsolute(pPackageInformation.directory, pInputFile.inputFilePath),
+                // Convert entry point path into absolute file path rooted in the package directory.
+                inputFilePath: FileSystem.pathToAbsolute(pPackageInformation.directory, pInputFile.inputFilePath),
                 outputExtension: pInputFile.outputExtension
             };
         });
@@ -54,11 +59,14 @@ export class EnvironmentBundle {
         // Build bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
             loader: pLoader,
+
+            // For some higher reason the deno plugins does not have the correct type definition.
             plugins: [...denoPlugins({
                 configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json')
             })] as unknown as Array<esbuild.Plugin>,
+
             entry: {
-                files: pInputFiles
+                files: lInputFile
             }
         };
 
@@ -73,6 +81,13 @@ export class EnvironmentBundle {
      * @returns Loader list.
      */
     public fetchLoaderFromModuleDeclaration(pModuleDeclaration: string): EnvironmentBundleExtentionLoader {
+        // Regex to read information from a module declaration.
+        /*
+         * declare module '*.css' { 
+         *   const text: string;
+         *   export default text;
+         * }
+         */
         const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*\{[^\}]*export\s+default\s+([a-zA-Z0-9]+)[^\}]*\}/gms;
 
         // Get all declaration informations by reading the extension and the loader information from the comment.
@@ -121,7 +136,7 @@ export class EnvironmentBundle {
             outdir: 'out'
         };
 
-        // List of input names.
+        // List of input names and their expected output names.
         const lInputFileNames: Array<{ outputBaseName: string; basename: string; extension: string; }> = new Array<{ outputBaseName: string; basename: string; extension: string; }>();
 
         // Eighter build files or a file content.
@@ -129,8 +144,8 @@ export class EnvironmentBundle {
             // Convert entry files into a filename to input file mapping.
             const lEntryPoints: { [key: string]: string; } = {};
             for (const lInputFile of pOptions.entry.files) {
-                //
-                lEntryPoints[lInputFile.outputBasename] = lInputFile.inputFilePath;
+                // Add input file path. Prepend file:// to make it a valid url.
+                lEntryPoints[lInputFile.outputBasename] = `file://${lInputFile.inputFilePath}`;
 
                 // Add input file name.
                 lInputFileNames.push({
@@ -150,7 +165,7 @@ export class EnvironmentBundle {
                 sourcefile: `standard-input-file.js`
             };
 
-            // Add input file name.
+            // Add input file name. For some reason esbuild allways uses stdin.js as an output file name for stdin content.
             lInputFileNames.push({
                 outputBaseName: 'stdin',
                 basename: pOptions.entry.content.outputBasename,
@@ -160,45 +175,46 @@ export class EnvironmentBundle {
             throw new Error('No file input was specified.');
         }
 
-        // Create bundle settings.
+        // Start esbuild.
         const lBuildResult = await esbuild.build(lEsBuildConfiguration);
-        await esbuild.stop();
-
-        // Read all output files and convert into EnvironmentBuildedFiles.
-        const lBuildOutput: EnvironmentBundleOutput = [];
 
         // On any error, return an empty result.
-        if (lBuildResult.errors.length > 0 || !lBuildResult.outputFiles) {
-            return lBuildOutput;
+        if (!lBuildResult.outputFiles) {
+            return [];
         }
 
         // Grouped file output with its source map.
         const lFileOutput: { [fileName: string]: Partial<EnvironmentBundleOutput[number]>; } = {};
 
-        // Read and save all output files.
+        // Read and map all output files that belong to each other.
         for (const lOutFile of lBuildResult.outputFiles) {
             const lOutFileInformation: PathInformation = FileSystem.pathInformation(lOutFile.path);
 
             // Get file name without extension. When it ends with .js it is a map file.
             let lOutFileName: string = lOutFileInformation.filename;
             if (lOutFileName.endsWith('.js')) {
+                // Remove .js from file name.
                 lOutFileName = lOutFileName.substring(0, lOutFileName.length - 3);
             }
 
-            // Get or create file output entry.
+            // Get or create file output entry mapping.
             let lFileOutputEntry: Partial<EnvironmentBundleOutput[number]> | undefined = lFileOutput[lOutFileName];
             if (!lFileOutputEntry) {
+                // Create and register empty file output entry.
                 lFileOutputEntry = { fileName: lOutFileName };
                 lFileOutput[lOutFileName] = lFileOutputEntry;
             }
 
-            // Create a new outfile entry for any new js file.
+            // Add eighter content or source map, based on file extension, to the file output entry.
             if (lOutFileInformation.extension === '.js') {
                 lFileOutputEntry.content = lOutFile.contents;
             } else if (lOutFileInformation.extension === '.map') {
                 lFileOutputEntry.sourceMap = lOutFile.contents;
             }
         }
+
+        // Read all output files and convert into EnvironmentBuildedFiles.
+        const lBuildOutput: EnvironmentBundleOutput = [];
 
         // Map output files with the coresponding input files.
         for (const lInputFile of lInputFileNames) {
@@ -219,7 +235,7 @@ export class EnvironmentBundle {
                 throw new Error(`Output file map not emited for input file: ${lInputFile.basename}`);
             }
 
-            // Replace sourcemap url in output file.
+            // Replace sourcemap url in output file when the output file name is different from the input file name.
             if (lInputFile.outputBaseName !== lInputFile.basename) {
                 // Convert Uint8Array into text. Replace sourcemapping url.
                 const lSourceText: string = new TextDecoder().decode(lFileOutputEntry.content).replace(
@@ -238,6 +254,9 @@ export class EnvironmentBundle {
                 sourceMap: lFileOutputEntry.sourceMap
             });
         }
+
+        // Wait for the esbuild process to stop before returning the output.
+        await esbuild.stop();
 
         return lBuildOutput;
     }

@@ -1,17 +1,17 @@
 import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleInputFiles, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
 import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
-import { EnvironmentBundleInputContent } from "../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
+import { EnvironmentBundleInputContent } from "../../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
 
-export class HttpServer {
-    private readonly mBuildFiles: HttpServerBuildFiles;
-    private readonly mConfiguration: HttpServerRunConfiguration;
+export class ScratchpadHttpServer {
+    private readonly mBuildFiles: ScratchpadHttpServerBuildFiles;
+    private readonly mConfiguration: ScratchpadHttpServerRunConfiguration;
     private readonly mPackageInformation: PackageInformation;
     private readonly mOpenWebsockets: Set<WebSocket>;
     private readonly mWatchedFiles: Map<string, string>;
     private readonly mAccessedFilePaths: Set<string>;
 
-    public constructor(pPackageInformation: PackageInformation, pConfiguration: HttpServerRunConfiguration) {
+    public constructor(pPackageInformation: PackageInformation, pConfiguration: ScratchpadHttpServerRunConfiguration) {
         this.mPackageInformation = pPackageInformation;
         this.mConfiguration = pConfiguration;
         this.mOpenWebsockets = new Set<WebSocket>();
@@ -347,12 +347,12 @@ export class HttpServer {
     }
 }
 
-type HttpServerBuildFiles = {
+type ScratchpadHttpServerBuildFiles = {
     javascriptFileContent: Uint8Array;
     mapFileContent: Uint8Array;
 };
 
-export type HttpServerRunConfiguration = {
+export type ScratchpadHttpServerRunConfiguration = {
     project: Project;
     watchPaths: Array<string>;
     port: number;
