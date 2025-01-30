@@ -18,7 +18,9 @@
         "name": "Kartoffelgames.Environment.Command_Scratchpad",
         "config": {
             "blueprint": "kg-main",
-            "pack": false,
+            "bundle": {
+                "enabled": true
+            },
             "page": false,
             "scratchpad": {
                 "buildRequired": true,

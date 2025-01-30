@@ -1,9 +1,9 @@
 export {
     EnvironmentBundle,
-    type EnvironmentBundleFile,
+    type EnvironmentBundleFileOutput,
     type EnvironmentBundleOutput,
-    type EnvironmentBundleSettings,
-    type EnvironmentSettingFiles,
+    type EnvironmentBundleInputFiles,
+    type EnvironmentBundleSettingFiles,
     type EnvironmentBundleLoader,
     type EnvironmentBundleExtentionLoader
 } from './environment-bundle.ts';

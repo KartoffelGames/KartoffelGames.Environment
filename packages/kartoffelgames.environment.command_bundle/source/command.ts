@@ -1,4 +1,4 @@
-import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleOutput, EnvironmentBundleSettings } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleOutput, EnvironmentBundleInputFiles } from '@kartoffelgames/environment-bundle';
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, Package, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliCommand<BundleConfiguration> {
@@ -80,7 +80,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
         })();
 
         // Load local bundle settings.
-        const lBundleSettings: EnvironmentBundleSettings = await (async () => {
+        const lBundleSettings: EnvironmentBundleInputFiles = await (async () => {
             const lBundleSettingsFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.bundleSettings);
             if (lPackageConfiguration.bundleSettings.trim() !== '') {
                 // Check for file exists.
@@ -94,19 +94,19 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
                 }
 
                 // Import bundle as js file.
-                const lBundleSettingObject: { default: EnvironmentBundleSettings; } = await Package.import(`file://${lBundleSettingsFilePath}`);
+                const lBundleSettingObject: { default: EnvironmentBundleInputFiles; } = await Package.import(`file://${lBundleSettingsFilePath}`);
 
                 return lBundleSettingObject.default;
             }
 
             // Use default settings.
-            return {
-                inputFiles: [{
-                    path: './source/index.ts',
-                    basename: '<packagename>',
-                    extension: 'js'
-                }]
-            };
+            return [
+                {
+                    inputFilePath: './source/index.ts',
+                    outputBasename: '<packagename>',
+                    outputExtension: 'js'
+                }
+            ];
         })();
 
         // Start bundling.
@@ -117,7 +117,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
         FileSystem.createDirectory(lBuildOutput);
 
         // Output build result.
-        for (const lOutput of lBundleResult.files) {
+        for (const lOutput of lBundleResult) {
             // Write content file.
             const lContentFilePath = FileSystem.pathToAbsolute(lBuildOutput, lOutput.fileName);
             FileSystem.writeBinary(lContentFilePath, lOutput.content);

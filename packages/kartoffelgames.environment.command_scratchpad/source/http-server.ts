@@ -1,4 +1,4 @@
-import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleOutput, EnvironmentBundleSettings } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleInputFiles, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
 import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
 
@@ -70,15 +70,13 @@ export class HttpServer {
         }
 
         // Create default scratchpad input.
-        const lBundleSettings: EnvironmentBundleSettings = {
-            inputFiles: [
-                {
-                    path: './scratchpad/source/index.ts',
-                    basename: 'scratchpad',
-                    extension: '.js'
-                }
-            ]
-        };
+        const lBundleSettings: EnvironmentBundleInputFiles = [
+            {
+                inputFilePath: './scratchpad/source/index.ts',
+                outputBasename: 'scratchpad',
+                outputExtension: '.js'
+            }
+        ];
 
         // Create environment bundle.
         const lEnvironmentBundle: EnvironmentBundle = new EnvironmentBundle();
@@ -116,8 +114,8 @@ export class HttpServer {
                 const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackage(this.mPackageInformation, lBundleSettings, lLoader);
 
                 return {
-                    content: lBundleResult.files[0].content,
-                    sourcemap: lBundleResult.files[0].sourceMap
+                    content: lBundleResult[0].content,
+                    sourcemap: lBundleResult[0].sourceMap
                 };
             } catch (e) {
                 lConsole.writeLine((<Error>e).message, 'red');
@@ -234,13 +232,13 @@ export class HttpServer {
 
         // Save socket connection on open.
         lSocket.addEventListener("open", () => {
-            lConsole.writeLine('Browser connection established')
+            lConsole.writeLine('Browser connection established');
             this.mOpenWebsockets.add(lSocket);
         });
 
         // Remove socket when it is closed.
         lSocket.addEventListener('close', () => {
-            lConsole.writeLine('Browser connection lost')
+            lConsole.writeLine('Browser connection lost');
             this.mOpenWebsockets.delete(lSocket);
         });
 
