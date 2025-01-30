@@ -8,11 +8,15 @@ export class HttpServer {
     private readonly mConfiguration: HttpServerRunConfiguration;
     private readonly mPackageInformation: PackageInformation;
     private readonly mOpenWebsockets: Set<WebSocket>;
+    private readonly mWatchedFiles: Map<string, string>;
+    private readonly mAccessedFilePaths: Set<string>;
 
     public constructor(pPackageInformation: PackageInformation, pConfiguration: HttpServerRunConfiguration) {
         this.mPackageInformation = pPackageInformation;
         this.mConfiguration = pConfiguration;
         this.mOpenWebsockets = new Set<WebSocket>();
+        this.mWatchedFiles = new Map<string, string>();
+        this.mAccessedFilePaths = new Set<string>();
         this.mBuildFiles = {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
@@ -47,8 +51,10 @@ export class HttpServer {
     /**
      * Rebuild scratchpad files.
      * When build is required, main source is build first with the native kg bundle command.
+     * 
+     * // TODO: Also move into own class.
      */
-    private async rebuildBuildFiles(): Promise<boolean> {
+    private async rebuildBuildFiles(): Promise<boolean> { 
         const lConsole = new Console();
 
         // Build native when native is required.
@@ -75,7 +81,7 @@ export class HttpServer {
             inputResolveDirectory: './scratchpad/source/',
             outputBasename: 'scratchpad',
             outputExtension: 'js',
-            inputFileContent: 
+            inputFileContent:
                 "(() => {\n" +
                 "    const socket = new WebSocket('ws://127.0.0.1:8888');\n" +
                 "    socket.addEventListener('open', () => {\n" +
@@ -210,9 +216,18 @@ export class HttpServer {
                 if (FileSystem.exists(lExistigFilePath)) {
                     const lFileInformation = FileSystem.pathInformation(lExistigFilePath);
 
-                    // Open file and return response. // TODO: Try catch when file is locked or locking while reading.
-                    const file = await Deno.open(lExistigFilePath, { read: true });
-                    return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
+                    // Try catch when file is locked or locking while reading.
+                    try {
+                        // Save path as accessed path. // TODO: Must be used some case. 
+                        this.mAccessedFilePaths.add(lExistigFilePath);
+
+                        // Open file and return response.
+                        const file = await Deno.open(lExistigFilePath, { read: true });
+                        return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
+                    } catch (e) {
+                        // Somthing went wrong idk what.
+                        return new Response("File could not be read.", { status: 500 });
+                    }
                 }
             }
 
@@ -271,7 +286,7 @@ export class HttpServer {
     }
 
     /**
-     * Initialize watcher for scratchpad files.
+     * Initialize watcher for scratchpad files. // TODO: Move into own class.
      * 
      * @param pWatchPaths - Watch paths.
      * @param pWatchCallback - Watch callback.
@@ -283,14 +298,50 @@ export class HttpServer {
         // Init debounce timer.
         let lDebounceTimer: number = 0;
 
+        let lFilesHasChanged: boolean = false;
+
         // Start watcher loop asyncron.
-        for await (const _ of lWatcher) {
+        for await (const lEvent of lWatcher) {
+            const lChangedPath: string = FileSystem.pathToAbsolute(lEvent.paths[0]);
+
             // Reset debounce timer.
             clearTimeout(lDebounceTimer);
+
+            switch (lEvent.kind) {
+                case 'create':
+                case 'modify':
+                case 'rename': {
+                    // Read current changed file.
+                    const lFileContent: string = FileSystem.read(lChangedPath);
+
+                    // Any new file is a changed file.
+                    if (!this.mWatchedFiles.has(lChangedPath) || this.mWatchedFiles.get(lChangedPath) !== lFileContent) {
+                        this.mWatchedFiles.set(lChangedPath, lFileContent);
+                        lFilesHasChanged = true;
+                    }
+
+                    break;
+                }
+                case 'remove': {
+                    // Only set to changed when it was previously used.
+                    if (this.mWatchedFiles.has(lChangedPath)) {
+                        this.mWatchedFiles.delete(lChangedPath);
+                        lFilesHasChanged = true;
+                    }
+
+                    break;
+                }
+            }
+
+            // Skipp file change.
+            if (!lFilesHasChanged) {
+                continue;
+            }
 
             // Set new debounce timer.
             lDebounceTimer = setTimeout(() => {
                 pWatchCallback();
+                lFilesHasChanged = false;
             }, 100);
         }
     }
