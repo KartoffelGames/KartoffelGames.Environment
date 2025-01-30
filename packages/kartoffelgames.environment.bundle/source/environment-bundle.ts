@@ -122,7 +122,7 @@ export class EnvironmentBundle {
         };
 
         // List of input names.
-        const lInputFileNames: Array<{ basename: string; extension: string; }> = new Array<{ basename: string; extension: string; }>();
+        const lInputFileNames: Array<{ outputBaseName: string; basename: string; extension: string; }> = new Array<{ outputBaseName: string; basename: string; extension: string; }>();
 
         // Eighter build files or a file content.
         if (pOptions.entry.files) {
@@ -134,6 +134,7 @@ export class EnvironmentBundle {
 
                 // Add input file name.
                 lInputFileNames.push({
+                    outputBaseName: lInputFile.outputBasename,
                     basename: lInputFile.outputBasename,
                     extension: lInputFile.outputExtension
                 });
@@ -145,11 +146,13 @@ export class EnvironmentBundle {
             lEsBuildConfiguration.stdin = {
                 contents: pOptions.entry.content.inputFileContent,
                 resolveDir: pOptions.entry.content.inputResolveDirectory,
-                loader: 'ts'
+                loader: 'ts',
+                sourcefile: `standard-input-file.js`
             };
 
             // Add input file name.
             lInputFileNames.push({
+                outputBaseName: 'stdin',
                 basename: pOptions.entry.content.outputBasename,
                 extension: pOptions.entry.content.outputExtension
             });
@@ -199,7 +202,7 @@ export class EnvironmentBundle {
 
         // Map output files with the coresponding input files.
         for (const lInputFile of lInputFileNames) {
-            const lFileOutputEntry: Partial<EnvironmentBundleOutput[number]> | undefined = lFileOutput[lInputFile.basename];
+            const lFileOutputEntry: Partial<EnvironmentBundleOutput[number]> | undefined = lFileOutput[lInputFile.outputBaseName];
 
             // Missing everything.
             if (!lFileOutputEntry) {
@@ -214,6 +217,18 @@ export class EnvironmentBundle {
             // Missing source map.
             if (!lFileOutputEntry.sourceMap) {
                 throw new Error(`Output file map not emited for input file: ${lInputFile.basename}`);
+            }
+
+            // Replace sourcemap url in output file.
+            if (lInputFile.outputBaseName !== lInputFile.basename) {
+                // Convert Uint8Array into text. Replace sourcemapping url.
+                const lSourceText: string = new TextDecoder().decode(lFileOutputEntry.content).replace(
+                    `//# sourceMappingURL=${lInputFile.outputBaseName}.js.map`,
+                    `//# sourceMappingURL=${lInputFile.basename}.${lInputFile.extension}.map`
+                );
+
+                // Encode text again into Uint8Array
+                lFileOutputEntry.content = new TextEncoder().encode(lSourceText);
             }
 
             // Add file to output.

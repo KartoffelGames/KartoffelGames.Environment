@@ -1,6 +1,7 @@
 import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleInputFiles, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
 import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { EnvironmentBundleInputContent } from "../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
 
 export class HttpServer {
     private readonly mBuildFiles: HttpServerBuildFiles;
@@ -70,13 +71,25 @@ export class HttpServer {
         }
 
         // Create default scratchpad input.
-        const lBundleSettings: EnvironmentBundleInputFiles = [
-            {
-                inputFilePath: './scratchpad/source/index.ts',
-                outputBasename: 'scratchpad',
-                outputExtension: '.js'
-            }
-        ];
+        const lBundleSettings: EnvironmentBundleInputContent = {
+            inputResolveDirectory: './scratchpad/source/',
+            outputBasename: 'scratchpad',
+            outputExtension: 'js',
+            inputFileContent: 
+                "(() => {\n" +
+                "    const socket = new WebSocket('ws://127.0.0.1:8888');\n" +
+                "    socket.addEventListener('open', () => {\n" +
+                "        console.log('Refresh connection established');\n" +
+                "    });\n" +
+                "    socket.addEventListener('message', (event) => {\n" +
+                "        console.log('Build finished. Start refresh');\n" +
+                "        if (event.data === 'REFRESH') {\n" +
+                "            window.location.reload();\n" +
+                "        }\n" +
+                "    });\n" +
+                "})();\n" +
+                "import './index.ts';\n"
+        };
 
         // Create environment bundle.
         const lEnvironmentBundle: EnvironmentBundle = new EnvironmentBundle();
@@ -111,7 +124,7 @@ export class HttpServer {
         // Start bundling.
         const lBuildResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
-                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackageFiles(this.mPackageInformation, lBundleSettings, lLoader);
+                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackageContent(this.mPackageInformation, lBundleSettings, lLoader);
 
                 return {
                     content: lBundleResult[0].content,
@@ -197,7 +210,7 @@ export class HttpServer {
                 if (FileSystem.exists(lExistigFilePath)) {
                     const lFileInformation = FileSystem.pathInformation(lExistigFilePath);
 
-                    // Open file and return response.
+                    // Open file and return response. // TODO: Try catch when file is locked or locking while reading.
                     const file = await Deno.open(lExistigFilePath, { read: true });
                     return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
                 }
