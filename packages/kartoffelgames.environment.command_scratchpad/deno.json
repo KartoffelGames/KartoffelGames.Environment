@@ -23,7 +23,7 @@
             },
             "page": false,
             "scratchpad": {
-                "buildRequired": true,
+                "mainBundleRequired": true,
                 "port": 8888
             }
         }

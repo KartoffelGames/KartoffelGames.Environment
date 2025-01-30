@@ -1,4 +1,6 @@
-import { CliCommandDescription, CliParameter, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { ScratchpadBundler } from "./file_handler/scratchpad-bundler.ts";
+import { ScratchpadFileWatcher } from "./file_handler/scratchpad-file-watcher.ts";
 import { ScratchpadHttpServer } from "./file_handler/scratchpad-http-server.ts";
 
 export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
@@ -16,7 +18,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
             configuration: {
                 name: 'scratchpad',
                 default: {
-                    buildRequired: false,
+                    mainBundleRequired: false,
                     port: 8088,
                     moduleDeclaration: ''
                 },
@@ -52,21 +54,43 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         // Source directory of www files.
         const lSourceDirectory: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'scratchpad');
 
-        // Start http server.
-        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageInformation, {
-            watchPaths: lWatchPaths,
-            port: lPackageConfiguration.port,
-            rootPath: lSourceDirectory,
-            buildRequired: lPackageConfiguration.buildRequired,
-            project: pProjectHandler,
-            moduleDeclaration: lPackageConfiguration.moduleDeclaration
+        // Create console.
+        const lConsole = new Console();
+
+        // Build scratchpad http-server, watcher and bundler.
+        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory);
+        const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
+        const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler(pProjectHandler, lPackageInformation, lPackageConfiguration.moduleDeclaration, lPackageConfiguration.mainBundleRequired);
+
+        // Build initial build files.
+        lConsole.writeLine("Starting initial build...");
+        await lScratchpadBundler.bundle();
+        lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
+
+        // Rebuild scratchpad files and refresh connected browsers when files have changed.
+        lWatcher.addListener(async () => {
+            // Bundle files and update server served scratchpad files once they have changed.
+            if (await lScratchpadBundler.bundle()) {
+                lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
+                
+                // Output build finished.
+                lConsole.writeLine('Build finished', 'green');
+            } else {
+                // Signal build was not changed.
+                lConsole.writeLine('No changes detected in build files.', 'yellow');
+            }
+
+            // Refresh connected browsers
+            lHttpServer.refreshConnectedBrowser();
         });
 
-        // Start http server asnyc.
-        lHttpServer.start();
+        // Start watcher.
+        lConsole.writeLine("Starting watcher...");
+        lWatcher.start();
 
-        // Keep process alive.
-        await new Promise(() => { });
+        // Start http server asnyc and keep process running as long as server is running.
+        lConsole.writeLine("Starting scratchpad server...");
+        await lHttpServer.start();
     }
 
     /***
@@ -118,7 +142,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
 
 
 type ScratchpadConfiguration = {
-    buildRequired: boolean;
+    mainBundleRequired: boolean;
     port: number;
     moduleDeclaration: string;
 };

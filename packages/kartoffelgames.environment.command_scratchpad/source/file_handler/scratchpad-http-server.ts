@@ -1,168 +1,50 @@
-import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleInputFiles, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
-import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
-import { EnvironmentBundleInputContent } from "../../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
+import { Console, FileSystem } from '@kartoffelgames/environment-core';
 
 export class ScratchpadHttpServer {
-    private readonly mBuildFiles: ScratchpadHttpServerBuildFiles;
-    private readonly mConfiguration: ScratchpadHttpServerRunConfiguration;
-    private readonly mPackageInformation: PackageInformation;
+    private readonly mScratchpadFiles: ScratchpadHttpServerScratchpadFiles;
+    private readonly mRootPath: string;
+    private readonly mPort: number;
     private readonly mOpenWebsockets: Set<WebSocket>;
-    private readonly mWatchedFiles: Map<string, string>;
-    private readonly mAccessedFilePaths: Set<string>;
-
-    public constructor(pPackageInformation: PackageInformation, pConfiguration: ScratchpadHttpServerRunConfiguration) {
-        this.mPackageInformation = pPackageInformation;
-        this.mConfiguration = pConfiguration;
-        this.mOpenWebsockets = new Set<WebSocket>();
-        this.mWatchedFiles = new Map<string, string>();
-        this.mAccessedFilePaths = new Set<string>();
-        this.mBuildFiles = {
-            javascriptFileContent: new Uint8Array(0),
-            mapFileContent: new Uint8Array(0),
-        };
-    }
+    private mServer: Deno.HttpServer<Deno.NetAddr> | null;
 
     /**
-     * Start http server.
-     * Refreshes build files any time a file changes in the watch paths.
-     * Triggers a browser refresh after build files are updated.
-     */
-    public async start(): Promise<void> {
-        const lConsole = new Console();
-
-        // Build initial build files.
-        lConsole.writeLine("Starting initial build...");
-        await this.rebuildBuildFiles();
-
-        // Standalone web server.
-        lConsole.writeLine("Starting scratchpad server...");
-        this.startWebserver(this.mConfiguration.port, this.mConfiguration.rootPath);
-
-        // Start watcher to rebuild build files and trigger a browser refresh when any watched file changes.
-        lConsole.writeLine("Starting watcher...");
-        this.startWatcher(this.mConfiguration.watchPaths, async () => {
-            if (await this.rebuildBuildFiles()) {
-                this.triggerBrowserRefresh();
-            }
-        });
-    }
-
-    /**
-     * Rebuild scratchpad files.
-     * When build is required, main source is build first with the native kg bundle command.
+     * Constructor.
      * 
-     * // TODO: Also move into own class.
+     * @param pPort - Listening port.
+     * @param pRootPath - Root path for webserver files.
      */
-    private async rebuildBuildFiles(): Promise<boolean> { 
+    public constructor(pPort: number, pRootPath: string) {
+        this.mPort = pPort;
+        this.mRootPath = pRootPath;
+        this.mOpenWebsockets = new Set<WebSocket>();
+        this.mServer = null;
+        this.mScratchpadFiles = {
+            source: new Uint8Array(0),
+            map: new Uint8Array(0),
+        };
+    }
+
+    /**
+     * Set scratchpad bundle files served by the server.
+     * 
+     * @param pSourceFile - Javascript source file.
+     * @param pSourceMapFile - Source map file.
+     */
+    public setScratchpadBundle(pSourceFile: Uint8Array, pSourceMapFile: Uint8Array) {
+        this.mScratchpadFiles.source = pSourceFile;
+        this.mScratchpadFiles.map = pSourceMapFile;
+    }
+
+    /**
+     * Trigger a browser refresh for all connected websockets.
+     */
+    public refreshConnectedBrowser(): void {
         const lConsole = new Console();
 
-        // Build native when native is required.
-        if (this.mConfiguration.buildRequired) {
-            // Create main build parameter with force flag.
-            const lMainBuildParameter: CliParameter = new CliParameter();
-            lMainBuildParameter.parameter.set('package_name', this.mPackageInformation.packageName);
-            lMainBuildParameter.flags.add('force');
-
-            // Create bundle command.
-            const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
-
-            // Try to build main source.
-            try {
-                await lMainBundleCommand.run(lMainBuildParameter, this.mConfiguration.project);
-            } catch (e) {
-                lConsole.writeLine('Failed to build main source.', 'red');
-                lConsole.writeLine((<Error>e).message, 'red');
-            }
+        lConsole.writeLine('Refreshing browser...');
+        for (const lSocket of this.mOpenWebsockets) {
+            lSocket.send('REFRESH');
         }
-
-        // Create default scratchpad input.
-        const lBundleSettings: EnvironmentBundleInputContent = {
-            inputResolveDirectory: './scratchpad/source/',
-            outputBasename: 'scratchpad',
-            outputExtension: 'js',
-            inputFileContent:
-                "(() => {\n" +
-                "    const socket = new WebSocket('ws://127.0.0.1:8888');\n" +
-                "    socket.addEventListener('open', () => {\n" +
-                "        console.log('Refresh connection established');\n" +
-                "    });\n" +
-                "    socket.addEventListener('message', (event) => {\n" +
-                "        console.log('Build finished. Start refresh');\n" +
-                "        if (event.data === 'REFRESH') {\n" +
-                "            window.location.reload();\n" +
-                "        }\n" +
-                "    });\n" +
-                "})();\n" +
-                "import './index.ts';\n"
-        };
-
-        // Create environment bundle.
-        const lEnvironmentBundle: EnvironmentBundle = new EnvironmentBundle();
-
-        // Load local resolver from module declaration
-        let lLoader: EnvironmentBundleExtentionLoader = (() => {
-            const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(this.mPackageInformation.directory, this.mConfiguration.moduleDeclaration);
-
-            // Check for file exists.
-            if (!FileSystem.exists(lModuleDeclarationFilePath)) {
-                lConsole.writeLine(`No module declaration found in "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
-
-                // Use empty loader to load with default loader.
-                return {};
-            }
-
-            // Check for path is a file.
-            if (!FileSystem.pathInformation(lModuleDeclarationFilePath).isFile) {
-                lConsole.writeLine(`Invalid module declaration file "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
-
-                // Use empty loader to load with default loader.
-                return {};
-            }
-
-            // Read module declaration file content.
-            const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
-
-            // Read module declaration text from file.
-            return lEnvironmentBundle.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
-        })();
-
-        // Start bundling.
-        const lBuildResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
-            try {
-                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackageContent(this.mPackageInformation, lBundleSettings, lLoader);
-
-                return {
-                    content: lBundleResult[0].content,
-                    sourcemap: lBundleResult[0].sourceMap
-                };
-            } catch (e) {
-                lConsole.writeLine((<Error>e).message, 'red');
-
-                return {
-                    content: new Uint8Array(0),
-                    sourcemap: new Uint8Array(0)
-                };
-            }
-        })();
-
-        // Cache build files.
-        const lTextDecoder = new TextDecoder();
-        if (lTextDecoder.decode(this.mBuildFiles.javascriptFileContent) === lTextDecoder.decode(lBuildResult.content)) {
-            // Signal build was not changed.
-            lConsole.writeLine('No changes detected in build files.', 'yellow');
-
-            return false;
-        }
-
-        // Cache build files.
-        this.mBuildFiles.javascriptFileContent = lBuildResult.content;
-        this.mBuildFiles.mapFileContent = lBuildResult.sourcemap;
-
-        // Output build finished.
-        lConsole.writeLine('Build finished', 'green');
-
-        return true;
     }
 
     /**
@@ -174,7 +56,12 @@ export class ScratchpadHttpServer {
      * @param pPort - Listening port.
      * @param pRootPath - Root path for webserver files.
      */
-    private startWebserver(pPort: number, pRootPath: string): void {
+    public async start(): Promise<void> {
+        // Prevent server from starting multiple times.
+        if (this.mServer !== null) {
+            return this.mServer.finished;
+        }
+
         // Mime type mapping.
         const lMimeTypeMapping: Map<string, string> = new Map<string, string>();
         lMimeTypeMapping.set('.html', 'text/html');
@@ -189,18 +76,18 @@ export class ScratchpadHttpServer {
         lMimeTypeMapping.set('.ico', 'image/x-icon');
 
         // Start webserver on defined port.
-        Deno.serve({ port: pPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
+        this.mServer = Deno.serve({ port: this.mPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
             // Upgrade to websocket.
             if (pReqest.headers.get("upgrade") === "websocket") {
                 return this.upgradeToWebsocketConnection(pReqest);
             }
 
             const lFilePathName: string = new URL(pReqest.url).pathname;
-            let lFilePath: string = FileSystem.pathToAbsolute(pRootPath, '.' + lFilePathName);
+            let lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
             // Special case for build directory.
             if (lFilePathName.toLowerCase().startsWith('/build/')) {
-                lFilePath = FileSystem.pathToAbsolute(pRootPath, '..', 'library', lFilePathName.substring(7));
+                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(7));
             }
 
             // Send file when it is in fact a file path.
@@ -218,9 +105,6 @@ export class ScratchpadHttpServer {
 
                     // Try catch when file is locked or locking while reading.
                     try {
-                        // Save path as accessed path. // TODO: Must be used some case. 
-                        this.mAccessedFilePaths.add(lExistigFilePath);
-
                         // Open file and return response.
                         const file = await Deno.open(lExistigFilePath, { read: true });
                         return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
@@ -233,16 +117,29 @@ export class ScratchpadHttpServer {
 
             // Send cached buidl scratchpad.js for a special path.
             if (lFilePathName.toLowerCase() === '/scratchpad.js') {
-                return new Response(this.mBuildFiles.javascriptFileContent, { headers: { 'Content-Type': 'application/javascript' } });
+                return new Response(this.mScratchpadFiles.source, { headers: { 'Content-Type': 'application/javascript' } });
             }
 
             // Send cached buidl scratchpad.js for a special path.
             if (lFilePathName.toLowerCase() === '/scratchpad.js.map') {
-                return new Response(this.mBuildFiles.mapFileContent, { headers: { 'Content-Type': 'application/json' } });
+                return new Response(this.mScratchpadFiles.map, { headers: { 'Content-Type': 'application/json' } });
             }
 
             return new Response("404 Not Found", { status: 404 });
         });
+
+        // Return promise that resolves once the server is closed.
+        return this.mServer.finished;
+    }
+
+    /**
+     * Stop webserver.
+     */
+    public stop(): void {
+        if (this.mServer !== null) {
+            this.mServer.shutdown();
+            this.mServer = null;
+        }
     }
 
     /**
@@ -272,91 +169,9 @@ export class ScratchpadHttpServer {
 
         return lResponse;
     }
-
-    /**
-     * Trigger a browser refresh for all connected websockets.
-     */
-    private triggerBrowserRefresh(): void {
-        const lConsole = new Console();
-
-        lConsole.writeLine('Refreshing browser...');
-        for (const lSocket of this.mOpenWebsockets) {
-            lSocket.send('REFRESH');
-        }
-    }
-
-    /**
-     * Initialize watcher for scratchpad files. // TODO: Move into own class.
-     * 
-     * @param pWatchPaths - Watch paths.
-     * @param pWatchCallback - Watch callback.
-     */
-    public async startWatcher(pWatchPaths: Array<string>, pWatchCallback: () => void): Promise<void> {
-        // Init watcher.
-        const lWatcher: Deno.FsWatcher = Deno.watchFs(pWatchPaths, { recursive: true });
-
-        // Init debounce timer.
-        let lDebounceTimer: number = 0;
-
-        let lFilesHasChanged: boolean = false;
-
-        // Start watcher loop asyncron.
-        for await (const lEvent of lWatcher) {
-            const lChangedPath: string = FileSystem.pathToAbsolute(lEvent.paths[0]);
-
-            // Reset debounce timer.
-            clearTimeout(lDebounceTimer);
-
-            switch (lEvent.kind) {
-                case 'create':
-                case 'modify':
-                case 'rename': {
-                    // Read current changed file.
-                    const lFileContent: string = FileSystem.read(lChangedPath);
-
-                    // Any new file is a changed file.
-                    if (!this.mWatchedFiles.has(lChangedPath) || this.mWatchedFiles.get(lChangedPath) !== lFileContent) {
-                        this.mWatchedFiles.set(lChangedPath, lFileContent);
-                        lFilesHasChanged = true;
-                    }
-
-                    break;
-                }
-                case 'remove': {
-                    // Only set to changed when it was previously used.
-                    if (this.mWatchedFiles.has(lChangedPath)) {
-                        this.mWatchedFiles.delete(lChangedPath);
-                        lFilesHasChanged = true;
-                    }
-
-                    break;
-                }
-            }
-
-            // Skipp file change.
-            if (!lFilesHasChanged) {
-                continue;
-            }
-
-            // Set new debounce timer.
-            lDebounceTimer = setTimeout(() => {
-                pWatchCallback();
-                lFilesHasChanged = false;
-            }, 100);
-        }
-    }
 }
 
-type ScratchpadHttpServerBuildFiles = {
-    javascriptFileContent: Uint8Array;
-    mapFileContent: Uint8Array;
-};
-
-export type ScratchpadHttpServerRunConfiguration = {
-    project: Project;
-    watchPaths: Array<string>;
-    port: number;
-    rootPath: string;
-    buildRequired: boolean;
-    moduleDeclaration: string;
+type ScratchpadHttpServerScratchpadFiles = {
+    source: Uint8Array;
+    map: Uint8Array;
 };

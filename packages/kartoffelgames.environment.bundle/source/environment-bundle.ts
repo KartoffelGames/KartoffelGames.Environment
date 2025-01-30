@@ -25,7 +25,7 @@ export class EnvironmentBundle {
             plugins: [...denoPlugins({
                 configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json')
             })] as unknown as Array<esbuild.Plugin>,
-            
+
             entry: {
                 content: pInputContent
             }
