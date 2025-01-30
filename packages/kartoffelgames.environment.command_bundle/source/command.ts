@@ -110,7 +110,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
         })();
 
         // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackage(lPackageInformation, lBundleSettings, lLoader);
+        const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackageFiles(lPackageInformation, lBundleSettings, lLoader);
 
         // Create output file directory.
         const lBuildOutput: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'library');

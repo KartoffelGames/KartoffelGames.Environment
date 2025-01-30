@@ -4,14 +4,44 @@ import * as esbuild from 'esbuild';
 
 export class EnvironmentBundle {
     /**
-     * Bundle package with set settings and loader.
+     * Bundle a custom content in the context of a package with set settings and loader.
      * 
-     * @param pProject - Project.
      * @param pPackageInformation - Package information.
+     * @param pInputContent - Input source content.
+     * @param pLoader - file extension loader.
      *  
      * @returns Build output of webpack build. 
      */
-    public async bundlePackage(pPackageInformation: PackageInformation, pInputFiles: EnvironmentBundleInputFiles, lLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
+    public async bundlePackageContent(pPackageInformation: PackageInformation, pInputContent: EnvironmentBundleInputContent, lLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
+        // Convert the relative resolve path into a absolute path.
+        pInputContent.outputBasename = pInputContent.outputBasename.replace('<packagename>', pPackageInformation.idName);
+        pInputContent.inputResolveDirectory = FileSystem.pathToAbsolute(pPackageInformation.directory, pInputContent.inputResolveDirectory);
+
+        // Build bundle options.
+        const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
+            loader: lLoader,
+            plugins: [...denoPlugins({
+                configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json')
+            })] as unknown as Array<esbuild.Plugin>,
+            entry: {
+                content: pInputContent
+            }
+        };
+
+        // Run bundle.
+        return this.runBundleProcess(lEnvironmentBundleOptions);
+    }
+
+    /**
+     * Bundle package files with set settings and loader.
+     * 
+     * @param pPackageInformation - Package information.
+     * @param pInputFiles - Input files.
+     * @param pLoader - file extension loader.
+     *  
+     * @returns Build output of webpack build. 
+     */
+    public async bundlePackageFiles(pPackageInformation: PackageInformation, pInputFiles: EnvironmentBundleInputFiles, pLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
         // Replace <packagename> with package name and convert entry point path into absolute file path url.
         pInputFiles = pInputFiles.map((pInputFile) => {
             return {
@@ -23,7 +53,7 @@ export class EnvironmentBundle {
 
         // Build bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
-            loader: lLoader,
+            loader: pLoader,
             plugins: [...denoPlugins({
                 configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json')
             })] as unknown as Array<esbuild.Plugin>,
@@ -33,7 +63,7 @@ export class EnvironmentBundle {
         };
 
         // Run bundle.
-        return this.runBundle(lEnvironmentBundleOptions);
+        return this.runBundleProcess(lEnvironmentBundleOptions);
     }
 
     /**
@@ -61,7 +91,15 @@ export class EnvironmentBundle {
         return lLoaderList;
     }
 
-    private async runBundle(pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
+    /**
+     * Run a generic bundle process.
+     * 
+     * @param pOptions - Bundle options.
+     * 
+     * @returns bundle output files. 
+     */
+    private async runBundleProcess(pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
+        // Create esbuild configuration object.
         const lEsBuildConfiguration: esbuild.BuildOptions = {
             // User setupable.
             plugins: pOptions.plugins,
@@ -91,6 +129,7 @@ export class EnvironmentBundle {
             // Convert entry files into a filename to input file mapping.
             const lEntryPoints: { [key: string]: string; } = {};
             for (const lInputFile of pOptions.entry.files) {
+                //
                 lEntryPoints[lInputFile.outputBasename] = lInputFile.inputFilePath;
 
                 // Add input file name.

@@ -111,7 +111,7 @@ export class HttpServer {
         // Start bundling.
         const lBuildResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
-                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackage(this.mPackageInformation, lBundleSettings, lLoader);
+                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackageFiles(this.mPackageInformation, lBundleSettings, lLoader);
 
                 return {
                     content: lBundleResult[0].content,
