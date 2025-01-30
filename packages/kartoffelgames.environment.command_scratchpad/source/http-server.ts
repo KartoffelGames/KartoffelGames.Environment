@@ -6,10 +6,12 @@ export class HttpServer {
     private readonly mBuildFiles: HttpServerBuildFiles;
     private readonly mConfiguration: HttpServerRunConfiguration;
     private readonly mPackageInformation: PackageInformation;
+    private readonly mOpenWebsockets: Set<WebSocket>;
 
     public constructor(pPackageInformation: PackageInformation, pConfiguration: HttpServerRunConfiguration) {
         this.mPackageInformation = pPackageInformation;
         this.mConfiguration = pConfiguration;
+        this.mOpenWebsockets = new Set<WebSocket>();
         this.mBuildFiles = {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
@@ -94,7 +96,7 @@ export class HttpServer {
             }
 
             // Check for path is a file.
-            if(!FileSystem.pathInformation(lModuleDeclarationFilePath).isFile) {
+            if (!FileSystem.pathInformation(lModuleDeclarationFilePath).isFile) {
                 lConsole.writeLine(`Invalid module declaration file "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
 
                 // Use empty loader to load with default loader.
@@ -170,7 +172,12 @@ export class HttpServer {
         lMimeTypeMapping.set('.ico', 'image/x-icon');
 
         // Start webserver on defined port.
-        Deno.serve({ port: pPort, hostname: '127.0.0.1' }, async (pReqest): Promise<Response> => {
+        Deno.serve({ port: pPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
+            // Upgrade to websocket.
+            if (pReqest.headers.get("upgrade") === "websocket") {
+                return this.upgradeToWebsocketConnection(pReqest);
+            }
+
             const lFilePathName: string = new URL(pReqest.url).pathname;
             let lFilePath: string = FileSystem.pathToAbsolute(pRootPath, '.' + lFilePathName);
 
@@ -212,11 +219,44 @@ export class HttpServer {
         });
     }
 
+    /**
+     * Upgrade a http connection into a websocket connection.
+     * 
+     * @param pReqest - Http request.
+     * 
+     * @returns a new websocket connection. 
+     */
+    private upgradeToWebsocketConnection(pReqest: Request): Response {
+        const lConsole = new Console();
+
+        // Upgrade request to websocket.
+        const { socket: lSocket, response: lResponse } = Deno.upgradeWebSocket(pReqest);
+
+        // Save socket connection on open.
+        lSocket.addEventListener("open", () => {
+            lConsole.writeLine('Browser connection established')
+            this.mOpenWebsockets.add(lSocket);
+        });
+
+        // Remove socket when it is closed.
+        lSocket.addEventListener('close', () => {
+            lConsole.writeLine('Browser connection lost')
+            this.mOpenWebsockets.delete(lSocket);
+        });
+
+        return lResponse;
+    }
+
+    /**
+     * Trigger a browser refresh for all connected websockets.
+     */
     private triggerBrowserRefresh(): void {
         const lConsole = new Console();
 
         lConsole.writeLine('Refreshing browser...');
-        // TODO: Implement browser refresh with webpack.
+        for (const lSocket of this.mOpenWebsockets) {
+            lSocket.send('REFRESH');
+        }
     }
 
     /**
