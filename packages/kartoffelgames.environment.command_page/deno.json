@@ -1,0 +1,31 @@
+{
+    "name": "@kartoffelgames/environment-command-page",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {},
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json",
+            "kg-cli.config.json"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Page",
+        "config": {
+            "blueprint": "kg-main",
+            "bundle": {
+                "enabled": true
+            },
+            "page": false,
+            "scratchpad": {
+                "mainBundleRequired": true,
+                "port": 8888
+            }
+        }
+    }
+}

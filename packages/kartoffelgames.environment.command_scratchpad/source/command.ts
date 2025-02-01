@@ -60,7 +60,13 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         // Build scratchpad http-server, watcher and bundler.
         const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory);
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
-        const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler(pProjectHandler, lPackageInformation, lPackageConfiguration.moduleDeclaration, lPackageConfiguration.mainBundleRequired);
+        const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
+            projectHandler: pProjectHandler,
+            packageInformation: lPackageInformation,
+            moduleDeclaration: lPackageConfiguration.moduleDeclaration,
+            coreBundleRequired: lPackageConfiguration.mainBundleRequired,
+            websocketPort: lPackageConfiguration.port,
+        });
 
         // Build initial build files.
         lConsole.writeLine("Starting initial bundle...");
@@ -72,7 +78,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
             // Bundle files and update server served scratchpad files once they have changed.
             if (await lScratchpadBundler.bundle()) {
                 lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
-                
+
                 // Output bundle finished.
                 lConsole.writeLine('Build finished', 'green');
             } else {

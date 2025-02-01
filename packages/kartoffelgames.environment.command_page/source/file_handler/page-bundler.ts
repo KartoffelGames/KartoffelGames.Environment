@@ -3,11 +3,11 @@ import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-c
 import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
 import { EnvironmentBundleInputContent } from "../../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
 
-export class ScratchpadBundler {
+export class PageBundler {
     private readonly mCoreBundleRequired: boolean;
     private readonly mPackageInformation: PackageInformation;
     private readonly mProjectHandler: Project;
-    private readonly mBundledFiles: ScratchpadBundlerFiles;
+    private readonly mBundledFiles: PageBundlerFiles;
     private readonly mModuleDeclaration: string;
     private readonly mWebsocketPort: number;
 
@@ -30,7 +30,7 @@ export class ScratchpadBundler {
      * 
      * @param pParameters - Constructor parameters.
      */
-    public constructor(pParameters: ScratchpadBundlerConstructor) {
+    public constructor(pParameters: PageBundlerConstructor) {
         this.mProjectHandler = pParameters.projectHandler;
         this.mPackageInformation = pParameters.packageInformation;
         this.mModuleDeclaration = pParameters.moduleDeclaration;
@@ -43,7 +43,7 @@ export class ScratchpadBundler {
     }
 
     /**
-     * Rebundle scratchpad files.
+     * Rebundle page files.
      * When main source bundle is required, main source is bundled first with the native kg bundle command.
      */
     public async bundle(): Promise<boolean> {
@@ -68,10 +68,10 @@ export class ScratchpadBundler {
             }
         }
 
-        // Create default scratchpad input.
+        // Create default page input.
         const lBundleSettings: EnvironmentBundleInputContent = {
-            inputResolveDirectory: './scratchpad/source/',
-            outputBasename: 'scratchpad',
+            inputResolveDirectory: './page/source/',
+            outputBasename: 'page',
             outputExtension: 'js',
             inputFileContent:
                 `(() => {\n` +
@@ -133,13 +133,13 @@ export class ScratchpadBundler {
             } catch (e) {
                 // Pass through error message.
                 lConsole.writeLine((<Error>e).message, 'red');
-
-                // Return empty bundle result on error.
-                return {
-                    content: new Uint8Array(0),
-                    sourcemap: new Uint8Array(0)
-                };
             }
+
+            // Return empty bundle result on error.
+            return {
+                content: new Uint8Array(0),
+                sourcemap: new Uint8Array(0)
+            };
         })();
 
         // Cache bundled files.
@@ -157,12 +157,12 @@ export class ScratchpadBundler {
     }
 }
 
-type ScratchpadBundlerFiles = {
+type PageBundlerFiles = {
     javascriptFileContent: Uint8Array;
     mapFileContent: Uint8Array;
 };
 
-export type ScratchpadBundlerConstructor = {
+export type PageBundlerConstructor = {
     projectHandler: Project;
     packageInformation: PackageInformation;
     moduleDeclaration: string;
