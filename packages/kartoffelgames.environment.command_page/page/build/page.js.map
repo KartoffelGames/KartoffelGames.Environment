@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../packages/kartoffelgames.environment.command_page/page/source/index.ts", "../packages/kartoffelgames.environment.command_page/page/source/standard-input-file.js"],
-  "sourcesContent": ["console.log('Hello World!!!');", "(() => {\n    const socket = new WebSocket('ws://127.0.0.1:8088');\n    socket.addEventListener('open', () => {\n        console.log('Refresh connection established');\n    });\n    socket.addEventListener('message', (event) => {\n        console.log('Bundle finished. Start refresh');\n        if (event.data === 'REFRESH') {\n            window.location.reload();\n        }\n    });\n})();\nimport './index.ts';\n"],
-  "mappings": "AAAA,QAAQ,IAAI,gBAAgB,GCA3B,IAAM,CACH,IAAMA,EAAS,IAAI,UAAU,qBAAqB,EAClDA,EAAO,iBAAiB,OAAQ,IAAM,CAClC,QAAQ,IAAI,gCAAgC,CAChD,CAAC,EACDA,EAAO,iBAAiB,UAAYC,GAAU,CAC1C,QAAQ,IAAI,gCAAgC,EACxCA,EAAM,OAAS,WACf,OAAO,SAAS,OAAO,CAE/B,CAAC,CACL,GAAG",
-  "names": ["socket", "event"]
-}
