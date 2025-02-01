@@ -19,11 +19,11 @@
         "config": {
             "blueprint": "kg-main",
             "bundle": {
-                "enabled": true
+                "enabled": false
             },
             "page": false,
             "scratchpad": {
-                "mainBundleRequired": true,
+                "mainBundleRequired": false,
                 "port": 8888
             }
         }
