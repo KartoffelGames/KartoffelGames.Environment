@@ -19,8 +19,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
                 name: 'scratchpad',
                 default: {
                     mainBundleRequired: false,
-                    port: 8088,
-                    moduleDeclaration: ''
+                    port: 8088
                 },
             }
         };
@@ -63,7 +62,6 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
             projectHandler: pProjectHandler,
             packageInformation: lPackageInformation,
-            moduleDeclaration: lPackageConfiguration.moduleDeclaration,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
         });
@@ -150,5 +148,4 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
 type ScratchpadConfiguration = {
     mainBundleRequired: boolean;
     port: number;
-    moduleDeclaration: string;
 };

@@ -60,24 +60,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
         const lEnvironmentBundle = new EnvironmentBundle();
 
         // Load local resolver from module declaration
-        let lLoader: EnvironmentBundleExtentionLoader = (() => {
-            const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.moduleDeclaration);
-            if (lPackageConfiguration.moduleDeclaration.trim() !== '') {
-                // Check for file exists.
-                if (!FileSystem.exists(lModuleDeclarationFilePath)) {
-                    throw new Error(`Module declaration file not found: ${lModuleDeclarationFilePath}`);
-                }
-
-                // Read module declaration file content.
-                const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
-
-                // Read module declaration text from file.
-                return lEnvironmentBundle.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
-            }
-
-            // Use empty / default loader.
-            return {};
-        })();
+        const lLoader: EnvironmentBundleExtentionLoader = lEnvironmentBundle.loadLoaderFromModuleDeclaration(lPackageInformation, lPackageConfiguration.moduleDeclaration)
 
         // Load local bundle settings.
         const lBundleSettings: EnvironmentBundleInputFiles = await (async () => {

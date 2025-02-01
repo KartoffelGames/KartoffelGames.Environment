@@ -20,8 +20,7 @@ export class KgCliCommand implements ICliCommand<PageConfiguration> {
                 default: {
                     enabled: false,
                     mainBundleRequired: false,
-                    port: 8088,
-                    moduleDeclaration: ''
+                    port: 8088
                 },
             }
         };
@@ -71,7 +70,6 @@ export class KgCliCommand implements ICliCommand<PageConfiguration> {
         const lPageBundler: PageBundler = new PageBundler({
             projectHandler: pProjectHandler,
             packageInformation: lPackageInformation,
-            moduleDeclaration: lPackageConfiguration.moduleDeclaration,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
         });
@@ -184,5 +182,4 @@ type PageConfiguration = {
     enabled: boolean;
     mainBundleRequired: boolean;
     port: number;
-    moduleDeclaration: string;
 };

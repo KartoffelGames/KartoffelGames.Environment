@@ -1,6 +1,6 @@
 import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
-import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliParameter, Console, PackageInformation, Project } from '@kartoffelgames/environment-core';
 import { EnvironmentBundleInputContent } from "../../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
 
 export class ScratchpadBundler {
@@ -8,7 +8,6 @@ export class ScratchpadBundler {
     private readonly mPackageInformation: PackageInformation;
     private readonly mProjectHandler: Project;
     private readonly mBundledFiles: ScratchpadBundlerFiles;
-    private readonly mModuleDeclaration: string;
     private readonly mWebsocketPort: number;
 
     /**
@@ -33,7 +32,6 @@ export class ScratchpadBundler {
     public constructor(pParameters: ScratchpadBundlerConstructor) {
         this.mProjectHandler = pParameters.projectHandler;
         this.mPackageInformation = pParameters.packageInformation;
-        this.mModuleDeclaration = pParameters.moduleDeclaration;
         this.mCoreBundleRequired = pParameters.coreBundleRequired;
         this.mWebsocketPort = pParameters.websocketPort;
         this.mBundledFiles = {
@@ -49,15 +47,15 @@ export class ScratchpadBundler {
     public async bundle(): Promise<boolean> {
         const lConsole = new Console();
 
+        // Create bundle command.
+        const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
+
         // Bundle native when native is required.
         if (this.mCoreBundleRequired) {
             // Create main bundle parameter with force flag.
             const lMainBundleParameter: CliParameter = new CliParameter();
             lMainBundleParameter.parameter.set('package_name', this.mPackageInformation.packageName);
             lMainBundleParameter.flags.add('force');
-
-            // Create bundle command.
-            const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
 
             // Try to bundle main source.
             try {
@@ -92,32 +90,11 @@ export class ScratchpadBundler {
         // Create environment bundle.
         const lEnvironmentBundle: EnvironmentBundle = new EnvironmentBundle();
 
+        // Read module declaration from main bundle command.
+        const lMainBundleModuleDeclaration: string = (await this.mProjectHandler.readCliPackageConfiguration(this.mPackageInformation, lMainBundleCommand)).moduleDeclaration;
+
         // Load local resolver from module declaration
-        let lLoader: EnvironmentBundleExtentionLoader = (() => {
-            const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(this.mPackageInformation.directory, this.mModuleDeclaration);
-
-            // Check for file exists.
-            if (!FileSystem.exists(lModuleDeclarationFilePath)) {
-                lConsole.writeLine(`No module declaration found in "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
-
-                // Use empty loader to load with default loader.
-                return {};
-            }
-
-            // Check for path is a file.
-            if (!FileSystem.pathInformation(lModuleDeclarationFilePath).isFile) {
-                lConsole.writeLine(`Invalid module declaration file "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
-
-                // Use empty loader to load with default loader.
-                return {};
-            }
-
-            // Read module declaration file content.
-            const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
-
-            // Read module declaration text from file.
-            return lEnvironmentBundle.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
-        })();
+        const lLoader: EnvironmentBundleExtentionLoader = lEnvironmentBundle.loadLoaderFromModuleDeclaration(this.mPackageInformation, lMainBundleModuleDeclaration);
 
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
@@ -165,7 +142,6 @@ type ScratchpadBundlerFiles = {
 export type ScratchpadBundlerConstructor = {
     projectHandler: Project;
     packageInformation: PackageInformation;
-    moduleDeclaration: string;
     coreBundleRequired: boolean;
     websocketPort: number;
 };

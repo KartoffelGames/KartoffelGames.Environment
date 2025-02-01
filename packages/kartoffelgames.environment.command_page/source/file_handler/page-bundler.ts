@@ -8,7 +8,6 @@ export class PageBundler {
     private readonly mPackageInformation: PackageInformation;
     private readonly mProjectHandler: Project;
     private readonly mBundledFiles: PageBundlerFiles;
-    private readonly mModuleDeclaration: string;
     private readonly mWebsocketPort: number;
 
     /**
@@ -33,7 +32,6 @@ export class PageBundler {
     public constructor(pParameters: PageBundlerConstructor) {
         this.mProjectHandler = pParameters.projectHandler;
         this.mPackageInformation = pParameters.packageInformation;
-        this.mModuleDeclaration = pParameters.moduleDeclaration;
         this.mCoreBundleRequired = pParameters.coreBundleRequired;
         this.mWebsocketPort = pParameters.websocketPort;
         this.mBundledFiles = {
@@ -49,15 +47,15 @@ export class PageBundler {
     public async bundle(): Promise<boolean> {
         const lConsole = new Console();
 
+        // Create bundle command.
+        const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
+
         // Bundle native when native is required.
         if (this.mCoreBundleRequired) {
             // Create main bundle parameter with force flag.
             const lMainBundleParameter: CliParameter = new CliParameter();
             lMainBundleParameter.parameter.set('package_name', this.mPackageInformation.packageName);
             lMainBundleParameter.flags.add('force');
-
-            // Create bundle command.
-            const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
 
             // Try to bundle main source.
             try {
@@ -92,32 +90,11 @@ export class PageBundler {
         // Create environment bundle.
         const lEnvironmentBundle: EnvironmentBundle = new EnvironmentBundle();
 
+        // Read module declaration from main bundle command.
+        const lMainBundleModuleDeclaration: string = (await this.mProjectHandler.readCliPackageConfiguration(this.mPackageInformation, lMainBundleCommand)).moduleDeclaration;
+
         // Load local resolver from module declaration
-        let lLoader: EnvironmentBundleExtentionLoader = (() => {
-            const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(this.mPackageInformation.directory, this.mModuleDeclaration);
-
-            // Check for file exists.
-            if (!FileSystem.exists(lModuleDeclarationFilePath)) {
-                lConsole.writeLine(`No module declaration found in "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
-
-                // Use empty loader to load with default loader.
-                return {};
-            }
-
-            // Check for path is a file.
-            if (!FileSystem.pathInformation(lModuleDeclarationFilePath).isFile) {
-                lConsole.writeLine(`Invalid module declaration file "${lModuleDeclarationFilePath}". Skipping.`, 'yellow');
-
-                // Use empty loader to load with default loader.
-                return {};
-            }
-
-            // Read module declaration file content.
-            const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
-
-            // Read module declaration text from file.
-            return lEnvironmentBundle.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
-        })();
+        const lLoader: EnvironmentBundleExtentionLoader = lEnvironmentBundle.loadLoaderFromModuleDeclaration(this.mPackageInformation, lMainBundleModuleDeclaration);
 
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
@@ -165,7 +142,6 @@ type PageBundlerFiles = {
 export type PageBundlerConstructor = {
     projectHandler: Project;
     packageInformation: PackageInformation;
-    moduleDeclaration: string;
     coreBundleRequired: boolean;
     websocketPort: number;
 };

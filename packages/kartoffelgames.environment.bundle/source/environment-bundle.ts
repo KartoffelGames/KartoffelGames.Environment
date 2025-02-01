@@ -75,6 +75,34 @@ export class EnvironmentBundle {
     }
 
     /**
+     * Load loader from module declaration file.
+     * 
+     * @param pPackageInformation - Package information.
+     * @param pModuleDeclarationFilePath - Module declaration file path relative from package directory.
+     * 
+     * @returns Loader list.
+     */
+    public loadLoaderFromModuleDeclaration(pPackageInformation: PackageInformation, pModuleDeclarationFilePath: string): EnvironmentBundleExtentionLoader {
+        if (pModuleDeclarationFilePath.trim() === '') {
+            // Use default loader.
+            return {};
+        }
+
+        const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(pPackageInformation.directory, pModuleDeclarationFilePath);
+        
+        // Check for file exists.
+        if (!FileSystem.exists(lModuleDeclarationFilePath)) {
+            throw new Error(`Module declaration file not found: ${lModuleDeclarationFilePath}`);
+        }
+
+        // Read module declaration file content.
+        const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
+
+        // Read module declaration text from file.
+        return this.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
+    }
+
+    /**
      * Read all module declarations for file.
      * @param pModuleDeclaration - Module declaration file content.
      * 
