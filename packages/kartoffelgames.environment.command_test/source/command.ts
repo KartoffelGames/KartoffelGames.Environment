@@ -1,36 +1,48 @@
-import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console, Project, Shell } from '@kartoffelgames/environment.core';
-import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment.command-build';
-import * as path from 'path';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
 
-export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
+export class KgCliCommand implements ICliCommand<TestConfiguration> {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription<KgBuildConfiguration> {
+    public get information(): CliCommandDescription<TestConfiguration> {
         return {
             command: {
-                pattern: 'test <package_name> --coverage --no-timeout',
                 description: 'Test package',
+                name: 'test',
+                parameters: ['<package_name>'],
+                flags: ['coverage', 'no-timeout'],
             },
             configuration: {
                 name: 'tests',
-                default: ['unit'],
+                default: {
+                    bundleRequired: false
+                },
             }
         };
     }
 
     /**
      * Execute command.
+     * 
      * @param pParameter - Command parameter.
-     * @param _pPackages - All cli packages grouped by type.
-     * @param pProjectHandler - Project handling.
+     * @param pProjectHandler - Project.
      */
-    public async run(pParameter: CliParameter, _pPackages: Array<string>, pProjectHandler: Project): Promise<void> {
-        const lConsole = new Console();
-
+    public async run(pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
         // Cli parameter.
         const lPackageName: string = <string>pParameter.parameter.get('package_name');
+
+        // Read package information and bundle config. 
+        // Configuration is filled up with default information.
+        const lPackageInformation: PackageInformation = pProjectHandler.getPackageInformation(lPackageName);
+
+        // Read cli configuration from cli package.
+        const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
+
+
+
+
+
+        const lConsole = new Console();
 
         // Construct paths.
         const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
@@ -93,4 +105,6 @@ export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
     }
 }
 
-type KgBuildConfiguration = Array<'unit'>;
+type TestConfiguration = {
+    bundleRequired: boolean;
+};

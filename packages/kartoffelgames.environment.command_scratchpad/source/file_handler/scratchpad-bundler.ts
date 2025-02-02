@@ -1,7 +1,6 @@
-import { EnvironmentBundle, EnvironmentBundleExtentionLoader, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
 import { CliParameter, Console, PackageInformation, Project } from '@kartoffelgames/environment-core';
-import { EnvironmentBundleInputContent } from "../../../kartoffelgames.environment.bundle/source/environment-bundle.ts";
 
 export class ScratchpadBundler {
     private readonly mCoreBundleRequired: boolean;
@@ -59,6 +58,7 @@ export class ScratchpadBundler {
 
             // Try to bundle main source.
             try {
+                // The original bundle command puts the files in the right directories.
                 await lMainBundleCommand.run(lMainBundleParameter, this.mProjectHandler);
             } catch (e) {
                 lConsole.writeLine('Failed to bundle core source.', 'red');
@@ -87,20 +87,15 @@ export class ScratchpadBundler {
                 `import './index.ts';\n`
         };
 
-        // Create environment bundle.
-        const lEnvironmentBundle: EnvironmentBundle = new EnvironmentBundle();
-
-        // Read module declaration from main bundle command.
-        const lMainBundleModuleDeclaration: string = (await this.mProjectHandler.readCliPackageConfiguration(this.mPackageInformation, lMainBundleCommand)).moduleDeclaration;
-
-        // Load local resolver from module declaration
-        const lLoader: EnvironmentBundleExtentionLoader = lEnvironmentBundle.loadLoaderFromModuleDeclaration(this.mPackageInformation, lMainBundleModuleDeclaration);
-
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
                 // Run bundle.
-                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundlePackageContent(this.mPackageInformation, lBundleSettings, lLoader);
+                const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(this.mProjectHandler, this.mPackageInformation.packageName, (pOptions: EnvironmentBundleOptions) => {
+                    pOptions.entry = {
+                        content: lBundleSettings
+                    };
+                });
 
                 // Return bundle result. Its allways one file.
                 return {

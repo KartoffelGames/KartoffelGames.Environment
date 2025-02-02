@@ -27,6 +27,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
 
     /**
      * Execute command.
+     * 
      * @param pParameter - Command parameter.
      * @param pProjectHandler - Project.
      */

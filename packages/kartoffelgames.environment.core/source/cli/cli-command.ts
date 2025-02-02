@@ -87,17 +87,17 @@ export class CliCommand {
         }
 
         // Read all optional parameter names starting with -- from command pattern.
-        const lOptionalUnnamedParameterPatternList: Array<string> = new Array<string>();
+        const lOptionalParameterPatternList: Array<string> = new Array<string>();
         for (const lCommandPatternPart of pCliCommand.information.command.parameters) {
             if (lCommandPatternPart.startsWith('[')) {
-                lOptionalUnnamedParameterPatternList.push(lCommandPatternPart.substring(1, lCommandPatternPart.length - 1).toLowerCase());
+                lOptionalParameterPatternList.push(lCommandPatternPart.substring(1, lCommandPatternPart.length - 1).toLowerCase());
             }
         }
 
         // Read all optional parameter names starting with -- from command pattern.
-        const lOptionalNamedParameterPatternList: Set<string> = new Set<string>();
+        const lFlagParameterPatternList: Set<string> = new Set<string>();
         for (const lCommandPatternPart of pCliCommand.information.command.flags) {
-            lOptionalNamedParameterPatternList.add(lCommandPatternPart);
+            lFlagParameterPatternList.add(lCommandPatternPart);
         }
 
         // Create cli parameter and copy specified parameter.
@@ -133,7 +133,7 @@ export class CliCommand {
         }
 
         // Convert and check all optional unnamed parameters.
-        for (const lOptionalUnnamedParameterName of lOptionalUnnamedParameterPatternList) {
+        for (const lOptionalUnnamedParameterName of lOptionalParameterPatternList) {
             // Read next parameter. Needn't to be existent.
             let lParameter: string | undefined = lUncheckedParameters.at(0);
             if (!lParameter) {
@@ -171,28 +171,12 @@ export class CliCommand {
             const lParameterName: string = lParameter.substring(2).toLowerCase();
 
             // Validate of named parameter exists.
-            if (!lOptionalNamedParameterPatternList.has(lParameterName)) {
+            if (!lFlagParameterPatternList.has(lParameterName)) {
                 throw new Error(`Unexpected parameter "${lParameter}". Named parameter does not exist`);
             }
 
-            // Default parameter value is null,
-            let lParameterValue: string | null = null;
-
-            // Check if the next parameter is a value and does not start with "--".
-            const lNextParameter: string | undefined = lUncheckedParameters.at(0);
-            if (lNextParameter && !lNextParameter.startsWith('--')) {
-                if (lNextParameter.startsWith('"')) {
-                    lParameterValue = lNextParameter.substring(1, lNextParameter.length - 1);
-                } else {
-                    lParameterValue = lNextParameter;
-                }
-
-                // Remove parameter.
-                lUncheckedParameters.shift();
-            }
-
             // Set optional named parameter.
-            lCliParameter.parameter.set(lParameterName, lParameterValue);
+            lCliParameter.flags.add(lParameterName);
         }
 
         return lCliParameter;

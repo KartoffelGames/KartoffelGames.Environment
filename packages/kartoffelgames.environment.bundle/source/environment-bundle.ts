@@ -4,15 +4,34 @@ import * as esbuild from 'esbuild';
 
 export class EnvironmentBundle {
     /**
+     * Bundle a package with set settings and loader.
+     * 
+     * @param pPackageInformation - Package information.
+     * @param pOptions - Bundle options.
+     * 
+     * @returns Build output of esbuild build. 
+     */
+    public async bundle(pPackageInformation: PackageInformation, pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
+        // Bundle based on entry type.
+        if (pOptions.entry.content) {
+            return this.bundlePackageContent(pPackageInformation, pOptions.entry.content, pOptions.loader, pOptions.plugins);
+        } else if (pOptions.entry.files) {
+            return this.bundlePackageFiles(pPackageInformation, pOptions.entry.files, pOptions.loader, pOptions.plugins);
+        }
+
+        throw new Error('No entry point was specified.');
+    }
+
+    /**
      * Bundle a custom content in the context of a package with set settings and loader.
      * 
      * @param pPackageInformation - Package information.
      * @param pInputContent - Input source content.
      * @param pLoader - file extension loader.
      *  
-     * @returns Build output of webpack build. 
+     * @returns Build output of esbuild build. 
      */
-    public async bundlePackageContent(pPackageInformation: PackageInformation, pInputContent: EnvironmentBundleInputContent, lLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
+    private async bundlePackageContent(pPackageInformation: PackageInformation, pInputContent: EnvironmentBundleInputContent, lLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
         // Convert the relative resolve path into a absolute path.
         pInputContent.outputBasename = pInputContent.outputBasename.replace('<packagename>', pPackageInformation.idName);
         pInputContent.inputResolveDirectory = FileSystem.pathToAbsolute(pPackageInformation.directory, pInputContent.inputResolveDirectory);
@@ -22,9 +41,10 @@ export class EnvironmentBundle {
             loader: lLoader,
 
             // For some higher reason the deno plugins does not have the correct type definition.
-            plugins: [...denoPlugins({
-                configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json')
-            })] as unknown as Array<esbuild.Plugin>,
+            plugins: [
+                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json') }),
+                ...pPlugins
+            ] as unknown as Array<esbuild.Plugin>,
 
             entry: {
                 content: pInputContent
@@ -42,9 +62,9 @@ export class EnvironmentBundle {
      * @param pInputFiles - Input files.
      * @param pLoader - file extension loader.
      *  
-     * @returns Build output of webpack build. 
+     * @returns Build output of esbuild build. 
      */
-    public async bundlePackageFiles(pPackageInformation: PackageInformation, pInputFiles: EnvironmentBundleInputFiles, pLoader: EnvironmentBundleExtentionLoader): Promise<EnvironmentBundleOutput> {
+    private async bundlePackageFiles(pPackageInformation: PackageInformation, pInputFiles: EnvironmentBundleInputFiles, pLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
         // Convert input files into a proper input file format the bundler command understands.
         const lInputFile = pInputFiles.map((pInputFile) => {
             return {
@@ -61,9 +81,10 @@ export class EnvironmentBundle {
             loader: pLoader,
 
             // For some higher reason the deno plugins does not have the correct type definition.
-            plugins: [...denoPlugins({
-                configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json')
-            })] as unknown as Array<esbuild.Plugin>,
+            plugins: [
+                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json') }),
+                ...pPlugins
+            ] as unknown as Array<esbuild.Plugin>,
 
             entry: {
                 files: lInputFile
@@ -72,66 +93,6 @@ export class EnvironmentBundle {
 
         // Run bundle.
         return this.runBundleProcess(lEnvironmentBundleOptions);
-    }
-
-    /**
-     * Load loader from module declaration file.
-     * 
-     * @param pPackageInformation - Package information.
-     * @param pModuleDeclarationFilePath - Module declaration file path relative from package directory.
-     * 
-     * @returns Loader list.
-     */
-    public loadLoaderFromModuleDeclaration(pPackageInformation: PackageInformation, pModuleDeclarationFilePath: string): EnvironmentBundleExtentionLoader {
-        if (pModuleDeclarationFilePath.trim() === '') {
-            // Use default loader.
-            return {};
-        }
-
-        const lModuleDeclarationFilePath = FileSystem.pathToAbsolute(pPackageInformation.directory, pModuleDeclarationFilePath);
-        
-        // Check for file exists.
-        if (!FileSystem.exists(lModuleDeclarationFilePath)) {
-            throw new Error(`Module declaration file not found: ${lModuleDeclarationFilePath}`);
-        }
-
-        // Read module declaration file content.
-        const lModuleDeclarationFileContent = FileSystem.read(lModuleDeclarationFilePath);
-
-        // Read module declaration text from file.
-        return this.fetchLoaderFromModuleDeclaration(lModuleDeclarationFileContent);
-    }
-
-    /**
-     * Read all module declarations for file.
-     * @param pModuleDeclaration - Module declaration file content.
-     * 
-     * @returns Loader list.
-     */
-    public fetchLoaderFromModuleDeclaration(pModuleDeclaration: string): EnvironmentBundleExtentionLoader {
-        // Regex to read information from a module declaration.
-        /*
-         * declare module '*.css' { 
-         *   const text: string;
-         *   export default text;
-         * }
-         */
-        const lFileExtensionRegex = /declare\s+module\s+(?:"|')\*([.a-zA-Z0-9]+)(?:"|')\s*\{[^\}]*export\s+default\s+([a-zA-Z0-9]+)[^\}]*\}/gms;
-
-        // Get all declaration informations by reading the extension and the loader information from the comment.
-        const lLoaderList: EnvironmentBundleExtentionLoader = {};
-
-        // Read all module declarations.
-        for (const lMatch of pModuleDeclaration.matchAll(lFileExtensionRegex)) {
-            // Get extension and assigned loader.
-            const lExtension: string = lMatch[1];
-            const lLoader: string = lMatch[2];
-
-            // Add found to loader list.
-            lLoaderList[lExtension] = lLoader as EnvironmentBundleLoader;
-        }
-
-        return lLoaderList;
     }
 
     /**
@@ -290,8 +251,7 @@ export class EnvironmentBundle {
     }
 }
 
-export type EnvironmentBundleLoader = "base64" | "dataurl" | "empty" | "js" | "json" | "text" | "ts";
-export type EnvironmentBundleExtentionLoader = { [extension: string]: EnvironmentBundleLoader; };
+export type EnvironmentBundleExtentionLoader = { [extension: string]: "base64" | "dataurl" | "empty" | "js" | "json" | "text" | "ts"; };
 
 export type EnvironmentBundleInputFiles = Array<{
     /**
@@ -332,11 +292,6 @@ export type EnvironmentBundleInputContent = {
     outputExtension: string;
 };
 
-export type EnvironmentBundleSettingFiles = {
-    moduleDeclarationFilePath: string | null;
-    bundleSettingsFilePath: string | null;
-};
-
 export type EnvironmentBundleOutput = Array<{
     /**
      * File content.
@@ -354,8 +309,7 @@ export type EnvironmentBundleOutput = Array<{
     sourceMap: Uint8Array;
 }>;
 
-
-type EnvironmentBundleOptions = {
+export type EnvironmentBundleOptions = {
     plugins: Array<esbuild.Plugin>;
     loader: EnvironmentBundleExtentionLoader;
     entry: {
