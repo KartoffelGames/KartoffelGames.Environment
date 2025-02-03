@@ -18,11 +18,12 @@ export class Process {
      */
     public async execute(pCommand: ProcessParameter, pIgnoreError: boolean = false): Promise<string> {
         // Construct command.
-        const lCommand: Deno.Command = new Deno.Command(pCommand.commandList.join(' '), {
+        const lCommand: Deno.Command = new Deno.Command(pCommand.commandList[0], {
             cwd: pCommand.workingDirectory,
             stderr: 'piped',
             stdout: 'piped',
-            stdin: 'piped'
+            stdin: 'piped',
+            args: pCommand.commandList.slice(1)
         });
 
         // Start process.
@@ -51,11 +52,12 @@ export class Process {
      */
     public async executeInConsole(pCommand: ProcessParameter): Promise<void> {
         // Construct command.
-        const lCommand: Deno.Command = new Deno.Command(pCommand.commandList.join(' '), {
+        const lCommand: Deno.Command = new Deno.Command(pCommand.commandList[0], {
             cwd: pCommand.workingDirectory,
             stderr: 'inherit',
             stdout: 'inherit',
-            stdin: 'inherit'
+            stdin: 'inherit',
+            args: pCommand.commandList.slice(1)
         });
 
         // Start process.

@@ -59,7 +59,8 @@
             "@kartoffelgames/environment-blueprint",
             "@kartoffelgames/environment-command-bundle",
             "@kartoffelgames/environment-command-scratchpad",
-            "@kartoffelgames/environment-command-page"
+            "@kartoffelgames/environment-command-page",
+            "@kartoffelgames/environment-command-test"
         ]
     }
 }
