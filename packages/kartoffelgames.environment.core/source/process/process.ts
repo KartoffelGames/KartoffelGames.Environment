@@ -67,7 +67,7 @@ export class Process {
         const lProcessStatus: Deno.CommandStatus = await lChildProcess.status;
 
         // Throw when childprocess has an error.
-        if (lProcessStatus.success) {
+        if (!lProcessStatus.success) {
             throw new Error();
         }
     }
