@@ -129,7 +129,9 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
 
             // Run "deno test" command in current console process.
             const lTestProcess: Process = new Process();
-            await lTestProcess.executeInConsole(lTestCommandParameter);
+            await lTestProcess.executeInConsole(lTestCommandParameter); // TODO: Exec with error should be catched and thrown later to exec coverage.
+
+            // TODO: Somehow tell that coverage does not work for bundled tests... for now. 
 
             // When coverage is on, run 'deno coverage' command.
             if (lCoverageEnabled) {
@@ -137,7 +139,7 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
 
                 // Create coverage command parameter.
                 const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
-                    'deno', 'coverage', lRelativeCoverageFileDirectory, '--include=source/'
+                    'deno', 'coverage', lRelativeCoverageFileDirectory, '--include=source/' // TODO: include <package_name>/source to restrict included files.
                 ]);
 
                 // Run "deno coverage" command in current console process.
