@@ -293,6 +293,11 @@ export class FileSystem {
      * @returns relative path.
      */
     public static pathToRelative(pBasePath: string, pPath: string): string {
+        const lRelativePath: string = path.relative(pBasePath, pPath);
+        if(lRelativePath.startsWith('.')) {
+            return lRelativePath;
+        }
+        
         return `./${path.relative(pBasePath, pPath)}`;
     }
 

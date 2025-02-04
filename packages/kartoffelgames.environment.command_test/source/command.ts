@@ -47,6 +47,7 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
 
         // Create all paths.
         const lTestInputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, 'test');
+        const lSourceInputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, 'source');
         const lTestOutputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, '.kg-test');
         const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
         const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
@@ -67,14 +68,15 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
         if (lPackageConfiguration.bundleRequired) {
             // Read all .test.ts files from the test directory.
             const lTestFileList: Array<string> = FileSystem.findFiles(lTestInputDirectory, { include: { extensions: ['ts'] } });
+            const lSourceFileList: Array<string> = FileSystem.findFiles(lSourceInputDirectory, { include: { extensions: ['ts'] } });
 
             // Create bundle input content with all imports.
             let lTestBundleContent: string = '';
-            for (const lTestFile of lTestFileList) {
-                const lRelativeTestFilePath: string = FileSystem.pathToRelative(lTestInputDirectory, lTestFile);
+            for (const lTestFile of [...lTestFileList, ...lSourceFileList]) {
+                const lRelativePath: string = FileSystem.pathToRelative(lTestInputDirectory, lTestFile).replace(/\\/g, '/');
 
                 // Add import to bundle content.
-                lTestBundleContent += `import "${lRelativeTestFilePath}";\n`;
+                lTestBundleContent += `import "${lRelativePath}";\n`;
             }
 
             // Create bundle command.
@@ -111,35 +113,41 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
         }
 
         // Eighter test the test directory or the bundle result directory when bundle is required.
-        let lTestFilesDirectory: string = `test/`;
+        let lTestFilesDirectoryList: Array<string> = [];
         if (lPackageConfiguration.bundleRequired) {
-            lTestFilesDirectory = FileSystem.pathToRelative(lPackageInformation.directory, lBundleResultJavascriptFile);
+            lTestFilesDirectoryList.push(FileSystem.pathToRelative(lPackageInformation.directory, lBundleResultJavascriptFile));
+        } else {
+            lTestFilesDirectoryList.push(`test/**/*.ts`);
+            lTestFilesDirectoryList.push(`source/**/*.ts`);
         }
 
-        // Create test command parameter.
-        const lTestCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
-            'deno', 'test', '-A', lTestFilesDirectory, ...lTestWithCoverageCommand
-        ]);
-
-        // Run "deno test" command in current console process.
-        const lTestProcess: Process = new Process();
-        await lTestProcess.executeInConsole(lTestCommandParameter);
-
-        // TODO: When coverage is on, run 'deno coverage' command.
-        if (lCoverageEnabled) {
-            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
-
-            const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
-                'deno', 'coverage', lRelativeCoverageFileDirectory, '--include=source/'
+        try {
+            // Create test command parameter.
+            const lTestCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
+                'deno', 'test', '-A', ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
             ]);
 
-            // Run "deno coverage" command in current console process.
-            const lCoverageProcess: Process = new Process();
-            await lCoverageProcess.executeInConsole(lCoverageCommandParameter);
-        }
+            // Run "deno test" command in current console process.
+            const lTestProcess: Process = new Process();
+            await lTestProcess.executeInConsole(lTestCommandParameter);
 
-        // Remove test output directory.
-        FileSystem.deleteDirectory(lTestOutputDirectory);
+            // When coverage is on, run 'deno coverage' command.
+            if (lCoverageEnabled) {
+                const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
+
+                // Create coverage command parameter.
+                const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
+                    'deno', 'coverage', lRelativeCoverageFileDirectory, '--include=source/'
+                ]);
+
+                // Run "deno coverage" command in current console process.
+                const lCoverageProcess: Process = new Process();
+                await lCoverageProcess.executeInConsole(lCoverageCommandParameter);
+            }
+        } finally {
+            // Remove test output directory.
+            FileSystem.deleteDirectory(lTestOutputDirectory);
+        }
     }
 
     /**
