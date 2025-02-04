@@ -25,6 +25,9 @@
             "scratchpad": {
                 "mainBundleRequired": false,
                 "port": 8888
+            },
+            "test": {
+                "bundleRequired": false
             }
         }
     }

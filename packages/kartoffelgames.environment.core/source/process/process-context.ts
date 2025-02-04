@@ -3,13 +3,13 @@ export class ProcessContext {
      * Command parameter of current execution.
      */
     public static get parameters(): Array<string> {
-        return process.argv;
+        return Deno.args;
     }
 
     /**
      * Current working directory.
      */
     public static get workingDirectory(): string {
-        return process.cwd();
+        return Deno.cwd();
     }
 }

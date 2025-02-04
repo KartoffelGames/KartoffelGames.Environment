@@ -293,7 +293,7 @@ export class FileSystem {
      * @returns relative path.
      */
     public static pathToRelative(pBasePath: string, pPath: string): string {
-        return path.relative(pBasePath, pPath);
+        return `./${path.relative(pBasePath, pPath)}`;
     }
 
     /**

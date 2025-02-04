@@ -1,6 +1,6 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Process, Project } from '@kartoffelgames/environment-core';
+import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
-import { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { CliCommandDescription, CliParameter, FileSystem, ICliCommand, PackageInformation, Process, Project } from '@kartoffelgames/environment-core';
 import { ProcessParameter } from "../../kartoffelgames.environment.core/source/index.ts";
 
 export class KgCliCommand implements ICliCommand<TestConfiguration> {
@@ -45,50 +45,60 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
         // initialize test directory.
         this.initialTestDirectory(lPackageInformation);
 
-        // Initialize test output directory.
+        // Create all paths.
+        const lTestInputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, 'test');
         const lTestOutputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, '.kg-test');
+        const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
+        const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
+        const lBundleResultSourceMapFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js.map');
+        const lCoverageFileDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'coverage');
+
+        // Initialize test output directory.        
         if (!FileSystem.exists(lTestOutputDirectory)) {
             FileSystem.createDirectory(lTestOutputDirectory);
         }
 
-        // Bundle result directory.
-        const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
+        // Bundle result directory.    
         if (!FileSystem.exists(lBundleResultDirectory)) {
             FileSystem.createDirectory(lBundleResultDirectory);
         }
 
         // Bundle test files when bundle is required.
         if (lPackageConfiguration.bundleRequired) {
+            // Read all .test.ts files from the test directory.
+            const lTestFileList: Array<string> = FileSystem.findFiles(lTestInputDirectory, { include: { extensions: ['ts'] } });
+
+            // Create bundle input content with all imports.
+            let lTestBundleContent: string = '';
+            for (const lTestFile of lTestFileList) {
+                const lRelativeTestFilePath: string = FileSystem.pathToRelative(lTestInputDirectory, lTestFile);
+
+                // Add import to bundle content.
+                lTestBundleContent += `import "${lRelativeTestFilePath}";\n`;
+            }
+
             // Create bundle command.
             const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
 
             // Run bundle.
             const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(pProjectHandler, lPackageName, (pOptions: EnvironmentBundleOptions) => {
-                // TODO: Create bundle stdin from any test.ts file found inside the test directory.
-                
                 // Override entry file with the test bundle.ts
                 pOptions.entry = {
-                    files: [
-                        {
-                            inputFilePath: './test/bundle.ts',
-                            outputBasename: 'bundle.test',
-                            outputExtension: 'js'
-                        }
-                    ]
+                    content: {
+                        inputResolveDirectory: lTestInputDirectory,
+                        inputFileContent: lTestBundleContent,
+                        outputBasename: 'bundle.test',
+                        outputExtension: 'js'
+                    }
                 };
             });
 
-            // Write source file.
-            const lPageJsFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
-            FileSystem.writeBinary(lPageJsFile, lBundleResult[0].content);
-
-            // Write source map file.
-            const lPageJsMapFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js.map');
-            FileSystem.writeBinary(lPageJsMapFile, lBundleResult[0].sourceMap);
+            // Write source files.
+            FileSystem.writeBinary(lBundleResultJavascriptFile, lBundleResult[0].content);
+            FileSystem.writeBinary(lBundleResultSourceMapFile, lBundleResult[0].sourceMap);
         }
 
         // Create coverage directory.
-        const lCoverageFileDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'coverage');
         if (!FileSystem.exists(lCoverageFileDirectory)) {
             FileSystem.createDirectory(lCoverageFileDirectory);
         }
@@ -96,28 +106,40 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
         // Create test with coverage command extension.
         const lTestWithCoverageCommand: Array<string> = [];
         if (lCoverageEnabled) {
-            lTestWithCoverageCommand.push('--coverage', `"${lCoverageFileDirectory}"`.replace(/\\/g, '/'));
+            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
+            lTestWithCoverageCommand.push(`--coverage=${lRelativeCoverageFileDirectory}`);
         }
 
         // Eighter test the test directory or the bundle result directory when bundle is required.
         let lTestFilesDirectory: string = `test/`;
-        if (lCoverageEnabled) {
-            lTestFilesDirectory = `"${lBundleResultDirectory}"`;
+        if (lPackageConfiguration.bundleRequired) {
+            lTestFilesDirectory = FileSystem.pathToRelative(lPackageInformation.directory, lBundleResultJavascriptFile);
         }
-        lTestFilesDirectory = lTestFilesDirectory.replace(/\\/g, '/');
 
         // Create test command parameter.
         const lTestCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
-            'deno', 'test', lTestFilesDirectory, ...lTestWithCoverageCommand
+            'deno', 'test', '-A', lTestFilesDirectory, ...lTestWithCoverageCommand
         ]);
 
         // Run "deno test" command in current console process.
         const lTestProcess: Process = new Process();
         await lTestProcess.executeInConsole(lTestCommandParameter);
 
-        // TODO: Create test directory.
-
         // TODO: When coverage is on, run 'deno coverage' command.
+        if (lCoverageEnabled) {
+            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
+
+            const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
+                'deno', 'coverage', lRelativeCoverageFileDirectory, '--include=source/'
+            ]);
+
+            // Run "deno coverage" command in current console process.
+            const lCoverageProcess: Process = new Process();
+            await lCoverageProcess.executeInConsole(lCoverageCommandParameter);
+        }
+
+        // Remove test output directory.
+        FileSystem.deleteDirectory(lTestOutputDirectory);
     }
 
     /**
