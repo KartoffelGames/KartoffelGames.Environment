@@ -1,12 +1,12 @@
 {
     "name": "@kartoffelgames/environment-blueprint",
     "version": "0.0.1",
+    "license": "MIT",
     "tasks": {},
     "imports": {},
     "exports": {
         ".": "./source/index.ts",
-        "./kg-cli.config.json": "./kg-cli.config.json",
-        "./blueprint/package-blueprint.zip": "./blueprint/package-blueprint.zip"
+        "./kg-cli.config.json": "./kg-cli.config.json"
     },
     "publish": {
         "include": [

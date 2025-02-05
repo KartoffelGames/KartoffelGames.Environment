@@ -1,6 +1,7 @@
 {
     "name": "@kartoffelgames/environment-command-page",
     "version": "0.0.1",
+    "license": "MIT",
     "tasks": {},
     "imports": {},
     "exports": {

@@ -1,13 +1,13 @@
 {
     "name": "@kartoffelgames/environment",
     "version": "0.0.1",
+    "license": "MIT",
     "tasks": {},
     "imports": {
         "@zip-js/zip-js": "jsr:@zip-js/zip-js"
     },
     "exports": {
-		".": "./source/index.ts",
-		"./blueprint/project-blueprint.zip": "./blueprint/project-blueprint.zip"
+		".": "./source/index.ts"
 	},
     "publish": {
         "include": [

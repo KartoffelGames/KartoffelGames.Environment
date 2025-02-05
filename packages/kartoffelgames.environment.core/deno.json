@@ -1,9 +1,10 @@
 {
     "name": "@kartoffelgames/environment-core",
     "version": "0.0.1",
+    "license": "MIT",
     "tasks": {},
     "imports": {
-        "@std/path": "jsr:@std/path"
+        "@std/path": "jsr:@std/path@^1.0.8"
     },
     "exports": "./source/index.ts",
     "publish": {

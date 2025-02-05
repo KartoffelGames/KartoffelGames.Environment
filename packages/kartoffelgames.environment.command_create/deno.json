@@ -1,9 +1,10 @@
 {
     "name": "@kartoffelgames/environment-command-create",
     "version": "0.0.1",
+    "license": "MIT",
     "tasks": {},
     "imports": {
-        "@zip-js/zip-js": "jsr:@zip-js/zip-js"
+        "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.7.57"
     },
     "exports": {
         ".": "./source/index.ts",
