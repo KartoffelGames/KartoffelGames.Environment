@@ -1,6 +1,6 @@
 import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
-import { CliCommandDescription, CliParameter, FileSystem, ICliCommand, PackageInformation, Process, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Process, Project } from '@kartoffelgames/environment-core';
 import { ProcessParameter } from "../../kartoffelgames.environment.core/source/index.ts";
 
 export class KgCliCommand implements ICliCommand<TestConfiguration> {
@@ -121,34 +121,50 @@ export class KgCliCommand implements ICliCommand<TestConfiguration> {
             lTestFilesDirectoryList.push(`source/**/*.ts`);
         }
 
-        try {
-            // Create test command parameter.
-            const lTestCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
-                'deno', 'test', '-A', ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
+        // Test failed flag to throw error only at the end.
+        let lTestFailed: boolean = false;
+
+        // Create test command parameter.
+        const lTestCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
+            'deno', 'test', '-A', ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
+        ]);
+
+        // Run "deno test" command in current console process.
+        const lTestProcess: Process = new Process();
+        await lTestProcess.executeInConsole(lTestCommandParameter).catch(() => {
+            lTestFailed = true;
+        });
+
+        // Somehow tell that coverage does not work for bundled tests... for now. 
+        if (lCoverageEnabled && lPackageConfiguration.bundleRequired) {
+            new Console().writeLine('Coverage is not supported for bundled tests.', 'yellow');
+        }
+
+        // When coverage is on, run 'deno coverage' command.
+        if (lCoverageEnabled && !lPackageConfiguration.bundleRequired) {
+            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
+
+            // Get package directory base name.
+            const lPackageDirectoryBaseName: string = FileSystem.pathInformation(lPackageInformation.directory).basename;
+
+            // Create coverage command parameter.
+            const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
+                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=packages/${lPackageDirectoryBaseName}/source/`
             ]);
 
-            // Run "deno test" command in current console process.
-            const lTestProcess: Process = new Process();
-            await lTestProcess.executeInConsole(lTestCommandParameter); // TODO: Exec with error should be catched and thrown later to exec coverage.
+            // Run "deno coverage" command in current console process.
+            const lCoverageProcess: Process = new Process();
+            await lCoverageProcess.executeInConsole(lCoverageCommandParameter).catch(() => {
+                lTestFailed = true;
+            });
+        }
 
-            // TODO: Somehow tell that coverage does not work for bundled tests... for now. 
+        // Remove test output directory.
+        FileSystem.deleteDirectory(lTestOutputDirectory);
 
-            // When coverage is on, run 'deno coverage' command.
-            if (lCoverageEnabled) {
-                const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
-
-                // Create coverage command parameter.
-                const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
-                    'deno', 'coverage', lRelativeCoverageFileDirectory, '--include=source/' // TODO: include <package_name>/source to restrict included files.
-                ]);
-
-                // Run "deno coverage" command in current console process.
-                const lCoverageProcess: Process = new Process();
-                await lCoverageProcess.executeInConsole(lCoverageCommandParameter);
-            }
-        } finally {
-            // Remove test output directory.
-            FileSystem.deleteDirectory(lTestOutputDirectory);
+        // Throw error when test failed.
+        if (lTestFailed) {
+            throw new Error('Test failed.');
         }
     }
 
