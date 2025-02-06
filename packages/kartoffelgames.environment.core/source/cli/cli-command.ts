@@ -1,4 +1,4 @@
-import { Project } from '../project/project.ts';
+import { PackageInformation, Project } from '../project/project.ts';
 import { CliPackageInformation, CliPackages } from './cli-packages.ts';
 import { CliParameter } from './cli-parameter.ts';
 import { ICliCommand } from './i-cli-command.interface.ts';
@@ -42,8 +42,10 @@ export class CliCommand {
     /**
      * Execute command.
      * @param pParameter - Command parameter.
+     * @param pPackage -  Package the command should be applied to. // TODO: Run should support the package parameter.
+     * 
      */
-    public async execute(pProject: Project): Promise<void> {
+    public async execute(pProject: Project, pPackage: PackageInformation | null): Promise<void> {
         // Find command configuration by name.
         const lCliPackageConfigurations: Map<string, CliPackageInformation> = await this.mCliPackages.getCommandPackages(this.mName);
 

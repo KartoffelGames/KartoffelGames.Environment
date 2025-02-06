@@ -18,6 +18,8 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
         return pParameter.toLowerCase() === '--debug';
     });
 
+    // TODO: Add a "--all" parameter.
+
     // Set debug flag and remove debug parameter.
     const lDebugEnabled: boolean = lDebugParameterIndex !== -1;
     if (lDebugParameterIndex !== -1) {

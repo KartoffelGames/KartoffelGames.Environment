@@ -18,11 +18,14 @@ export class CliCommand implements ICliCommand {
 
     /**
      * Execute command.
+     * 
      * @param _pParameter - Command parameter.
      * @param _pCliPackages - All cli packages grouped by type.
      */
     public async run(_pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
         const lConsole = new Console();
+
+        // TODO: This command needs a version sync from root deno.json. Or something to bump all versions to the same.
 
         // Find all packages.
         const lPackageList: Array<PackageInformation> = pProjectHandler.readAllPackages();
@@ -36,6 +39,7 @@ export class CliCommand implements ICliCommand {
 
     /**
      * Update kg project configuration to updated structure.
+     * 
      * @param pProjectList - Local project list.
      * @param pProject - Project handler.
      */

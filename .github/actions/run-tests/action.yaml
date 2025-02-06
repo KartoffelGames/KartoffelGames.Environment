@@ -5,14 +5,14 @@ runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: denoland/setup-deno@v2
       with:
-        node-version: 18
-    # Clean Install NPM 
-    - name: NPM Install
-      run: npm ci --ignore-scripts
+        node-version: v2.x
+    # Init deno cache 
+    - name: Deno Install
+      run: deno install
       shell: bash
     # Run NPM Test
     - name: Tests
-      run: npm run test -- --force
+      run: deno task kg test --all
       shell: bash

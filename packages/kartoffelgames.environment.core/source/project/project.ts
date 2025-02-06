@@ -293,7 +293,7 @@ export class Project {
         }
 
         // Read package configuration before updating package json.
-        const lPackageConfiguration: Record<string, any> = await this.readPackageConfiguration(lPackageInformation);
+        const lPackageConfiguration: Record<string, any> = await this.readPackageConfiguration(lPackageInformation); // TODO: This does only read object values from default, not strings.
 
         // Read and parse deno.json
         const lJson: Record<string, any> = lPackageInformation.packageJson;
@@ -467,7 +467,8 @@ export type PackageInformation = {
     directory: string;
     workspace: {
         name: string;
-        root?: boolean,
+        root?: boolean, // TODO: Use this. And extend it to use "package" directory. Apply to all command packages.
+        config?: { [key: string]: any; };// TODO: Config
     };
     packageJson: Record<string, any>;
 };
