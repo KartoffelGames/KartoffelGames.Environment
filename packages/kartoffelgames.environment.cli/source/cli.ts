@@ -45,7 +45,12 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
 
 
         // Init commands.
-        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages);
+        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages); // TODO: lProject.cliPackages.create(this.mName)
+
+        // TODO: Move the blueprint resolver shit out of core.
+        // TODO: Read packages by type. kg-cli.config.json with "type": "cli-command"
+        // TODO: Read information with lProject.cliPackages.readListOf('cli-command') // lProject.cliPackages.readListOf('package-blueprint')
+        // TODO: With "name" and "type" the only required shits. The functions that reads the list must validate.  
 
         // TODO: Create command parameter.
 

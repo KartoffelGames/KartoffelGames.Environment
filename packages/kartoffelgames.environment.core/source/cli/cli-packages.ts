@@ -4,6 +4,8 @@ import { FileSystem } from '../system/file-system.ts';
 import { ICliCommand } from './i-cli-command.interface.ts';
 import { ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface.ts';
 
+// TODO: remove any blueprint shit out of this core lib.
+
 /**
  * Cli packages. Resolves all available cli packages.
  */
@@ -50,7 +52,7 @@ export class CliPackages {
      * 
      * @returns - Cli package resolver instance. 
      */
-    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation): Promise<ICliPackageBlueprintResolver> {
+    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation): Promise<ICliPackageBlueprintResolver> { // TODO: Yes remove this shit.
         if (!pPackage.configuration.packageBlueprints?.resolveClass) {
             throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
         }
@@ -143,7 +145,7 @@ export class CliPackages {
     }
 }
 
-export type CliPackageConfiguration = {
+export type CliPackageConfiguration = { 
     name: string;
     commandEntryClass?: string;
     packageBlueprints?: {
