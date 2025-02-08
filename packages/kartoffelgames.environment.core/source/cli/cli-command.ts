@@ -1,4 +1,5 @@
-import { PackageInformation, Project } from '../project/project.ts';
+import { Package } from "../project/package.ts";
+import { Project } from '../project/project.ts';
 import { CliPackageInformation, CliPackages } from './cli-packages.ts';
 import { CliParameter } from './cli-parameter.ts';
 import { ICliCommand } from './i-cli-command.interface.ts';
@@ -8,15 +9,15 @@ import { ICliCommand } from './i-cli-command.interface.ts';
  * Converts and validates environment split commands into a easy to use command pattern.
  */
 export class CliCommand {
-    private readonly mCliPackages: CliPackages;
+    private readonly mProject: Project;
     private readonly mName: string;
     private readonly mParameters: Array<string>;
 
     /**
      * Cli packages.
      */
-    public get cliPackages(): CliPackages {
-        return this.mCliPackages;
+    public get project(): Project {
+        return this.mProject;
     }
 
     /**
@@ -33,10 +34,10 @@ export class CliCommand {
      * @param pParameter - Command parameter.
      * @param pCliPackages - Cli packages.
      */
-    public constructor(pCommandName: string, pParameter: Array<string>, pCliPackages: CliPackages) {
+    public constructor(pProject: Project, pCommandName: string, pParameter: Array<string>,) {
         this.mName = pCommandName;
         this.mParameters = pParameter;
-        this.mCliPackages = pCliPackages;
+        this.mProject = pProject;
     }
 
     /**
@@ -45,9 +46,9 @@ export class CliCommand {
      * @param pPackage -  Package the command should be applied to. // TODO: Run should support the package parameter.
      * 
      */
-    public async execute(pProject: Project, pPackage: PackageInformation | null): Promise<void> {
+    public async execute(pPackage: Package | null): Promise<void> {
         // Find command configuration by name.
-        const lCliPackageConfigurations: Map<string, CliPackageInformation> = await this.mCliPackages.getCommandPackages(this.mName);
+        const lCliPackageConfigurations: Map<string, CliPackageInformation> = await this.mProject.cliPackages.getCommandPackages(this.mName);
 
         // Find command.
         const lCliPackageConfiguration: CliPackageInformation | undefined = lCliPackageConfigurations.get(this.mName);
@@ -61,13 +62,13 @@ export class CliCommand {
         }
 
         // Create command constructor.
-        const lCommand: ICliCommand = await this.mCliPackages.createPackageCommandInstance(lCliPackageConfiguration);
+        const lCommand: ICliCommand = await this.mProject.cliPackages.createPackageCommandInstance(lCliPackageConfiguration);
 
         // Validate command pattern for cli package configuration.
         const lCommandParameter: CliParameter = this.convertCommandParameter(lCommand, this.mParameters);
 
         // Build project handler.
-        await lCommand.run(lCommandParameter, pProject);
+        await lCommand.run(this.mProject, pPackage, lCommandParameter);
     }
 
     /**
@@ -75,112 +76,109 @@ export class CliCommand {
      * @param pParameter - Command parameter.
      */
     private convertCommandParameter(pCliCommand: ICliCommand, pParameter: Array<string>): CliParameter {
-        // All required parameter.
-        const lRequiredParameterPatternList: Array<string> = new Array<string>();
-
-        // Add command name to required parameter list.
-        lRequiredParameterPatternList.push(pCliCommand.information.command.name);
-
-        // Read all required parameter names starting with < or any letter from command pattern.
-        for (const lCommandPatternPart of pCliCommand.information.command.parameters) {
-            if (lCommandPatternPart.startsWith('<') || lCommandPatternPart.match(/^[a-zA-Z0-9]/)) {
-                lRequiredParameterPatternList.push(lCommandPatternPart.toLowerCase());
-            }
+        // At least one parameter (the root) is required.
+        if (pParameter.length === 0) {
+            throw new Error('No command parameter found');
         }
 
-        // Read all optional parameter names starting with -- from command pattern.
-        const lOptionalParameterPatternList: Array<string> = new Array<string>();
-        for (const lCommandPatternPart of pCliCommand.information.command.parameters) {
-            if (lCommandPatternPart.startsWith('[')) {
-                lOptionalParameterPatternList.push(lCommandPatternPart.substring(1, lCommandPatternPart.length - 1).toLowerCase());
-            }
-        }
-
-        // Read all optional parameter names starting with -- from command pattern.
-        const lFlagParameterPatternList: Set<string> = new Set<string>();
-        for (const lCommandPatternPart of pCliCommand.information.command.flags) {
-            lFlagParameterPatternList.add(lCommandPatternPart);
-        }
-
-        // Create cli parameter and copy specified parameter.
-        const lCliParameter: CliParameter = new CliParameter();
+        // Create copy specified parameter.
         const lUncheckedParameters: Array<string> = [...pParameter];
 
-        // Convert and check all required parameters.
-        for (const lRequiredParameter of lRequiredParameterPatternList) {
+        // Read the root parameter from parameter list.
+        const lRootParameter: string = lUncheckedParameters.shift()!;
+        if (lRootParameter !== pCliCommand.information.command.parameters.root) {
+            throw new Error(`Unexpected parameter "${lRootParameter}". Expected root parameter "${pCliCommand.information.command.parameters.root}"`);
+        }
+
+        // Construct cli parameter with the root parameter.
+        const lCliParameter: CliParameter = new CliParameter(lRootParameter);
+
+        // Read all required parameter. Required parameters musn't start with dashes.
+        for (const lRequiredParameter of pCliCommand.information.command.parameters.required ?? []) {
             // Read next parameter.
             let lParameter: string | undefined = lUncheckedParameters.shift();
             if (!lParameter) {
                 throw `Required parameter "${lRequiredParameter}" is missing`;
             }
 
-            // Format parameter when it is set as string.
-            if (lParameter.startsWith('"')) {
-                lParameter = lParameter.substring(1, lParameter.length - 1);
+            // Required parameters musn't start with dashes.
+            if (lParameter.startsWith('-')) {
+                throw `Unexpected parameter "${lParameter}". Required parameters musn't start with dashes`;
             }
-
-            // Set required named parameter.
-            if (lRequiredParameter.startsWith('<')) {
-                const lParameterName: string = lRequiredParameter.substring(1, lRequiredParameter.length - 1);
-                lCliParameter.parameter.set(lParameterName, lParameter);
-                continue;
-            }
-
-            // Check required static parameter.
-            if (lRequiredParameter === lParameter.toLowerCase()) {
-                continue;
-            }
-
-            throw `Required parameter "${lRequiredParameter}" is missing`;
-        }
-
-        // Convert and check all optional unnamed parameters.
-        for (const lOptionalUnnamedParameterName of lOptionalParameterPatternList) {
-            // Read next parameter. Needn't to be existent.
-            let lParameter: string | undefined = lUncheckedParameters.at(0);
-            if (!lParameter) {
-                break;
-            }
-
-            // Skip when parameter is a named parameter.
-            if (lParameter.startsWith('--')) {
-                break;
-            }
-
-            // Parameter is used, so we can remove it.
-            lUncheckedParameters.shift();
 
             // Format parameter when it is set as string.
             if (lParameter.startsWith('"')) {
                 lParameter = lParameter.substring(1, lParameter.length - 1);
             }
 
-            // Set optional unnamed parameter.
-            lCliParameter.parameter.set(lOptionalUnnamedParameterName, lParameter);
+            // Set required parameter as value.
+            lCliParameter.set(lRequiredParameter, lParameter);
         }
 
+        // Convert all optional parameters to a map.
+        const lOptionalParameters: Map<string, CliCommandOptionalParameter> = new Map<string, CliCommandOptionalParameter>();
+        for (const [lOptionalParameterName, lOptionalParameter] of Object.entries(pCliCommand.information.command.parameters.optional ?? {})) {
+            const lConfiguration: CliCommandOptionalParameter = {
+                fullname: lOptionalParameterName,
+                shortName: lOptionalParameter.shortName ?? null,
+                default: lOptionalParameter.default ?? null
+            };
+
+            // Set long name with value.
+            lOptionalParameters.set(`--${lOptionalParameterName}`, lConfiguration);
+
+            // Set shortname with value.
+            if (lOptionalParameter.shortName) {
+                lOptionalParameters.set(`-${lOptionalParameter.shortName}`, lConfiguration);
+            }
+        }
+
+        // Read all optional parameters. Optional parameters must start with dashes.
         // Convert and check all optional named parameters.
         while (lUncheckedParameters.length > 0) {
             // Read next parameter.
             const lParameter: string = lUncheckedParameters.shift()!;
 
             // Fail when parameter is a not a named parameter.
-            if (!lParameter.startsWith('--')) {
-                throw new Error(`Unexpected parameter "${lParameter}". Expected named parameter starting with "--"`);
+            if (!lParameter.startsWith('-')) {
+                throw new Error(`Unexpected parameter "${lParameter}". Expected named parameter starting with "--" or "-".`);
             }
 
             // Get parameter name.
-            const lParameterName: string = lParameter.substring(2).toLowerCase();
+            let [lParameterName, lParameterValue] = lParameter.split('=');
 
-            // Validate of named parameter exists.
-            if (!lFlagParameterPatternList.has(lParameterName)) {
-                throw new Error(`Unexpected parameter "${lParameter}". Named parameter does not exist`);
+            // Get parameter configuration by name.
+            const lOptionalParameter: CliCommandOptionalParameter | undefined = lOptionalParameters.get(lParameterName);
+            if (!lOptionalParameter) {
+                throw new Error(`Unexpected parameter "${lParameter}". Parameter does not exist.`);
             }
 
+            // Format parameter value when it is set as string.
+            if (lParameterValue.startsWith('"')) {
+                lParameterValue = lParameter.substring(1, lParameter.length - 1);
+            }
             // Set optional named parameter.
-            lCliParameter.flags.add(lParameterName);
+            lCliParameter.set(lOptionalParameter.fullname, lParameterValue);
+        }
+
+        // Fill in default values for optional parameters.
+        for (const [lOptionalParameterName, lOptionalParameter] of Object.entries(pCliCommand.information.command.parameters.optional ?? {})) {
+            if (!lOptionalParameter.default) {
+                continue;
+            }
+
+            // Set default value when parameter is not set.
+            if (!lCliParameter.has(lOptionalParameterName)) {
+                lCliParameter.set(lOptionalParameterName, lOptionalParameter.default);
+            }
         }
 
         return lCliParameter;
     }
 }
+
+type CliCommandOptionalParameter = {
+    fullname: string;
+    shortName: string | null;
+    default: string | null;
+};

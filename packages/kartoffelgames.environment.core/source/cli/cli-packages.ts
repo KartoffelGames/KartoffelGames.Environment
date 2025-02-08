@@ -1,6 +1,4 @@
-import { ProcessParameter } from '../process/process-parameter.ts';
-import { Process } from '../process/process.ts';
-import { Package } from '../project/package.ts';
+import { Import } from '../project/import.ts';
 import { Project } from "../project/project.ts";
 import { FileSystem } from '../system/file-system.ts';
 import { ICliCommand } from './i-cli-command.interface.ts';
@@ -16,7 +14,7 @@ export class CliPackages {
      * Constructor.
      * @param pCommandRootDirectory - Root package that contains all needed command packages.
      */
-    public constructor(pCommandRootDirectory: string,) {
+    public constructor(pCommandRootDirectory: string) {
         this.mCommandRootPackageDirectory = pCommandRootDirectory;
     }
 
@@ -35,7 +33,7 @@ export class CliPackages {
         // Catch any create errors for malfunctioning packages.
         try {
             // Import package and get command constructor.
-            const lPackageImport: any = await Package.import(pPackage.packageName);
+            const lPackageImport: any = await Import.import(pPackage.packageName);
             const lPackageCliCommandConstructor: CliCommandConstructor = lPackageImport[pPackage.configuration.commandEntryClass] as CliCommandConstructor;
 
             // Create command instance
@@ -60,7 +58,7 @@ export class CliPackages {
         // Catch any create errors for malfunctioning packages.
         try {
             // Import package and get command constructor.
-            const lPackageImport: any = await Package.import(pPackage.packageName);
+            const lPackageImport: any = await Import.import(pPackage.packageName);
             const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints?.resolveClass] as CliPackageBlueprintResolverConstructor;
 
             // Create command instance
@@ -105,7 +103,7 @@ export class CliPackages {
             // Try to read all packages.
             for (const lPackageImport of lPackageImports) {
                 // Import "kg-cli.config.json" from package.
-                const lCliConfigFilePath: URL = Package.resolveToUrl(`${lPackageImport}/kg-cli.config.json`);
+                const lCliConfigFilePath: URL = Import.resolveToUrl(`${lPackageImport}/kg-cli.config.json`);
 
                 // Read cli configuration file as json.
                 const lFileReadyPromise: Promise<void> = fetch(lCliConfigFilePath)

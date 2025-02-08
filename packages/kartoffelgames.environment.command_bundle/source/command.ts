@@ -1,5 +1,5 @@
 import { EnvironmentBundle, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, Package, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, Import, Project } from '@kartoffelgames/environment-core';
 import { EnvironmentBundleOptions } from "@kartoffelgames/environment-bundle";
 
 export class KgCliCommand implements ICliCommand<BundleConfiguration> {
@@ -37,7 +37,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
 
         // Read package information and build config. 
         // Configuration is filled up with default information.
-        const lPackageInformation = pProjectHandler.getPackageInformation(lPackageName);
+        const lPackageInformation = pProjectHandler.getPackage(lPackageName);
 
         // Read cli configuration from cli package.
         const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
@@ -86,7 +86,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
     public async bundle(pProjectHandler: Project, pPackageName: string, pOverrideCallback?: (pOptions: EnvironmentBundleOptions) => (EnvironmentBundleOptions | void)): Promise<EnvironmentBundleOutput> {
         // Read package information and build config. 
         // Configuration is filled up with default information.
-        const lPackageInformation = pProjectHandler.getPackageInformation(pPackageName);
+        const lPackageInformation = pProjectHandler.getPackage(pPackageName);
 
         // Read cli configuration from cli package.
         const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
@@ -112,7 +112,7 @@ export class KgCliCommand implements ICliCommand<BundleConfiguration> {
                 }
 
                 // Import bundle as js file.
-                const lBundleSettingObject: { default: EnvironmentBundleOptions; } = await Package.import(`file://${lBundleSettingsFilePath}`);
+                const lBundleSettingObject: { default: EnvironmentBundleOptions; } = await Import.import(`file://${lBundleSettingsFilePath}`);
 
                 return lBundleSettingObject.default;
             }

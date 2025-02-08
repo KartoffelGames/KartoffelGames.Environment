@@ -1,6 +1,6 @@
 #!/usr/bin/env deno
 
-import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, Package } from '@kartoffelgames/environment-core';
+import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, Import } from '@kartoffelgames/environment-core';
 
 (async () => {
     const lConsole: Console = new Console();
@@ -18,18 +18,18 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
         return pParameter.toLowerCase() === '--debug';
     });
 
-    // TODO: Add a "--all" parameter.
-
     // Set debug flag and remove debug parameter.
     const lDebugEnabled: boolean = lDebugParameterIndex !== -1;
     if (lDebugParameterIndex !== -1) {
         lParameter.splice(lDebugParameterIndex, 1);
     }
 
+    // TODO: Add a "--all" parameter.
+
     // Execute command.
     try {
         // Read current version.
-        const lCliPackageJsonUrl: URL = Package.resolveToUrl(import.meta.url + '/../../' + 'deno.json');
+        const lCliPackageJsonUrl: URL = Import.resolveToUrl(import.meta.url + '/../../' + 'deno.json');
         const lCliPackageJsonRequest: Response = await fetch(lCliPackageJsonUrl);
         const lCliPackageJson: any = await lCliPackageJsonRequest.json();
         const lCurrentCliVersion: string = lCliPackageJson['version'];
@@ -40,18 +40,16 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
             lConsole.writeLine(ProcessContext.parameters.join(' '), 'green');
         }
 
-        // Check for changed command root package.
-        const lCommandRootPackagePath: string = Project.findRoot(ProcessContext.workingDirectory);
+        // Create project handler.
+        const lProject: Project = new Project(ProcessContext.workingDirectory);
 
-        // Init command indexing.
-        const lCliPackages: CliPackages = new CliPackages(lCommandRootPackagePath);
-        const lCliPackageName: string = lParameter[0]; // First parameter should be the package name.
 
         // Init commands.
-        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackageName, lParameter, lCliPackages);
+        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages);
 
-        // Create package handler.
-        const lProject: Project = new Project(lCommandRootPackagePath, lCliPackages);
+        // TODO: Create command parameter.
+
+
 
         // Print debug information.
         if (lDebugEnabled) {
@@ -73,7 +71,7 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
 
         // Execute command.
         lConsole.writeLine('Execute command...\n');
-        await lCliCommandHandler.execute(lProject);
+        await lCliCommandHandler.execute(lProject,);
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
 

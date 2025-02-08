@@ -37,7 +37,7 @@ export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
 
         // Read package information and bundle config. 
         // Configuration is filled up with default information.
-        const lPackageInformation: PackageInformation = pProjectHandler.getPackageInformation(lPackageName);
+        const lPackageInformation: PackageInformation = pProjectHandler.getPackage(lPackageName);
 
         // Read cli configuration from cli package.
         const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);

@@ -1,4 +1,4 @@
-import { CliCommandDescription, Console, FileSystem, ICliCommand, Package, ProcessContext } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, Console, FileSystem, ICliCommand, Import, ProcessContext } from '@kartoffelgames/environment-core';
 import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
 
 export class Command implements ICliCommand<string> {
@@ -57,7 +57,7 @@ export class Command implements ICliCommand<string> {
         import.meta.resolve;
 
         // Get url path of project blueprint and fetch it.
-        const lProjectBlueprintZipUrl: URL = Package.resolveToUrl('@kartoffelgames/environment/blueprint/project-blueprint.zip');
+        const lProjectBlueprintZipUrl: URL = Import.resolveToUrl('@kartoffelgames/environment/blueprint/project-blueprint.zip');
         const lProjectBlueprintZipRequest: Response = await fetch(lProjectBlueprintZipUrl);
         const lProjectBlueprintZipBlob: Blob = await lProjectBlueprintZipRequest.blob();
 

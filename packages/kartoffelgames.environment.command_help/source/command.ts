@@ -8,9 +8,11 @@ export class CliCommand implements ICliCommand {
         return {
             command: {
                 description: 'Show command list',
-                name: 'help',
-                parameters: [],
-                flags: []
+                parameters: {
+                    root: 'help',
+                    required: [],
+                    optional: {}
+                }
             },
             configuration: null
         };

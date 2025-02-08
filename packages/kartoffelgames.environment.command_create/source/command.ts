@@ -1,4 +1,4 @@
-import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliCommand, ICliPackageBlueprintResolver, Package, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliCommand, ICliPackageBlueprintResolver, Import, PackageInformation, Project } from '@kartoffelgames/environment-core';
 import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
 
 export class KgCliCommand implements ICliCommand<string> {
@@ -79,7 +79,7 @@ export class KgCliCommand implements ICliCommand<string> {
         pProject.addWorkspace(lNewPackageName, lNewPackageDirectory);
 
         // Read package information of newly created package.
-        const lPackageInformation: PackageInformation = pProject.getPackageInformation(lNewPackageName);
+        const lPackageInformation: PackageInformation = pProject.getPackage(lNewPackageName);
 
         // Add package information to deno.json.
         lConsole.writeLine('Set package configuration...');
@@ -109,7 +109,7 @@ export class KgCliCommand implements ICliCommand<string> {
         const lTargetPath: string = FileSystem.pathToAbsolute(pProject.projectRootDirectory, 'packages', lProjectName.toLowerCase());
 
         // Check if package already exists.
-        if (pProject.packageExists(pPackageName)) {
+        if (pProject.hasPackage(pPackageName)) {
             throw `Package "${pPackageName}" already exists.`;
         }
 
@@ -205,7 +205,7 @@ export class KgCliCommand implements ICliCommand<string> {
                 lAvailableBlueprint.set(lBlueprintPackageName, {
                     packageInformation: lPackage,
                     resolverClass: lPackage.configuration.packageBlueprints.resolveClass,
-                    blueprintFileUrl: Package.resolveToUrl(lPackage.packageName + `/` + lBlueprintPackagePath)
+                    blueprintFileUrl: Import.resolveToUrl(lPackage.packageName + `/` + lBlueprintPackagePath)
                 });
             }
         }
