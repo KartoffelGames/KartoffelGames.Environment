@@ -1,7 +1,7 @@
-import { CliCommandDescription, Console, FileSystem, ICliCommand, Import, ProcessContext } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, Console, FileSystem, ICliPackageCommand, Import, ProcessContext } from '@kartoffelgames/environment-core';
 import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
 
-export class Command implements ICliCommand<string> {
+export class Command implements ICliPackageCommand<string> {
     /**
      * Command description.
      */

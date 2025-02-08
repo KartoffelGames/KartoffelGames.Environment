@@ -1,6 +1,7 @@
 #!/usr/bin/env deno
 
-import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, Import } from '@kartoffelgames/environment-core';
+import { CliCommand, CliParameter, Console, FileSystem, Import, ProcessContext, Project } from '@kartoffelgames/environment-core';
+import { Package } from "../../kartoffelgames.environment.core/source/project/package.ts";
 
 (async () => {
     const lConsole: Console = new Console();
@@ -13,18 +14,11 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
         return ProcessContext.parameters.slice(lCliCommandStartIndex + 1);
     })();
 
-    // Check for enabled debug option.
-    const lDebugParameterIndex: number = lParameter.findIndex((pParameter) => {
-        return pParameter.toLowerCase() === '--debug';
-    });
+    // Read global cli parameters.
+    const lGlobalParameters: CliParameter = CliParameter.globals(lParameter);
 
     // Set debug flag and remove debug parameter.
-    const lDebugEnabled: boolean = lDebugParameterIndex !== -1;
-    if (lDebugParameterIndex !== -1) {
-        lParameter.splice(lDebugParameterIndex, 1);
-    }
-
-    // TODO: Add a "--all" parameter.
+    const lDebugEnabled: boolean = lGlobalParameters.has('debug');
 
     // Execute command.
     try {
@@ -43,40 +37,45 @@ import { Console, FileSystem, Project, CliPackages, CliCommand, ProcessContext, 
         // Create project handler.
         const lProject: Project = new Project(ProcessContext.workingDirectory);
 
-
         // Init commands.
-        const lCliCommandHandler: CliCommand = new CliCommand(lCliPackages); // TODO: lProject.cliPackages.create(this.mName)
+        const lCliCommand: CliCommand = await lProject.cliPackages.createCommand(lGlobalParameters.rootParameter);
 
-        // TODO: Move the blueprint resolver shit out of core.
-        // TODO: Read packages by type. kg-cli.config.json with "type": "cli-command"
-        // TODO: Read information with lProject.cliPackages.readListOf('cli-command') // lProject.cliPackages.readListOf('package-blueprint')
-        // TODO: With "name" and "type" the only required shits. The functions that reads the list must validate.  
+        // Read target packages.
+        const lTargetPackageList: Array<Package | null> = new Array<Package | null>(); // TODO: CliParameter.readGlobals(lParameter); creates a CliParameter only with global (--all, --debug ...) parameters.
+        if (lGlobalParameters.has('all')) {
+            lTargetPackageList.push(...lProject.readAllPackages());
+        } else if (lGlobalParameters.has('package')) {
+            lTargetPackageList.push(lProject.getPackage(lGlobalParameters.get('package')!));
+        }
 
-        // TODO: Create command parameter.
-
-
+        // Add null package when no package is set.
+        if (lTargetPackageList.length === 0) {
+            lTargetPackageList.push(null);
+        }
 
         // Print debug information.
         if (lDebugEnabled) {
-            lConsole.writeLine(`Project root: ${lProject.projectRootDirectory}`, 'green');
+            lConsole.writeLine(`Project root: ${lProject.rootDirectory}`, 'green');
 
             // Print all packages.
             lConsole.writeLine(`CLI-Packages:`, 'green');
-            for (const [lPackageName, lPackageConfig] of await lCliPackages.getCommandPackages()) {
-                lConsole.writeLine(`    ${lPackageName}:`, 'green');
-                lConsole.writeLine(`        ${JSON.stringify(lPackageConfig)}:`, 'green');
+            for (const lCliPackageInformation of await lProject.cliPackages.readAll()) {
+                lConsole.writeLine(`    ${lCliPackageInformation.packageName}:`, 'green');
+                lConsole.writeLine(`        ${JSON.stringify(lCliPackageInformation.configuration)}:`, 'green');
             }
 
             // Print all projects.
             lConsole.writeLine(`Project-Packages:`, 'green');
             for (const lProjectInformation of lProject.readAllPackages()) {
-                lConsole.writeLine(`    ${lProjectInformation.packageName} -- ${lProjectInformation.version}`, 'green');
+                lConsole.writeLine(`    ${lProjectInformation.id} -- ${lProjectInformation.version}`, 'green');
             }
         }
 
         // Execute command.
         lConsole.writeLine('Execute command...\n');
-        await lCliCommandHandler.execute(lProject,);
+        for (const lTargetPackage of lTargetPackageList) {
+            await lCliCommand.execute(lTargetPackage, lParameter);
+        }
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
 

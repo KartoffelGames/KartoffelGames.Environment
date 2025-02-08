@@ -2,7 +2,7 @@ import { Package } from "../project/package.ts";
 import { Project } from '../project/project.ts';
 import { CliParameter } from './cli-parameter.ts';
 
-export interface ICliCommand<TConfiguration = any> {
+export interface ICliPackageCommand<TConfiguration = any> {
     /**
      * Command description.
      */

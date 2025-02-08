@@ -1,8 +1,9 @@
+import { CliCommand } from "../index.ts";
 import { Import } from '../project/import.ts';
 import { Project } from "../project/project.ts";
 import { FileSystem } from '../system/file-system.ts';
-import { ICliCommand } from './i-cli-command.interface.ts';
 import { ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface.ts';
+import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
 // TODO: remove any blueprint shit out of this core lib.
 
@@ -10,64 +11,82 @@ import { ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver
  * Cli packages. Resolves all available cli packages.
  */
 export class CliPackages {
-    private readonly mCommandRootPackageDirectory: string;
+    private readonly mProject: Project;
 
     /**
      * Constructor.
-     * @param pCommandRootDirectory - Root package that contains all needed command packages.
+     * 
+     * @param pProject - Project handler.
      */
-    public constructor(pCommandRootDirectory: string) {
-        this.mCommandRootPackageDirectory = pCommandRootDirectory;
+    public constructor(pProject: Project) {
+        this.mProject = pProject;
     }
 
     /**
      * Create a new instance of a package command.
      * 
-     * @param pPackage - Package information.
+     * @param pName - Cli package information.
      * 
-     * @returns - Cli Command instance. 
+     * @returns - Cli package command instance. 
      */
-    public async createPackageCommandInstance(pPackage: CliPackageInformation): Promise<ICliCommand> {
-        if (!pPackage.configuration.commandEntryClass) {
-            throw new Error(`Can't initialize command ${pPackage.configuration.name}. No entry class defined.`);
+    public async createCommand(pName: string): Promise<CliCommand> {
+        // Read package command.
+        const lPackageInformation: CliPackageInformation<CliCommandPackageConfiguration> | null = await this.read<CliCommandPackageConfiguration>(pName, 'command');
+        if (lPackageInformation === null) {
+            throw new Error(`Cli command package "${pName}" could not be found.`);
+        }
+
+        if (!lPackageInformation.configuration.commandEntryClass) {
+            throw new Error(`Can't initialize command ${lPackageInformation.configuration.name}. No entry class defined.`);
         }
 
         // Catch any create errors for malfunctioning packages.
-        try {
-            // Import package and get command constructor.
-            const lPackageImport: any = await Import.import(pPackage.packageName);
-            const lPackageCliCommandConstructor: CliCommandConstructor = lPackageImport[pPackage.configuration.commandEntryClass] as CliCommandConstructor;
+        const lPackageCommand: ICliPackageCommand = await (async () => {
+            try {
+                // Import package and get command constructor.
+                const lPackageImport: any = await Import.import(lPackageInformation.packageName);
+                const lPackageCliCommandConstructor: CliCommandConstructor = lPackageImport[lPackageInformation.configuration.commandEntryClass] as CliCommandConstructor;
 
-            // Create command instance
-            return new lPackageCliCommandConstructor();
-        } catch (e) {
-            throw new Error(`Can't initialize command ${pPackage.configuration.name}. ${e}`);
-        }
+                // Create command instance
+                return new lPackageCliCommandConstructor();
+            } catch (e) {
+                throw new Error(`Can't initialize command ${lPackageInformation.configuration.name}. ${e}`);
+            }
+        })();
+
+        // Create new command instance.
+        return new CliCommand(this.mProject, lPackageCommand);
     }
 
     /**
-     * Create a new instance of a package blueprint resolver.
+     * Read information of a cli package.
      * 
-     * @param pPackage - Package information.
+     * @param pName - Cli command package name.
+     * @param pType - Cli command package type.
      * 
-     * @returns - Cli package resolver instance. 
+     * @returns cli package information or null if not found.
      */
-    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation): Promise<ICliPackageBlueprintResolver> { // TODO: Yes remove this shit.
-        if (!pPackage.configuration.packageBlueprints?.resolveClass) {
-            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
-        }
+    public async read<TTypeValues extends Record<string, any> = {}>(pName: string, pType: string): Promise<CliPackageInformation<TTypeValues> | null> {
+        // Read all packages with by a name filter.
+        const lFoundPackages: Map<string, CliPackageInformation> = await this.readAvailableProjectCommandPackages(pName, pType);
 
-        // Catch any create errors for malfunctioning packages.
-        try {
-            // Import package and get command constructor.
-            const lPackageImport: any = await Import.import(pPackage.packageName);
-            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints?.resolveClass] as CliPackageBlueprintResolverConstructor;
+        // Return found package.
+        return lFoundPackages.get(pName) as CliPackageInformation<TTypeValues> ?? null;
+    }
 
-            // Create command instance
-            return new lPackageCliConstructor();
-        } catch (e) {
-            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
-        }
+    /**
+     * Read information of a cli package.
+     * 
+     * @param pType - Cli command package type.
+     * 
+     * @returns all available cli package informations of the provided type.s  
+     */
+    public async readAll<TTypeValues extends Record<string, any> = {}>(pType?: string): Promise<Array<CliPackageInformation<TTypeValues>>> {
+        // Read all packages with by a name filter.
+        const lFoundPackages: Map<string, CliPackageInformation> = await this.readAvailableProjectCommandPackages('', pType);
+
+        // Return found package.
+        return [...lFoundPackages.values()] as Array<CliPackageInformation<TTypeValues>>;
     }
 
     /**
@@ -78,9 +97,9 @@ export class CliPackages {
      * 
      * @returns Map of available cli packages.
      */
-    public async getCommandPackages(pNameFilter: string = ''): Promise<Map<string, CliPackageInformation>> {
+    private async readAvailableProjectCommandPackages(pNameFilter: string, pType?: string): Promise<Map<string, CliPackageInformation>> {
         // Find root of project and read the json.
-        const lProjectRoot: string = Project.findRoot(this.mCommandRootPackageDirectory);
+        const lProjectRoot: string = Project.findRoot(this.mProject.rootDirectory);
         const lProjectRootPackageJsonString: string = FileSystem.read(`${lProjectRoot}/deno.json`);
         const lProjectRootPackageJson: any = JSON.parse(lProjectRootPackageJsonString);
 
@@ -95,6 +114,7 @@ export class CliPackages {
             return lCliPackages;
         }
 
+        // TODO: How to make this linear?
         return new Promise<Map<string, CliPackageInformation>>((pResolve) => {
             // Flag to skip searching after a result was aready resolved.
             let lAlreadyResolved: boolean = false;
@@ -112,13 +132,18 @@ export class CliPackages {
                     .then(async (lCliConfigFileRequest) => {
                         const lCliConfigFile: CliPackageConfiguration = await lCliConfigFileRequest.json();
 
+                        // Skip when package type does not match.
+                        if (pType && lCliConfigFile.type !== pType) {
+                            return;
+                        }
+
                         // Add dependency to type list.
                         lCliPackages.set(lCliConfigFile.name, {
                             packageName: lPackageImport,
                             configuration: lCliConfigFile
                         });
 
-                        // Resolve early when package was found.
+                        // Resolve early when a single package was found.
                         if (pNameFilter === lCliConfigFile.name) {
                             lAlreadyResolved = true;
                             pResolve(lCliPackages);
@@ -145,22 +170,22 @@ export class CliPackages {
     }
 }
 
-export type CliPackageConfiguration = { 
+export type CliPackageConfiguration<TTypeValues extends Record<string, any> = {}> = TTypeValues & {
+    type: string;
     name: string;
-    commandEntryClass?: string;
-    packageBlueprints?: {
-        resolveClass: string;
-        packages: Record<string, string>;
-    };
 };
 
-export type CliPackageInformation = {
+export type CliPackageInformation<TTypeValues extends Record<string, any> = {}> = {
     packageName: string;
-    configuration: CliPackageConfiguration;
+    configuration: CliPackageConfiguration<TTypeValues>;
+};
+
+export type CliCommandPackageConfiguration = {
+    commandEntryClass: string;
 };
 
 type CliCommandConstructor = {
-    new(): ICliCommand;
+    new(): ICliPackageCommand;
 };
 
 type CliPackageBlueprintResolverConstructor = {

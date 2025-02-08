@@ -55,7 +55,7 @@ export class Project {
     /**
      * Project root path.
      */
-    public get projectRootDirectory(): string {
+    public get rootDirectory(): string {
         return this.mRootPath;
     }
 
@@ -71,7 +71,7 @@ export class Project {
 
         // Set project root path and cli packages.
         this.mRootPath = lProjectRootPath;
-        this.mCliPackages = new CliPackages(lProjectRootPath);
+        this.mCliPackages = new CliPackages(this);
 
         // Read project json information.
         const lPackageJsonPath: string = FileSystem.pathToAbsolute(lProjectRootPath, 'deno.json');
@@ -114,12 +114,12 @@ export class Project {
      */
     public addWorkspace(pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
-        const lVsWorkspaceFilePath: string = FileSystem.findFiles(this.projectRootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
+        const lVsWorkspaceFilePath: string = FileSystem.findFiles(this.rootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
         const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
         const lVsWorkspaceFileJson = JSON.parse(lVsWorkspaceFileText);
 
         // Add new folder to folder list.
-        const lPackageDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
+        const lPackageDirectory: string = FileSystem.pathToRelative(this.rootDirectory, pPackageDirectory);
         const lPackageDirectoryList: Array<{ name: string, path: string; }> = lVsWorkspaceFileJson['folders'];
         lPackageDirectoryList.push({
             name: Package.nameToId(pPackageName),
@@ -138,12 +138,12 @@ export class Project {
         FileSystem.write(lVsWorkspaceFilePath, lAlteredVsWorkspaceFileText);
 
         // The same for Deno.json
-        const lWorkspaceDenoFilePath: string = FileSystem.pathToAbsolute(this.projectRootDirectory, 'deno.json');
+        const lWorkspaceDenoFilePath: string = FileSystem.pathToAbsolute(this.rootDirectory, 'deno.json');
         const lWorkspaceDenoFileText = FileSystem.read(lWorkspaceDenoFilePath);
         const lWorkspaceDenoFileJson = JSON.parse(lWorkspaceDenoFileText);
 
         // Convert to a relative path from the workspace root replace double backslashes with single backslashes and leading with a dot slash.
-        let lRelativePackageDirectory: string = FileSystem.pathToRelative(this.projectRootDirectory, pPackageDirectory);
+        let lRelativePackageDirectory: string = FileSystem.pathToRelative(this.rootDirectory, pPackageDirectory);
         lRelativePackageDirectory = `./${lRelativePackageDirectory.replace(/\\/g, '/')}`;
 
         // Read or create workspaces list.
@@ -205,7 +205,7 @@ export class Project {
      */
     public readAllPackages(): Array<Package> {
         // Search all deno.json files of root workspaces. Exclude node_modules.
-        const lAllFiles: Array<string> = FileSystem.findFiles(this.projectRootDirectory, { // TODO: Read from packages path specified in deno.json kg.root
+        const lAllFiles: Array<string> = FileSystem.findFiles(this.rootDirectory, { // TODO: Read from packages path specified in deno.json kg.root
             depth: 2, // ./packages/{package_name}/deno.json
             include: {
                 fileNames: ['deno.json'],

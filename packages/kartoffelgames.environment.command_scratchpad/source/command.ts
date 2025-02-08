@@ -1,9 +1,9 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
 import { ScratchpadBundler } from "./file_handler/scratchpad-bundler.ts";
 import { ScratchpadFileWatcher } from "./file_handler/scratchpad-file-watcher.ts";
 import { ScratchpadHttpServer } from "./file_handler/scratchpad-http-server.ts";
 
-export class KgCliCommand implements ICliCommand<ScratchpadConfiguration> {
+export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration> {
     /**
      * Command description.
      */

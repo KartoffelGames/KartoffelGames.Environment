@@ -1,6 +1,6 @@
-import { CliCommandDescription, CliPackages, CliParameter, Console, ICliCommand, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliPackages, CliParameter, Console, ICliPackageCommand, Project } from '@kartoffelgames/environment-core';
 
-export class CliCommand implements ICliCommand {
+export class CliCommand implements ICliPackageCommand {
     /**
      * Command description.
      */
@@ -25,10 +25,10 @@ export class CliCommand implements ICliCommand {
      */
     public async run(_pParameter: CliParameter, pProject: Project): Promise<void> {
         // Cli packages.
-        const lCliPackages: CliPackages = new CliPackages(pProject.projectRootDirectory);
+        const lCliPackages: CliPackages = new CliPackages(pProject.rootDirectory);
 
         // Create each package async.
-        const lPackageInstancePromiseList: Array<Promise<ICliCommand | null>> = new Array<Promise<ICliCommand | null>>();
+        const lPackageInstancePromiseList: Array<Promise<ICliPackageCommand | null>> = new Array<Promise<ICliPackageCommand | null>>();
 
         // Create each command package.
         for (const [, lPackageInformation] of await lCliPackages.getCommandPackages()) {
@@ -46,7 +46,7 @@ export class CliCommand implements ICliCommand {
         }
 
         // Wait for all packages to be created.
-        const lCommandList: Array<ICliCommand | null> = await Promise.all(lPackageInstancePromiseList);
+        const lCommandList: Array<ICliPackageCommand | null> = await Promise.all(lPackageInstancePromiseList);
 
         // Convert command list into command/description map.
         const lCommandMap: Map<string, string> = new Map<string, string>();

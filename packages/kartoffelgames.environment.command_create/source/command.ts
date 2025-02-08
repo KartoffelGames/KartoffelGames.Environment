@@ -1,7 +1,7 @@
-import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliCommand, ICliPackageBlueprintResolver, Import, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliPackageCommand, ICliPackageBlueprintResolver, Import, PackageInformation, Project } from '@kartoffelgames/environment-core';
 import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
 
-export class KgCliCommand implements ICliCommand<string> {
+export class KgCliCommand implements ICliPackageCommand<string> {
     /**
      * Command description.
      */
@@ -29,7 +29,7 @@ export class KgCliCommand implements ICliCommand<string> {
         const lConsole = new Console();
 
         // Read all available cli packages.
-        const lCliPackageList: Array<CliPackageInformation> = Array.from((await new CliPackages(pProject.projectRootDirectory).getCommandPackages()).values());
+        const lCliPackageList: Array<CliPackageInformation> = Array.from((await new CliPackages(pProject.rootDirectory).getCommandPackages()).values());
 
         // Read all KG_Cli_Blueprint packages informations.
         const lBlueprintList: Map<string, Blueprint> = this.readBlueprintList(lCliPackageList);
@@ -106,7 +106,7 @@ export class KgCliCommand implements ICliCommand<string> {
 
         // Get source and target path of blueprint files.
         const lProjectName: string = pProject.packageToIdName(pPackageName);
-        const lTargetPath: string = FileSystem.pathToAbsolute(pProject.projectRootDirectory, 'packages', lProjectName.toLowerCase());
+        const lTargetPath: string = FileSystem.pathToAbsolute(pProject.rootDirectory, 'packages', lProjectName.toLowerCase());
 
         // Check if package already exists.
         if (pProject.hasPackage(pPackageName)) {
@@ -119,7 +119,7 @@ export class KgCliCommand implements ICliCommand<string> {
         }
 
         // Create blueprint resolver instance.
-        const lPackageResolver: ICliPackageBlueprintResolver = await new CliPackages(pProject.projectRootDirectory).createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
+        const lPackageResolver: ICliPackageBlueprintResolver = await new CliPackages(pProject.rootDirectory).createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
 
         // Get url path of project blueprint and fetch it.
         const lProjectBlueprintZipUrl: URL = pBlueprint.blueprintFileUrl;
@@ -212,6 +212,33 @@ export class KgCliCommand implements ICliCommand<string> {
 
         return lAvailableBlueprint;
     }
+
+    /**
+     *  // TODO: Yes remove this shit.
+     * Create a new instance of a package blueprint resolver.
+     * 
+     * @param pPackage - Package information.
+     * 
+     * @returns - Cli package resolver instance. 
+     */
+    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliCommandPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
+        if (!pPackage.configuration.packageBlueprints?.resolveClass) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
+        }
+
+        // Catch any create errors for malfunctioning packages.
+        try {
+            // Import package and get command constructor.
+            const lPackageImport: any = await Import.import(pPackage.packageName);
+            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints?.resolveClass] as CliPackageBlueprintResolverConstructor;
+
+            // Create command instance
+            return new lPackageCliConstructor();
+        } catch (e) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
+        }
+    }
+
 }
 
 type Blueprint = {

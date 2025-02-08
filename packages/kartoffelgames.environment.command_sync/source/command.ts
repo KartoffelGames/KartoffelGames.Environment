@@ -1,6 +1,6 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
 
-export class CliCommand implements ICliCommand {
+export class CliCommand implements ICliPackageCommand {
     /**
      * Command description.
      */

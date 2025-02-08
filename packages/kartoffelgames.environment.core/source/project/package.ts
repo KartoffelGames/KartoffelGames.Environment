@@ -1,4 +1,4 @@
-import { ICliCommand } from '../cli/i-cli-command.interface.ts';
+import { ICliPackageCommand } from '../cli/i-cli-package-command.interface.ts';
 import { Project } from "../index.ts";
 import { FileSystem } from "../system/file-system.ts";
 
@@ -65,6 +65,13 @@ export class Package {
     }
 
     /**
+     * Get the package version.
+     */
+    public get version(): string {
+        return this.mPackageConfiguration.version;
+    }
+
+    /**
      * Get the project this package belongs to.
      */
     public get project(): Project {
@@ -121,7 +128,7 @@ export class Package {
      * 
      * @param pCommand - Target command.
      */
-    public cliConfigurationOf<T>(pCommand: ICliCommand<T>): T {
+    public cliConfigurationOf<T>(pCommand: ICliPackageCommand<T>): T {
         // Create instance of package and skip if no configuration is setable.
         if (!pCommand.information.configuration) {
             throw new Error(`Cli package has no configuration.`);
@@ -166,7 +173,7 @@ export class Package {
      * @param pCommand - Target command.
      * @param pData - New configuration data.
      */
-    public setCliConfigurationOf<T>(pCommand: ICliCommand<T>, pData: Partial<T>): void {
+    public setCliConfigurationOf<T>(pCommand: ICliPackageCommand<T>, pData: Partial<T>): void {
         // Create instance of package and skip if no configuration is setable.
         if (!pCommand.information.configuration) {
             throw new Error(`Cli package has no configuration.`);

@@ -1,9 +1,9 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
 import { PageBundler } from "./file_handler/page-bundler.ts";
 import { PageFileWatcher } from "./file_handler/page-file-watcher.ts";
 import { PageHttpServer } from "./file_handler/page-http-server.ts";
 
-export class KgCliCommand implements ICliCommand<PageConfiguration> {
+export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     /**
      * Command description.
      */
