@@ -109,8 +109,6 @@ export class Package {
             }
         })();
 
-        console.log(lPackageJson)
-
         // Ignore all packages where kg config is not set.
         if (typeof lPackageJson.name !== 'string') {
             throw new Error(`Package "${pPackageRootPath}" has no package name specified.`);

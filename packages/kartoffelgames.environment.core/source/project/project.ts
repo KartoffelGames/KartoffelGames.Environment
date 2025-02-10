@@ -221,8 +221,6 @@ export class Project {
             // Use only the directory of each deno.json file.
             const lPackageDirectory: string = FileSystem.directoryOfFile(lFile);
 
-            console.log(lPackageDirectory);
-
             // Create and push package settings.
             lPackageList.push(new Package(this, lPackageDirectory));
         }
