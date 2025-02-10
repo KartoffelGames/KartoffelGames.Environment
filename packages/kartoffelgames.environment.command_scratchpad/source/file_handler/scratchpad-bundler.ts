@@ -1,10 +1,10 @@
 import { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
-import { CliParameter, Console, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliParameter, Console, Package, Project } from '@kartoffelgames/environment-core';
 
 export class ScratchpadBundler {
     private readonly mCoreBundleRequired: boolean;
-    private readonly mPackageInformation: PackageInformation;
+    private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
     private readonly mBundledFiles: ScratchpadBundlerFiles;
     private readonly mWebsocketPort: number;
@@ -30,7 +30,7 @@ export class ScratchpadBundler {
      */
     public constructor(pParameters: ScratchpadBundlerConstructor) {
         this.mProjectHandler = pParameters.projectHandler;
-        this.mPackageInformation = pParameters.packageInformation;
+        this.mPackage = pParameters.package;
         this.mCoreBundleRequired = pParameters.coreBundleRequired;
         this.mWebsocketPort = pParameters.websocketPort;
         this.mBundledFiles = {
@@ -52,14 +52,13 @@ export class ScratchpadBundler {
         // Bundle native when native is required.
         if (this.mCoreBundleRequired) {
             // Create main bundle parameter with force flag.
-            const lMainBundleParameter: CliParameter = new CliParameter();
-            lMainBundleParameter.parameter.set('package_name', this.mPackageInformation.packageName);
-            lMainBundleParameter.flags.add('force');
+            const lMainBundleParameter: CliParameter = new CliParameter('root');
+            lMainBundleParameter.set('force', null);
 
             // Try to bundle main source.
             try {
                 // The original bundle command puts the files in the right directories.
-                await lMainBundleCommand.run(lMainBundleParameter, this.mProjectHandler);
+                await lMainBundleCommand.run(this.mProjectHandler, this.mPackage, lMainBundleParameter);
             } catch (e) {
                 lConsole.writeLine('Failed to bundle core source.', 'red');
                 lConsole.writeLine((<Error>e).message, 'red');
@@ -91,7 +90,7 @@ export class ScratchpadBundler {
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
                 // Run bundle.
-                const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(this.mProjectHandler, this.mPackageInformation.packageName, (pOptions: EnvironmentBundleOptions) => {
+                const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(this.mPackage, (pOptions: EnvironmentBundleOptions) => {
                     pOptions.entry = {
                         content: lBundleSettings
                     };
@@ -136,7 +135,7 @@ type ScratchpadBundlerFiles = {
 
 export type ScratchpadBundlerConstructor = {
     projectHandler: Project;
-    packageInformation: PackageInformation;
+    package: Package;
     coreBundleRequired: boolean;
     websocketPort: number;
 };

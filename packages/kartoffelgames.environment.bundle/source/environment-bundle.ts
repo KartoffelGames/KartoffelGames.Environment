@@ -1,4 +1,4 @@
-import { FileSystem, PackageInformation, PathInformation } from '@kartoffelgames/environment-core';
+import { FileSystem, Package, PathInformation } from '@kartoffelgames/environment-core';
 import { denoPlugins } from "@luca/esbuild-deno-loader";
 import * as esbuild from 'esbuild';
 
@@ -6,17 +6,17 @@ export class EnvironmentBundle {
     /**
      * Bundle a package with set settings and loader.
      * 
-     * @param pPackageInformation - Package information.
+     * @param pPackage - Package to bundle.
      * @param pOptions - Bundle options.
      * 
      * @returns Build output of esbuild build. 
      */
-    public async bundle(pPackageInformation: PackageInformation, pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
+    public async bundle(pPackage: Package, pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
         // Bundle based on entry type.
         if (pOptions.entry.content) {
-            return this.bundlePackageContent(pPackageInformation, pOptions.entry.content, pOptions.loader, pOptions.plugins);
+            return this.bundlePackageContent(pPackage, pOptions.entry.content, pOptions.loader, pOptions.plugins);
         } else if (pOptions.entry.files) {
-            return this.bundlePackageFiles(pPackageInformation, pOptions.entry.files, pOptions.loader, pOptions.plugins);
+            return this.bundlePackageFiles(pPackage, pOptions.entry.files, pOptions.loader, pOptions.plugins);
         }
 
         throw new Error('No entry point was specified.');
@@ -25,16 +25,16 @@ export class EnvironmentBundle {
     /**
      * Bundle a custom content in the context of a package with set settings and loader.
      * 
-     * @param pPackageInformation - Package information.
+     * @param pPackage - Package to bundle.
      * @param pInputContent - Input source content.
      * @param pLoader - file extension loader.
      *  
      * @returns Build output of esbuild build. 
      */
-    private async bundlePackageContent(pPackageInformation: PackageInformation, pInputContent: EnvironmentBundleInputContent, lLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
+    private async bundlePackageContent(pPackage: Package, pInputContent: EnvironmentBundleInputContent, lLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
         // Convert the relative resolve path into a absolute path.
-        pInputContent.outputBasename = pInputContent.outputBasename.replace('<packagename>', pPackageInformation.idName);
-        pInputContent.inputResolveDirectory = FileSystem.pathToAbsolute(pPackageInformation.directory, pInputContent.inputResolveDirectory);
+        pInputContent.outputBasename = pInputContent.outputBasename.replace('<packagename>', pPackage.id);
+        pInputContent.inputResolveDirectory = FileSystem.pathToAbsolute(pPackage.directory, pInputContent.inputResolveDirectory);
 
         // Build bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
@@ -42,7 +42,7 @@ export class EnvironmentBundle {
 
             // For some higher reason the deno plugins does not have the correct type definition.
             plugins: [
-                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json') }),
+                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json') }),
                 ...pPlugins
             ] as unknown as Array<esbuild.Plugin>,
 
@@ -58,20 +58,20 @@ export class EnvironmentBundle {
     /**
      * Bundle package files with set settings and loader.
      * 
-     * @param pPackageInformation - Package information.
+     * @param pPackage - Package to bundle.
      * @param pInputFiles - Input files.
      * @param pLoader - file extension loader.
      *  
      * @returns Build output of esbuild build. 
      */
-    private async bundlePackageFiles(pPackageInformation: PackageInformation, pInputFiles: EnvironmentBundleInputFiles, pLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
+    private async bundlePackageFiles(pPackage: Package, pInputFiles: EnvironmentBundleInputFiles, pLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
         // Convert input files into a proper input file format the bundler command understands.
         const lInputFile = pInputFiles.map((pInputFile) => {
             return {
                 // Replace <packagename> with package name.
-                outputBasename: pInputFile.outputBasename.replace('<packagename>', pPackageInformation.idName),
+                outputBasename: pInputFile.outputBasename.replace('<packagename>', pPackage.id),
                 // Convert entry point path into absolute file path rooted in the package directory.
-                inputFilePath: FileSystem.pathToAbsolute(pPackageInformation.directory, pInputFile.inputFilePath),
+                inputFilePath: FileSystem.pathToAbsolute(pPackage.directory, pInputFile.inputFilePath),
                 outputExtension: pInputFile.outputExtension
             };
         });
@@ -82,7 +82,7 @@ export class EnvironmentBundle {
 
             // For some higher reason the deno plugins does not have the correct type definition.
             plugins: [
-                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackageInformation.directory, 'deno.json') }),
+                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json') }),
                 ...pPlugins
             ] as unknown as Array<esbuild.Plugin>,
 

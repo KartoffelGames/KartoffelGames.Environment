@@ -1,4 +1,4 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
 import { PageBundler } from "./file_handler/page-bundler.ts";
 import { PageFileWatcher } from "./file_handler/page-file-watcher.ts";
 import { PageHttpServer } from "./file_handler/page-http-server.ts";
@@ -11,9 +11,17 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         return {
             command: {
                 description: 'Build and eventually serve html page files over local http server.',
-                name: 'page',
-                parameters: ['<package_name>'],
-                flags: ['force', 'build-only'],
+                parameters: {
+                    root: 'page',
+                    optional: {
+                        force: {
+                            shortName: 'f'
+                        },
+                        'build-only': {
+                            shortName: 'b'
+                        }
+                    }
+                }
             },
             configuration: {
                 name: 'page',
@@ -29,19 +37,19 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     /**
      * Execute command.
      * @param pParameter - Command parameter.
-     * @param pProjectHandler - Project.
+     * @param pProject - Project.
      */
-    public async run(pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
-        // Cli parameter.
-        const lPackageName: string = pParameter.parameter.get('package_name') as string;
-        const lForceBuild: boolean = pParameter.parameter.has('force');
+    public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
+        // Needs a package to run page.
+        if (pPackage === null) {
+            throw new Error('Package to run page not specified.');
+        }
 
-        // Read package information and bundle config. 
-        // Configuration is filled up with default information.
-        const lPackageInformation: PackageInformation = pProjectHandler.getPackage(lPackageName);
+        // Cli parameter.
+        const lForceBuild: boolean = pParameter.has('force');
 
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
+        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
 
         // Create console.
         const lConsole = new Console();
@@ -54,22 +62,22 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
         // Create watch paths for package source and page directory.
         const lWatchPaths: Array<string> = [
-            FileSystem.pathToAbsolute(lPackageInformation.directory, 'source'),
-            FileSystem.pathToAbsolute(lPackageInformation.directory, 'page')
+            FileSystem.pathToAbsolute(pPackage.directory, 'source'),
+            FileSystem.pathToAbsolute(pPackage.directory, 'page')
         ];
 
         // Init page files.
-        this.initPageFiles(lPackageInformation);
+        this.initPageFiles(pPackage);
 
         // Source directory of www files.
-        const lSourceDirectory: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'page');
+        const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
 
         // Build page http-server, watcher and bundler.
         const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory);
         const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         const lPageBundler: PageBundler = new PageBundler({
-            projectHandler: pProjectHandler,
-            packageInformation: lPackageInformation,
+            projectHandler: pProject,
+            package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
         });
@@ -109,8 +117,8 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     /***
      * Initialize page files.
      */
-    public initPageFiles(pPackageInformation: PackageInformation): void {
-        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackageInformation.directory, 'page');
+    public initPageFiles(pPackage: Package): void {
+        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
 
         // Create page directorys.
         FileSystem.createDirectory(lPageDirectory);

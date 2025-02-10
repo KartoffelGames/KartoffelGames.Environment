@@ -1,4 +1,5 @@
 {
+    "type": "blueprint",
     "name": "blueprint",
     "packageBlueprints": {
         "resolveClass": "CliPackageBlueprint",

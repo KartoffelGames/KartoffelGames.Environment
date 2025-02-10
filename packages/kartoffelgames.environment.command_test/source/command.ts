@@ -1,6 +1,6 @@
 import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, PackageInformation, Process, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Process, Project } from '@kartoffelgames/environment-core';
 import { ProcessParameter } from "../../kartoffelgames.environment.core/source/index.ts";
 
 export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
@@ -11,9 +11,15 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         return {
             command: {
                 description: 'Test package',
-                name: 'test',
-                parameters: ['<package_name>'],
-                flags: ['coverage'],
+                parameters: {
+                    root: 'test',
+                    required: [],
+                    optional: {
+                        coverage: {
+                            shortName: 'c'
+                        }
+                    }
+                },
             },
             configuration: {
                 name: 'test',
@@ -28,27 +34,27 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
      * Execute command.
      * 
      * @param pParameter - Command parameter.
-     * @param pProjectHandler - Project.
+     * @param pProject - Project.
      */
-    public async run(pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
-        // Cli parameter.
-        const lPackageName: string = <string>pParameter.parameter.get('package_name');
-        const lCoverageEnabled: boolean = pParameter.flags.has('coverage');
+    public async run(_pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
+        // Needs a package to run test.
+        if (pPackage === null) {
+            throw new Error('Package to run test not specified.');
+        }
 
-        // Read package information and bundle config. 
-        // Configuration is filled up with default information.
-        const lPackageInformation: PackageInformation = pProjectHandler.getPackage(lPackageName);
+        // Cli parameter.
+        const lCoverageEnabled: boolean = pParameter.has('coverage');
 
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
+        const lPackageConfiguration = await pPackage?.cliConfigurationOf(this);
 
         // initialize test directory.
-        this.initialTestDirectory(lPackageInformation);
+        this.initialTestDirectory(pPackage);
 
         // Create all paths.
-        const lTestInputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, 'test');
-        const lSourceInputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, 'source');
-        const lTestOutputDirectory = FileSystem.pathToAbsolute(lPackageInformation.directory, '.kg-test');
+        const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, 'test');
+        const lSourceInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, 'source');
+        const lTestOutputDirectory = FileSystem.pathToAbsolute(pPackage.directory, '.kg-test');
         const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
         const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
         const lBundleResultSourceMapFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js.map');
@@ -83,7 +89,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
 
             // Run bundle.
-            const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(pProjectHandler, lPackageName, (pOptions: EnvironmentBundleOptions) => {
+            const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(pPackage, (pOptions: EnvironmentBundleOptions) => {
                 // Override entry file with the test bundle.ts
                 pOptions.entry = {
                     content: {
@@ -108,14 +114,14 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         // Create test with coverage command extension.
         const lTestWithCoverageCommand: Array<string> = [];
         if (lCoverageEnabled) {
-            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
+            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
             lTestWithCoverageCommand.push(`--coverage=${lRelativeCoverageFileDirectory}`);
         }
 
         // Eighter test the test directory or the bundle result directory when bundle is required.
         let lTestFilesDirectoryList: Array<string> = [];
         if (lPackageConfiguration.bundleRequired) {
-            lTestFilesDirectoryList.push(FileSystem.pathToRelative(lPackageInformation.directory, lBundleResultJavascriptFile));
+            lTestFilesDirectoryList.push(FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile));
         } else {
             lTestFilesDirectoryList.push(`test/**/*.ts`);
             lTestFilesDirectoryList.push(`source/**/*.ts`);
@@ -125,7 +131,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         let lTestFailed: boolean = false;
 
         // Create test command parameter.
-        const lTestCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
+        const lTestCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
             'deno', 'test', '-A', ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
         ]);
 
@@ -142,13 +148,13 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
         // When coverage is on, run 'deno coverage' command.
         if (lCoverageEnabled && !lPackageConfiguration.bundleRequired) {
-            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(lPackageInformation.directory, lCoverageFileDirectory);
+            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
 
             // Get package directory base name.
-            const lPackageDirectoryBaseName: string = FileSystem.pathInformation(lPackageInformation.directory).basename;
+            const lPackageDirectoryBaseName: string = FileSystem.pathInformation(pPackage.directory).basename;
 
             // Create coverage command parameter.
-            const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(lPackageInformation.directory, [
+            const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
                 'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=packages/${lPackageDirectoryBaseName}/source/`
             ]);
 
@@ -171,10 +177,10 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
     /**
      * Initialize test directory.
      * 
-     * @param pPackageInformation - Package information.
+     * @param pPackage - Package.
      */
-    private initialTestDirectory(pPackageInformation: PackageInformation): void {
-        const lTestDirectory: string = FileSystem.pathToAbsolute(pPackageInformation.directory, 'test');
+    private initialTestDirectory(pPackage: Package): void {
+        const lTestDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'test');
 
         // Create test directory when not exists.
         if (!FileSystem.exists(lTestDirectory)) {

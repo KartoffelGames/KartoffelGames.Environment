@@ -1,5 +1,3 @@
-import { CliParameter, Console, FileSystem, PackageInformation, Project } from '@kartoffelgames/environment-core';
-
 export class ScratchpadFileWatcher {
     private readonly mWatchedPaths: Array<string>;
     private readonly mListener: Array<ScratchpadFileWatcherListener>;

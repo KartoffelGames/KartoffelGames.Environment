@@ -65,6 +65,13 @@ export class Package {
     }
 
     /**
+     * The root directory path of the package.
+     */
+    public get directory(): string {
+        return this.mPackageRootPath;
+    }
+
+    /**
      * Get the package version.
      */
     public get version(): string {

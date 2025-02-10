@@ -19,6 +19,13 @@ export class CliCommand {
     }
 
     /**
+     * Gets the CLI package command.
+     */
+    public get cliPackageCommand(): ICliPackageCommand {
+        return this.mCliPackageCommand; 
+    }
+
+    /**
      * Constructor.
      * 
      * @param pCommandName - Command name.

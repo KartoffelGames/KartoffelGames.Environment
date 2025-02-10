@@ -1,4 +1,5 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, ICliPackageCommand, Project } from '@kartoffelgames/environment-core';
+import { Package } from "../../kartoffelgames.environment.core/source/project/package.ts";
 
 export class CliCommand implements ICliPackageCommand {
     /**
@@ -8,9 +9,9 @@ export class CliCommand implements ICliPackageCommand {
         return {
             command: {
                 description: 'Sync local package versions into all package.json files.',
-                name: 'sync',
-                parameters: [],
-                flags: [],
+                parameters: {
+                    root: 'sync'
+                },
             },
             configuration: null
         };
@@ -22,17 +23,20 @@ export class CliCommand implements ICliPackageCommand {
      * @param _pParameter - Command parameter.
      * @param _pCliPackages - All cli packages grouped by type.
      */
-    public async run(_pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
+    public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
+        // Needs a package to run test.
+        if (pPackage === null) {
+            throw new Error('Package to sync not specified.');
+        }
+
         const lConsole = new Console();
 
         // TODO: This command needs a version sync from root deno.json. Or something to bump all versions to the same.
 
-        // Find all packages.
-        const lPackageList: Array<PackageInformation> = pProjectHandler.readAllPackages();
-
         // Update package kg configuration.
         lConsole.writeLine('Sync package configuration...');
-        await this.updatePackageConfigurations(lPackageList, pProjectHandler);
+
+        await this.updatePackageConfiguration(pProjectHandler, pPackage);
 
         lConsole.writeLine('Sync completed');
     }
@@ -43,16 +47,21 @@ export class CliCommand implements ICliPackageCommand {
      * @param pProjectList - Local project list.
      * @param pProject - Project handler.
      */
-    private async updatePackageConfigurations(pProjectList: Array<PackageInformation>, pProject: Project): Promise<void> {
-        const lUpdateWaiterList: Array<Promise<void>> = new Array<Promise<void>>();
+    private async updatePackageConfiguration(pProject: Project, pPackage: Package): Promise<void> {
+        // TODO: Maybe remove it and only update version and name.
 
-        // Update all package configurations
-        for (const lProject of pProjectList) {
-            lUpdateWaiterList.push(pProject.updatePackageConfiguration(lProject.packageName));
+        // Set all available cli configurations for each cli package.
+        for(const lCliCommand of await pProject.cliPackages.readAll('command')) {
+            const lCliPackage = await pProject.cliPackages.createCommand(lCliCommand.configuration.name);
+
+            // Read configuration of command. Unset fields are filled with default values.
+            const lCommandConfiguration: any = pPackage.cliConfigurationOf(lCliPackage.cliPackageCommand);
+
+            // And set it again.
+            pPackage.setCliConfigurationOf(lCliPackage.cliPackageCommand, lCommandConfiguration);
         }
 
-        // Wait for all updates to finish.
-        await Promise.all(lUpdateWaiterList);
+        pPackage.save();
     }
 }
 

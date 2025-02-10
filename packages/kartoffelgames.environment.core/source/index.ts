@@ -7,8 +7,8 @@ export { ProcessContext } from './process/process-context.ts';
 export { ProcessParameter } from './process/process-parameter.ts';
 export { Process } from './process/process.ts';
 export { Import } from './project/import.ts';
+export { Package } from "./project/package.ts";
 export { Project } from './project/project.ts';
 export { Console } from './system/console.ts';
 export { FileSystem, type FileSearchOptions, type PathInformation } from './system/file-system.ts';
-
 

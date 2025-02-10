@@ -1,5 +1,5 @@
-import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliPackages, CliParameter, Console, FileSystem, ICliPackageCommand, ICliPackageBlueprintResolver, Import, PackageInformation, Project } from '@kartoffelgames/environment-core';
-import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
+import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliParameter, Console, FileSystem, ICliPackageBlueprintResolver, ICliPackageCommand, Import, Package, Project } from '@kartoffelgames/environment-core';
+import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
 
 export class KgCliCommand implements ICliPackageCommand<string> {
     /**
@@ -9,9 +9,20 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         return {
             command: {
                 description: 'Create new package.',
-                name: 'create',
-                parameters: ['[blueprint_name]', '[package_name]'],
-                flags: ['list']
+                parameters: {
+                    root: 'create',
+                    optional: {
+                        list: {
+                            shortName: 'l'
+                        },
+                        blueprint: {
+                            shortName: 'b'
+                        },
+                        package: {
+                            shortName: 'p'
+                        }
+                    }
+                }
             },
             configuration: {
                 name: 'package-blueprint',
@@ -25,17 +36,17 @@ export class KgCliCommand implements ICliPackageCommand<string> {
      * @param pParameter - Command parameter.
      * @param pBlueprintPackages - All cli packages grouped by type.
      */
-    public async run(pParameter: CliParameter, pProject: Project): Promise<void> {
+    public async run(pProject: Project, _pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         const lConsole = new Console();
 
         // Read all available cli packages.
-        const lCliPackageList: Array<CliPackageInformation> = Array.from((await new CliPackages(pProject.rootDirectory).getCommandPackages()).values());
+        const lCliPackageList: Array<CliPackageInformation<CliBlueprintPackageConfiguration>> = await pProject.cliPackages.readAll<CliBlueprintPackageConfiguration>('blueprint');
 
         // Read all KG_Cli_Blueprint packages informations.
         const lBlueprintList: Map<string, Blueprint> = this.readBlueprintList(lCliPackageList);
 
         // List blueprints on --list parameter and exit command.
-        if (pParameter.parameter.has('list')) {
+        if (pParameter.has('list')) {
             // Output all commands.
             lConsole.writeLine('Available blueprints:');
             for (const [lBlueprintName,] of lBlueprintList) {
@@ -48,8 +59,10 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         lConsole.writeLine('Create Package');
 
         // Read required parameter.
-        let lBlueprintName: string = pParameter.parameter.get('blueprint_name')?.toLowerCase() ?? '';
-        if (lBlueprintName === '') {
+        let lBlueprintName: string;
+        if (pParameter.has('blueprint')) {
+            lBlueprintName = pParameter.get('blueprint').toLowerCase();
+        } else {
             lBlueprintName = await lConsole.promt('Bluprint name: ', /^[a-z0-9-]+$/);
         }
 
@@ -61,8 +74,10 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
         // Find name. Get from command parameter on promt user.
         const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-]+\/)?[a-z0-9-]+$/;
-        let lNewPackageName: string = pParameter.parameter.get('package_name') ?? '';
-        if (lNewPackageName === '') {
+        let lNewPackageName: string;
+        if (pParameter.has('package_name')) {
+            lNewPackageName = pParameter.get('package_name');
+        } else {
             lNewPackageName = await lConsole.promt('Package Name: ', lPackageNameValidation);
         }
 
@@ -79,16 +94,12 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         pProject.addWorkspace(lNewPackageName, lNewPackageDirectory);
 
         // Read package information of newly created package.
-        const lPackageInformation: PackageInformation = pProject.getPackage(lNewPackageName);
+        const lPackage: Package = pProject.getPackage(lNewPackageName);
 
         // Add package information to deno.json.
         lConsole.writeLine('Set package configuration...');
-        pProject.writeCliPackageConfiguration(lPackageInformation, this, () => {
-            return lBlueprintName;
-        });
-
-        // Update missing information.
-        pProject.updatePackageConfiguration(lPackageInformation.packageName);
+        lPackage.setCliConfigurationOf(this, lBlueprintName);
+        await lPackage.save();
 
         // Display init information.
         lConsole.writeLine('Package successfully created.');
@@ -105,7 +116,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         const lConsole = new Console();
 
         // Get source and target path of blueprint files.
-        const lProjectName: string = pProject.packageToIdName(pPackageName);
+        const lProjectName: string = Package.nameToId(pPackageName);
         const lTargetPath: string = FileSystem.pathToAbsolute(pProject.rootDirectory, 'packages', lProjectName.toLowerCase());
 
         // Check if package already exists.
@@ -119,7 +130,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         }
 
         // Create blueprint resolver instance.
-        const lPackageResolver: ICliPackageBlueprintResolver = await new CliPackages(pProject.rootDirectory).createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
+        const lPackageResolver: ICliPackageBlueprintResolver = await this.createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
 
         // Get url path of project blueprint and fetch it.
         const lProjectBlueprintZipUrl: URL = pBlueprint.blueprintFileUrl;
@@ -190,7 +201,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
      * Create all package blueprint definition class. 
      * @param pBlueprintPackages - Cli packages.
      */
-    private readBlueprintList(pPackages: Array<CliPackageInformation>): Map<string, Blueprint> {
+    private readBlueprintList(pPackages: Array<CliPackageInformation<CliBlueprintPackageConfiguration>>): Map<string, Blueprint> {
         const lAvailableBlueprint: Map<string, Blueprint> = new Map<string, Blueprint>();
 
         // Create each package blueprint package.
@@ -214,14 +225,13 @@ export class KgCliCommand implements ICliPackageCommand<string> {
     }
 
     /**
-     *  // TODO: Yes remove this shit.
      * Create a new instance of a package blueprint resolver.
      * 
      * @param pPackage - Package information.
      * 
      * @returns - Cli package resolver instance. 
      */
-    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliCommandPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
+    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliBlueprintPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
         if (!pPackage.configuration.packageBlueprints?.resolveClass) {
             throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
         }
@@ -242,7 +252,18 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 }
 
 type Blueprint = {
-    packageInformation: CliPackageInformation;
+    packageInformation: CliPackageInformation<CliBlueprintPackageConfiguration>;
     resolverClass: string;
     blueprintFileUrl: URL;
+};
+
+type CliPackageBlueprintResolverConstructor = {
+    new(): ICliPackageBlueprintResolver;
+};
+
+export type CliBlueprintPackageConfiguration = {
+    packageBlueprints: {
+        resolveClass: string;
+        packages: { [name: string]: string; };
+    };
 };

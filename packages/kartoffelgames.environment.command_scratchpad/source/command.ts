@@ -1,4 +1,5 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, PackageInformation, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Project } from '@kartoffelgames/environment-core';
+import { Package } from "../../kartoffelgames.environment.core/source/project/package.ts";
 import { ScratchpadBundler } from "./file_handler/scratchpad-bundler.ts";
 import { ScratchpadFileWatcher } from "./file_handler/scratchpad-file-watcher.ts";
 import { ScratchpadHttpServer } from "./file_handler/scratchpad-http-server.ts";
@@ -11,9 +12,9 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         return {
             command: {
                 description: 'Serve scratchpad files over local http server.',
-                name: 'scratchpad',
-                parameters: ['<package_name>'],
-                flags: [],
+                parameters: {
+                    root: 'scratchpad',
+                }
             },
             configuration: {
                 name: 'scratchpad',
@@ -31,28 +32,26 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
      * @param pParameter - Command parameter.
      * @param pProjectHandler - Project.
      */
-    public async run(pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
-        // Cli parameter.
-        const lPackageName: string = <string>pParameter.parameter.get('package_name');
-
-        // Read package information and bundle config. 
-        // Configuration is filled up with default information.
-        const lPackageInformation: PackageInformation = pProjectHandler.getPackage(lPackageName);
+    public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
+        // Needs a package to run test.
+        if (pPackage === null) {
+            throw new Error('Package to run scratchpad not specified.');
+        }
 
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
+        const lPackageConfiguration = await pPackage?.cliConfigurationOf(this);
 
         // Create watch paths for package source and scratchpad directory.
         const lWatchPaths: Array<string> = [
-            FileSystem.pathToAbsolute(lPackageInformation.directory, 'source'),
-            FileSystem.pathToAbsolute(lPackageInformation.directory, 'scratchpad')
+            FileSystem.pathToAbsolute(pPackage.directory, 'source'),
+            FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad')
         ];
 
         // Init scratchpad files.
-        this.initScratchpadFiles(lPackageInformation);
+        this.initScratchpadFiles(pPackage);
 
         // Source directory of www files.
-        const lSourceDirectory: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'scratchpad');
+        const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad');
 
         // Create console.
         const lConsole = new Console();
@@ -62,7 +61,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
             projectHandler: pProjectHandler,
-            packageInformation: lPackageInformation,
+            package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
         });
@@ -101,8 +100,8 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
     /***
      * Initialize scratchpad files.
      */
-    public initScratchpadFiles(pPackageInformation: PackageInformation): void {
-        const lScratchpadDirectory: string = FileSystem.pathToAbsolute(pPackageInformation.directory, 'scratchpad');
+    public initScratchpadFiles(pPackage: Package): void {
+        const lScratchpadDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad');
 
         // Create scratchpad directorys.
         FileSystem.createDirectory(lScratchpadDirectory);

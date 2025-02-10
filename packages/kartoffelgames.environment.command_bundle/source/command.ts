@@ -1,6 +1,5 @@
-import { EnvironmentBundle, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Import, Project } from '@kartoffelgames/environment-core';
-import { EnvironmentBundleOptions } from "@kartoffelgames/environment-bundle";
+import { EnvironmentBundle, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Import, Package, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
     /**
@@ -10,9 +9,14 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         return {
             command: {
                 description: 'Bundle package',
-                name: 'bundle',
-                parameters: ['<package_name>'],
-                flags: ['force'],
+                parameters: {
+                    root: 'bundle',
+                    optional: {
+                        force: {
+                            shortName: 'f'
+                        }
+                    }
+                }
             },
             configuration: {
                 name: 'bundle',
@@ -28,19 +32,19 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
      * Execute command.
      * 
      * @param pParameter - Command parameter.
-     * @param pProjectHandler - Project handling.
+     * @param pProject - Project handling.
      */
-    public async run(pParameter: CliParameter, pProjectHandler: Project): Promise<void> {
-        // Read cli parameter.
-        const lPackageName: string = <string>pParameter.parameter.get('package_name');
-        const lForceBundle: boolean = <boolean>pParameter.flags.has('force');
+    public async run(_pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
+        // Needs a package to run page.
+        if (pPackage === null) {
+            throw new Error('Package to run page not specified.');
+        }
 
-        // Read package information and build config. 
-        // Configuration is filled up with default information.
-        const lPackageInformation = pProjectHandler.getPackage(lPackageName);
+        // Read cli parameter.
+        const lForceBundle: boolean = <boolean>pParameter.has('force');
 
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
+        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
 
         const lConsole = new Console();
 
@@ -54,10 +58,10 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         }
 
         // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await this.bundle(pProjectHandler, lPackageName);
+        const lBundleResult: EnvironmentBundleOutput = await this.bundle(pPackage);
 
         // Create output file directory.
-        const lBuildOutput: string = FileSystem.pathToAbsolute(lPackageInformation.directory, 'library');
+        const lBuildOutput: string = FileSystem.pathToAbsolute(pPackage.directory, 'library');
         FileSystem.createDirectory(lBuildOutput);
 
         // Output build result.
@@ -77,22 +81,17 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
     /**
      * Bundle package with the bundle options specified in the package deno.json.
      * 
-     * @param pProjectHandler - Project handling. 
-     * @param pPackageName - Package name to bundle.
+     * @param pPackage - Package bundle.
      * @param pOverrideCallback  - Override functionality of bundle options.
      * 
      * @returns Bundle output.
      */
-    public async bundle(pProjectHandler: Project, pPackageName: string, pOverrideCallback?: (pOptions: EnvironmentBundleOptions) => (EnvironmentBundleOptions | void)): Promise<EnvironmentBundleOutput> {
-        // Read package information and build config. 
-        // Configuration is filled up with default information.
-        const lPackageInformation = pProjectHandler.getPackage(pPackageName);
-
+    public async bundle(pPackage: Package, pOverrideCallback?: (pOptions: EnvironmentBundleOptions) => (EnvironmentBundleOptions | void)): Promise<EnvironmentBundleOutput> {
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pProjectHandler.readCliPackageConfiguration(lPackageInformation, this);
+        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
 
         // Construct paths.
-        const lPackagePath = lPackageInformation.directory;
+        const lPackagePath = pPackage.directory;
 
         // Create environment bundle object.
         const lEnvironmentBundle = new EnvironmentBundle();
@@ -150,7 +149,7 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         }
 
         // Start bundling.
-        return await lEnvironmentBundle.bundle(lPackageInformation, lBundleOptions as EnvironmentBundleOptions);
+        return await lEnvironmentBundle.bundle(pPackage, lBundleOptions as EnvironmentBundleOptions);
     }
 }
 

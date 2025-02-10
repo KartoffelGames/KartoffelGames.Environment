@@ -2,10 +2,7 @@ import { CliCommand } from "../index.ts";
 import { Import } from '../project/import.ts';
 import { Project } from "../project/project.ts";
 import { FileSystem } from '../system/file-system.ts';
-import { ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface.ts';
 import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
-
-// TODO: remove any blueprint shit out of this core lib.
 
 /**
  * Cli packages. Resolves all available cli packages.
@@ -186,8 +183,4 @@ export type CliCommandPackageConfiguration = {
 
 type CliCommandConstructor = {
     new(): ICliPackageCommand;
-};
-
-type CliPackageBlueprintResolverConstructor = {
-    new(): ICliPackageBlueprintResolver;
 };

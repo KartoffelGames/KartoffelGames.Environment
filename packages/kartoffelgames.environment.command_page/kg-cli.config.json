@@ -1,4 +1,5 @@
 {
+    "type": "command",
     "name": "page",
     "commandEntryClass": "KgCliCommand"
 }

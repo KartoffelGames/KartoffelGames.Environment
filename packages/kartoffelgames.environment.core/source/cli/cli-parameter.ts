@@ -169,7 +169,7 @@ export class CliParameter {
      * 
      * @param pRootParameter - Root parameter.
      */
-    private constructor(pRootParameter: string) {
+    public constructor(pRootParameter: string) {
         this.mRootParameter = pRootParameter;
         this.mParameters = new Map<string, string | null>();
     }

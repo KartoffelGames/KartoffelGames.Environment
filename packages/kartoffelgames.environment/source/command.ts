@@ -9,9 +9,9 @@ export class Command implements ICliPackageCommand<string> {
         return {
             command: {
                 description: 'Initialize new monorepo project.',
-                name: 'init',
-                parameters: [],
-                flags: []
+                parameters: {
+                    root: 'init'
+                }
             },
             configuration: {
                 name: 'project-blueprint',
