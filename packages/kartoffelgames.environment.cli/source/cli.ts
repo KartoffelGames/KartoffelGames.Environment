@@ -72,9 +72,16 @@ import { Package } from "../../kartoffelgames.environment.core/source/project/pa
         }
 
         // Execute command.
-        lConsole.writeLine('Execute command...\n');
         for (const lTargetPackage of lTargetPackageList) {
+            if(lTargetPackage ) {
+                lConsole.writeLine(`Execute command for ${lTargetPackage.id} ...`, 'green');
+            } else {
+                lConsole.writeLine(`Execute command ...`, 'green');
+            }
+            
             await lCliCommand.execute(lTargetPackage, lParameter);
+
+            lConsole.writeLine('\n');
         }
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
