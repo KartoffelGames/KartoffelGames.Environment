@@ -21,7 +21,24 @@
         "config": {
             "blueprint": "kg-main",
             "pack": false,
-            "page": false
-        }
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "package-blueprint": "",
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "test": {
+                "bundleRequired": false
+            }
+        },
+        "source": "./source"
     }
 }

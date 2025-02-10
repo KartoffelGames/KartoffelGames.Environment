@@ -21,7 +21,24 @@
             "tests": [
                 "unit"
             ],
-            "page": false
-        }
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "package-blueprint": "",
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "bundleRequired": false
+            }
+        },
+        "source": "./source"
     }
 }

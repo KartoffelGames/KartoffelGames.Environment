@@ -7,8 +7,8 @@
         "@zip-js/zip-js": "jsr:@zip-js/zip-js"
     },
     "exports": {
-		".": "./source/index.ts"
-	},
+        ".": "./source/index.ts"
+    },
     "publish": {
         "include": [
             "source/",
@@ -21,7 +21,24 @@
         "config": {
             "blueprint": "kg-main",
             "pack": false,
-            "page": false
-        }
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "package-blueprint": "",
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "bundleRequired": false
+            }
+        },
+        "source": "./source"
     }
 }

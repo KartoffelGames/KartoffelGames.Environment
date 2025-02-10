@@ -56,7 +56,7 @@ export class CliParameter {
             }
 
             // Format parameter value when it is set as string.
-            if (lParameterValue.startsWith('"')) {
+            if (lParameterValue && lParameterValue.startsWith('"')) {
                 lParameterValue = lParameter.substring(1, lParameter.length - 1);
             }
             // Set optional named parameter.
@@ -166,7 +166,7 @@ export class CliParameter {
             }
 
             // Format parameter value when it is set as string.
-            if (lParameterValue.startsWith('"')) {
+            if (lParameterValue && lParameterValue.startsWith('"')) {
                 lParameterValue = lParameter.substring(1, lParameter.length - 1);
             }
             // Set optional named parameter.
