@@ -1,7 +1,7 @@
-import { CliCommandDescription, CliParameter, Console, ICliPackageCommand, Project } from '@kartoffelgames/environment-core';
+import { CliCommand, CliCommandDescription, CliParameter, Console, ICliPackageCommand, Project } from '@kartoffelgames/environment-core';
 import { Package } from "../../kartoffelgames.environment.core/source/project/package.ts";
 
-export class CliCommand implements ICliPackageCommand {
+export class KgCliCommand implements ICliPackageCommand {
     /**
      * Command description.
      */
@@ -52,7 +52,12 @@ export class CliCommand implements ICliPackageCommand {
 
         // Set all available cli configurations for each cli package.
         for(const lCliCommand of await pProject.cliPackages.readAll('command')) {
-            const lCliPackage = await pProject.cliPackages.createCommand(lCliCommand.configuration.name);
+            const lCliPackage: CliCommand = await pProject.cliPackages.createCommand(lCliCommand.configuration.name);
+
+            // Skip cli packages without configuration.
+            if (!lCliPackage.cliPackageCommand.information.configuration) {
+                continue;
+            }
 
             // Read configuration of command. Unset fields are filled with default values.
             const lCommandConfiguration: any = pPackage.cliConfigurationOf(lCliPackage.cliPackageCommand);

@@ -1,5 +1,5 @@
 {
     "type": "command",
     "name": "sync",
-    "commandEntryClass": "CliCommand"
+    "commandEntryClass": "KgCliCommand"
 }

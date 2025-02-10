@@ -205,13 +205,12 @@ export class Project {
      */
     public readAllPackages(): Array<Package> {
         // Search all deno.json files of root workspaces. Exclude node_modules.
-        const lAllFiles: Array<string> = FileSystem.findFiles(this.rootDirectory, { // TODO: Read from packages path specified in deno.json kg.root
-            depth: 2, // ./packages/{package_name}/deno.json
+        const lAllFiles: Array<string> = FileSystem.findFiles(FileSystem.pathToAbsolute(this.rootDirectory, 'packages'), { // TODO: Read from packages path specified in deno.json kg.root
+            depth: 1, // ./packages/{package_name}/deno.json
             include: {
                 fileNames: ['deno.json'],
                 extensions: ['json']
             },
-            exclude: { directories: ['node_modules'] } // TODO: Remove this.
         });
 
         // Create package list.
@@ -221,6 +220,8 @@ export class Project {
         for (const lFile of lAllFiles) {
             // Use only the directory of each deno.json file.
             const lPackageDirectory: string = FileSystem.directoryOfFile(lFile);
+
+            console.log(lPackageDirectory);
 
             // Create and push package settings.
             lPackageList.push(new Package(this, lPackageDirectory));

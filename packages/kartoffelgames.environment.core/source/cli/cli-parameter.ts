@@ -6,7 +6,21 @@ import { ICliPackageCommand } from "./i-cli-package-command.interface.ts";
  * retrieving parameter values, setting parameter values, and deleting parameters.
  */
 export class CliParameter {
-    public static globals( pParameter: Array<string>): CliParameter{
+    private static readonly mGlobalParameters: Map<string, CliParameterOptionalParameter> = (() => {
+        const lGlobalParameters: Map<string, CliParameterOptionalParameter> = new Map<string, CliParameterOptionalParameter>();
+
+        // Add the --all parameter.
+        lGlobalParameters.set('--all', { fullname: 'all', shortName: 'a', default: null });
+        lGlobalParameters.set('-a', { fullname: 'all', shortName: 'a', default: null });
+
+        // Add the --package parameter.
+        lGlobalParameters.set('--package', { fullname: 'package', shortName: 'p', default: null });
+        lGlobalParameters.set('-p', { fullname: 'package', shortName: 'p', default: null });
+
+        return lGlobalParameters;
+    })();
+
+    public static globals(pParameter: Array<string>): CliParameter {
         // At least one parameter (the root) is required.
         if (pParameter.length === 0) {
             throw new Error('No command parameter found');
@@ -16,13 +30,38 @@ export class CliParameter {
         const lUncheckedParameters: Array<string> = [...pParameter];
 
         // Read root command.
-        const lRootCommand: string = lUncheckedParameters.shift()!
+        const lRootCommand: string = lUncheckedParameters.shift()!;
 
         // Construct cli parameter with the root parameter.
         const lCliParameter: CliParameter = new CliParameter(lRootCommand);
 
+        // Read all optional parameters. Optional parameters must start with dashes.
+        // Convert and check all optional named parameters.
+        while (lUncheckedParameters.length > 0) {
+            // Read next parameter.
+            const lParameter: string = lUncheckedParameters.shift()!;
 
-        // TODO: Define globals in private static.
+            // Continue when parameter is a not a named parameter.
+            if (!lParameter.startsWith('-')) {
+                continue;
+            }
+
+            // Get parameter name.
+            let [lParameterName, lParameterValue] = lParameter.split('=');
+
+            // Get parameter configuration by name.
+            const lOptionalParameter: CliParameterOptionalParameter | undefined = CliParameter.mGlobalParameters.get(lParameterName);
+            if (!lOptionalParameter) {
+                continue
+            }
+
+            // Format parameter value when it is set as string.
+            if (lParameterValue.startsWith('"')) {
+                lParameterValue = lParameter.substring(1, lParameter.length - 1);
+            }
+            // Set optional named parameter.
+            lCliParameter.set(lOptionalParameter.fullname, lParameterValue);
+        }
 
         return lCliParameter;
     }
@@ -101,15 +140,10 @@ export class CliParameter {
             }
         }
 
-        // TODO: Add global parameters pattern.
-
-        // Add the --all parameter. // TODO: 
-        lOptionalParameters.set('--all', { fullname: '--all', shortName: '-a', default: null });
-        lOptionalParameters.set('-a', { fullname: '--all', shortName: '-a', default: null });
-
-        // Add the --package parameter.
-        lOptionalParameters.set('--package', { fullname: '--package', shortName: '-p', default: null });
-        lOptionalParameters.set('-p', { fullname: '--package', shortName: '-p', default: null });
+        // Add global parameters pattern.
+        for(const [lGlobalParameterName, lGlobalParameter] of CliParameter.mGlobalParameters.entries()) {
+            lOptionalParameters.set(lGlobalParameterName, lGlobalParameter);
+        }
 
         // Read all optional parameters. Optional parameters must start with dashes.
         // Convert and check all optional named parameters.
