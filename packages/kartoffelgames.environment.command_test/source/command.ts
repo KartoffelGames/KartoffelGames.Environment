@@ -59,6 +59,13 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
         const lBundleResultSourceMapFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js.map');
         const lCoverageFileDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'coverage');
+        const lConsole: Console = new Console();
+
+        // Skip testing when no test files are specified.
+        if (FileSystem.findFiles(lTestInputDirectory, { include: { extensions: ['ts'] } }).length === 0) {
+            lConsole.writeLine('No test files found.', 'yellow');
+            return;
+        }
 
         // Initialize test output directory.        
         if (!FileSystem.exists(lTestOutputDirectory)) {
@@ -143,7 +150,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
         // Somehow tell that coverage does not work for bundled tests... for now. 
         if (lCoverageEnabled && lPackageConfiguration.bundleRequired) {
-            new Console().writeLine('Coverage is not supported for bundled tests.', 'yellow');
+            lConsole.writeLine('Coverage is not supported for bundled tests.', 'yellow');
         }
 
         // When coverage is on, run 'deno coverage' command.
