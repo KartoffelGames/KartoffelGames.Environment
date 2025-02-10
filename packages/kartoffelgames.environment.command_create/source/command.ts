@@ -1,5 +1,6 @@
-import { CliCommandDescription, CliPackageBlueprintParameter, CliPackageInformation, CliParameter, Console, FileSystem, ICliPackageBlueprintResolver, ICliPackageCommand, Import, Package, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliPackageInformation, CliParameter, Console, FileSystem, ICliPackageCommand, Import, Package, Project } from '@kartoffelgames/environment-core';
 import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
+import { CliPackageBlueprintParameter, ICliPackageBlueprintResolver } from "./i-cli-package-blueprint-resolver.interface.ts";
 
 export class KgCliCommand implements ICliPackageCommand<string> {
     /**
