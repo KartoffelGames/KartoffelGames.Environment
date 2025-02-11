@@ -3,8 +3,9 @@ description: 'Release All packages To Set Registry'
 
 inputs:
   registry-token:
-    required: true
+    required: false
     description: 'Auth-Token to push packages to registry'
+    default: ''
   dry-run:
     required: false
     description: 'Dry run release'
