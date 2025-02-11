@@ -24,6 +24,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             configuration: {
                 name: 'test',
                 default: {
+                    directory: './test',
                     bundleRequired: false
                 },
             }
@@ -52,7 +53,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         this.initialTestDirectory(pPackage);
 
         // Create all paths.
-        const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, 'test');
+        const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
         const lSourceInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, 'source');
         const lTestOutputDirectory = FileSystem.pathToAbsolute(pPackage.directory, '.kg-test');
         const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
@@ -197,5 +198,6 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 }
 
 type TestConfiguration = {
+    directory: string;
     bundleRequired: boolean;
 };

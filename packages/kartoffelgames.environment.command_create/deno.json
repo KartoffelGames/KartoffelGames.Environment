@@ -37,7 +37,8 @@
                 "port": 8088
             },
             "test": {
-                "bundleRequired": false
+                "bundleRequired": false,
+                "directory": "./test"
             }
         },
         "source": "./source"
