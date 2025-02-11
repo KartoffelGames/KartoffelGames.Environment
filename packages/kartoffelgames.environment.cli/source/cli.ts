@@ -40,7 +40,7 @@ import { CliCommand, CliParameter, Console, FileSystem, Import, Package, Process
         const lCliCommand: CliCommand = await lProject.cliPackages.createCommand(lGlobalParameters.rootParameter);
 
         // Read target packages.
-        const lTargetPackageList: Array<Package | null> = new Array<Package | null>(); // TODO: CliParameter.readGlobals(lParameter); creates a CliParameter only with global (--all, --debug ...) parameters.
+        const lTargetPackageList: Array<Package | null> = new Array<Package | null>();
         if (lGlobalParameters.has('all')) {
             lTargetPackageList.push(...lProject.readAllPackages());
         } else if (lGlobalParameters.has('package')) {

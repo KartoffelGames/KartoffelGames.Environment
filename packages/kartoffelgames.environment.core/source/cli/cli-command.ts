@@ -40,7 +40,7 @@ export class CliCommand {
     /**
      * Execute command.
      * @param pParameterInput - Command parameter.
-     * @param pPackage -  Package the command should be applied to. // TODO: Run should support the package parameter.
+     * @param pPackage -  Package the command should be applied to.
      * 
      */
     public async execute(pPackage: Package | null, pParameterInput: Array<string>): Promise<void> {

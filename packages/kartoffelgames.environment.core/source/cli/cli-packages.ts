@@ -100,70 +100,70 @@ export class CliPackages {
         const lProjectRootPackageJsonString: string = FileSystem.read(`${lProjectRoot}/deno.json`);
         const lProjectRootPackageJson: any = JSON.parse(lProjectRootPackageJsonString);
 
-        // All found cli packages.
-        const lCliPackages: Map<string, CliPackageInformation> = new Map<string, CliPackageInformation>();
-
         // Read all available package imports.
         const lPackageImports: Array<string> | undefined = lProjectRootPackageJson['kg']?.['cli'];
 
         // Skip when no cli packages are defined.
         if (!lPackageImports) {
-            return lCliPackages;
+            return new Map<string, CliPackageInformation>();
         }
 
-        // TODO: How to make this linear?
-        return new Promise<Map<string, CliPackageInformation>>((pResolve) => {
-            // Flag to skip searching after a result was aready resolved.
-            let lAlreadyResolved: boolean = false;
+        // Promise list stored all read processes of each package information.
+        const lReadPackageInformationList: Array<Promise<CliPackageInformation>> = new Array<Promise<CliPackageInformation>>();
 
-            // Filter packages for existsing cli config.
-            const lFileReadingList: Array<Promise<void>> = new Array<Promise<void>>();
+        // Read all cli packages in seperate promises.
+        for (const lPackageImport of lPackageImports) {
+            // Import "kg-cli.config.json" from package.
+            const lCliConfigFilePath: URL = Import.resolveToUrl(`${lPackageImport}/kg-cli.config.json`);
 
-            // Try to read all packages.
-            for (const lPackageImport of lPackageImports) {
-                // Import "kg-cli.config.json" from package.
-                const lCliConfigFilePath: URL = Import.resolveToUrl(`${lPackageImport}/kg-cli.config.json`);
+            // Read cli configuration file as json.
+            const lCliPackageInformationPromise: Promise<CliPackageInformation> = fetch(lCliConfigFilePath)
+                .then(async (lCliConfigFileRequest) => {
+                    const lCliConfigFile: CliPackageConfiguration = await lCliConfigFileRequest.json();
 
-                // Read cli configuration file as json.
-                const lFileReadyPromise: Promise<void> = fetch(lCliConfigFilePath)
-                    .then(async (lCliConfigFileRequest) => {
-                        const lCliConfigFile: CliPackageConfiguration = await lCliConfigFileRequest.json();
+                    // Skip when package type does not match.
+                    if (pType && lCliConfigFile.type !== pType) {
+                        throw new Error('Package skipped, type does not match.');
+                    }
 
-                        // Skip when package type does not match.
-                        if (pType && lCliConfigFile.type !== pType) {
-                            return;
-                        }
+                    // Skip when package name does not match.
+                    if (pNameFilter.trim() !== '' && pNameFilter !== lCliConfigFile.name) {
+                        throw new Error('Package skipped, name does not match.');
+                    }
 
-                        // Add dependency to type list.
-                        lCliPackages.set(lCliConfigFile.name, {
-                            packageName: lPackageImport,
-                            configuration: lCliConfigFile
-                        });
+                    return {
+                        packageName: lPackageImport,
+                        configuration: lCliConfigFile
+                    };
+                });
 
-                        // Resolve early when a single package was found.
-                        if (pNameFilter === lCliConfigFile.name) {
-                            lAlreadyResolved = true;
-                            pResolve(lCliPackages);
-                        }
-                    }).catch(() => {
-                        // eslint-disable-next-line no-console
-                        console.warn(`Error reading cli config "${lPackageImport}"`);
-                    });
+            lReadPackageInformationList.push(lCliPackageInformationPromise);
+        }
 
-                lFileReadingList.push(lFileReadyPromise);
+        // Early resolve the quickest found package when name is filtered.
+        if (pNameFilter.trim() !== '') {
+            const lFoundPackage: CliPackageInformation = await Promise.any(lReadPackageInformationList);
+            return new Map<string, CliPackageInformation>([[lFoundPackage.configuration.name, lFoundPackage]]);
+        }
+
+        // Wait for all packages to be read.
+        const lFailablePackagePromiseList: Array<Promise<CliPackageInformation | null>> = lReadPackageInformationList.map((pPromise) => {
+            return pPromise.catch(() => null);
+        });
+        const lFoundPackageList: Array<CliPackageInformation| null> = await Promise.all(lFailablePackagePromiseList);
+
+        // All found cli packages.
+        const lCliPackages: Map<string, CliPackageInformation> = new Map<string, CliPackageInformation>();
+        for (const lCliPackageInformation of lFoundPackageList) {
+            // Filter out all packages that could not be read.
+            if (lCliPackageInformation === null) {
+                continue;
             }
 
-            // Wait for all file readings to finish.
-            Promise.all(lFileReadingList).then(() => {
-                // Dont resolve twice.
-                if (lAlreadyResolved) {
-                    return;
-                }
+            lCliPackages.set(lCliPackageInformation.configuration.name, lCliPackageInformation);
+        }
 
-                // Resolve all packages.
-                pResolve(lCliPackages);
-            });
-        });
+        return lCliPackages;
     }
 }
 

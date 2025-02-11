@@ -173,7 +173,7 @@ export class Project {
      */
     public readAllPackages(): Array<Package> {
         // Search all deno.json files of root workspaces. Exclude node_modules.
-        const lAllFiles: Array<string> = FileSystem.findFiles(FileSystem.pathToAbsolute(this.rootDirectory, 'packages'), { // TODO: Read from packages path specified in deno.json kg.root
+        const lAllFiles: Array<string> = FileSystem.findFiles(FileSystem.pathToAbsolute(this.packagesDirectory), {
             depth: 1, // ./packages/{package_name}/deno.json
             include: {
                 fileNames: ['deno.json'],
