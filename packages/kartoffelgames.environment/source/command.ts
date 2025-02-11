@@ -56,8 +56,11 @@ export class Command implements ICliPackageCommand<string> {
 
         import.meta.resolve;
 
-        // Get url path of project blueprint and fetch it.
-        const lProjectBlueprintZipUrl: URL = Import.resolveToUrl('@kartoffelgames/environment/blueprint/project-blueprint.zip');
+        // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
+        const lProjectBlueprintZipUrlString: string = import.meta.url.replace('command.ts', 'project-blueprint.zip');
+        const lProjectBlueprintZipUrl: URL = new URL(lProjectBlueprintZipUrlString);
+
+        // Fetch project blueprint zip.
         const lProjectBlueprintZipRequest: Response = await fetch(lProjectBlueprintZipUrl);
         const lProjectBlueprintZipBlob: Blob = await lProjectBlueprintZipRequest.blob();
 

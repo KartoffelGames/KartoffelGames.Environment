@@ -214,10 +214,14 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
             // Convert all available blueprints to an absolute path.
             for (const [lBlueprintPackageName, lBlueprintPackagePath] of Object.entries(lPackage.configuration.packageBlueprints.packages)) {
+                // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
+                const lBlueprintFileUrlString: string = Import.resolveToUrl(`${lPackage.packageName}/kg-cli.config.json`).href
+                    .replace('kg-cli.config.json', lBlueprintPackagePath);
+
                 lAvailableBlueprint.set(lBlueprintPackageName, {
                     packageInformation: lPackage,
                     resolverClass: lPackage.configuration.packageBlueprints.resolveClass,
-                    blueprintFileUrl: Import.resolveToUrl(lPackage.packageName + `/` + lBlueprintPackagePath)
+                    blueprintFileUrl: new URL(lBlueprintFileUrlString)
                 });
             }
         }
@@ -241,7 +245,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         try {
             // Import package and get command constructor.
             const lPackageImport: any = await Import.import(pPackage.packageName);
-            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints?.resolveClass] as CliPackageBlueprintResolverConstructor;
+            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints.resolveClass] as CliPackageBlueprintResolverConstructor;
 
             // Create command instance
             return new lPackageCliConstructor();
