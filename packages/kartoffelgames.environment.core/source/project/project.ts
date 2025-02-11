@@ -115,56 +115,17 @@ export class Project {
     }
 
     /**
-     * Add packages as vs code workspace to workspace settings.
-     * @param pWorkspaceName - Name of workspace. 
+     * Add packages as deno workspace to root project.
+     * 
      * @param pWorkspaceFolder - Folder name of workspace.
      */
-    public addWorkspace(pPackageName: string, pPackageDirectory: string): void {
-        // Read workspace file json.
-        const lVsWorkspaceFilePath: string = FileSystem.findFiles(this.rootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
-        const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
-        const lVsWorkspaceFileJson = JSON.parse(lVsWorkspaceFileText);
-
-        // Add new folder to folder list.
-        const lPackageDirectory: string = FileSystem.pathToRelative(this.rootDirectory, pPackageDirectory);
-        const lPackageDirectoryList: Array<{ name: string, path: string; }> = lVsWorkspaceFileJson['folders'];
-        lPackageDirectoryList.push({
-            name: Package.nameToId(pPackageName),
-            path: lPackageDirectory
-        });
-
-        // Sort folder alphabeticaly.
-        lPackageDirectoryList.sort((pFirst, pSecond) => {
-            if (pFirst.name < pSecond.name) { return -1; }
-            if (pFirst.name > pSecond.name) { return 1; }
-            return 0;
-        });
-
-        // Update workspace file.
-        const lAlteredVsWorkspaceFileText = JSON.stringify(lVsWorkspaceFileJson, null, 4);
-        FileSystem.write(lVsWorkspaceFilePath, lAlteredVsWorkspaceFileText);
-
-        // The same for Deno.json
-        const lWorkspaceDenoFilePath: string = FileSystem.pathToAbsolute(this.rootDirectory, 'deno.json');
-        const lWorkspaceDenoFileText = FileSystem.read(lWorkspaceDenoFilePath);
-        const lWorkspaceDenoFileJson = JSON.parse(lWorkspaceDenoFileText);
-
+    public addWorkspace(pPackageDirectory: string): void {
         // Convert to a relative path from the workspace root replace double backslashes with single backslashes and leading with a dot slash.
         let lRelativePackageDirectory: string = FileSystem.pathToRelative(this.rootDirectory, pPackageDirectory);
         lRelativePackageDirectory = `./${lRelativePackageDirectory.replace(/\\/g, '/')}`;
 
-        // Read or create workspaces list.
-        const lWorkspaceDenoFileJsonWorkspaceList: Array<string> = lWorkspaceDenoFileJson['workspace'] ?? new Array<string>();
-
         // Add new workspace folder.
-        lWorkspaceDenoFileJsonWorkspaceList.push(lRelativePackageDirectory);
-
-        // Update deno json file.
-        lWorkspaceDenoFileJson['workspace'] = lWorkspaceDenoFileJsonWorkspaceList;
-
-        // Write deno.json file.
-        const lAlteredWorkspaceDenoFileText = JSON.stringify(lWorkspaceDenoFileJson, null, 4);
-        FileSystem.write(lWorkspaceDenoFilePath, lAlteredWorkspaceDenoFileText);
+        this.mProjectConfiguration.workspace.push(lRelativePackageDirectory);
     }
 
     /**
@@ -233,6 +194,17 @@ export class Project {
         }
 
         return lPackageList;
+    }
+
+    /**
+     * Save project configuration.
+     */
+    public save() {
+        // Create path to deno.json.
+        const lPackageJsonPath: string = FileSystem.pathToAbsolute(this.mRootPath, 'deno.json');
+
+        // Save deno.json.
+        FileSystem.write(lPackageJsonPath, JSON.stringify(this.mProjectConfiguration, null, 4));
     }
 }
 

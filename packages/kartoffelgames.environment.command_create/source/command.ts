@@ -92,7 +92,11 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
         // Update vs code workspaces.
         lConsole.writeLine('Add VsCode Workspace...');
-        pProject.addWorkspace(lNewPackageName, lNewPackageDirectory);
+        pProject.addWorkspace(lNewPackageDirectory);
+        pProject.save();
+
+        // Update vs code workspaces.
+        this.addWorkspace(pProject, lNewPackageName, lNewPackageDirectory);
 
         // Read package information of newly created package.
         const lPackage: Package = pProject.getPackage(lNewPackageName);
@@ -104,6 +108,37 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
         // Display init information.
         lConsole.writeLine('Package successfully created.');
+    }
+
+    /**
+     * Add packages as vs code workspace to workspace settings.
+     * @param pWorkspaceName - Name of workspace. 
+     * @param pWorkspaceFolder - Folder name of workspace.
+     */
+    public addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
+        // Read workspace file json.
+        const lVsWorkspaceFilePath: string = FileSystem.findFiles(pProject.rootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
+        const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
+        const lVsWorkspaceFileJson = JSON.parse(lVsWorkspaceFileText);
+
+        // Add new folder to folder list.
+        const lPackageDirectory: string = FileSystem.pathToRelative(pProject.rootDirectory, pPackageDirectory);
+        const lPackageDirectoryList: Array<{ name: string, path: string; }> = lVsWorkspaceFileJson['folders'];
+        lPackageDirectoryList.push({
+            name: Package.nameToId(pPackageName),
+            path: lPackageDirectory
+        });
+
+        // Sort folder alphabeticaly.
+        lPackageDirectoryList.sort((pFirst, pSecond) => {
+            if (pFirst.name < pSecond.name) { return -1; }
+            if (pFirst.name > pSecond.name) { return 1; }
+            return 0;
+        });
+
+        // Update workspace file.
+        const lAlteredVsWorkspaceFileText = JSON.stringify(lVsWorkspaceFileJson, null, 4);
+        FileSystem.write(lVsWorkspaceFilePath, lAlteredVsWorkspaceFileText);
     }
 
     /**
@@ -236,7 +271,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
      * 
      * @returns - Cli package resolver instance. 
      */
-    public async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliBlueprintPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
+    private async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliBlueprintPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
         if (!pPackage.configuration.packageBlueprints?.resolveClass) {
             throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
         }
