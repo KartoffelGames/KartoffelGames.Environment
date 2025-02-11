@@ -60,6 +60,13 @@ export class Project {
     }
 
     /**
+     * Projects package directory.
+     */
+    public get packagesDirectory(): string {
+        return FileSystem.pathToAbsolute(this.rootDirectory, this.mProjectConfiguration.kg.packages);
+    }
+
+    /**
      * Constructor.
      * 
      * @param pCurrentPath - Project root path.

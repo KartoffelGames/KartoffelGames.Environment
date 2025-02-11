@@ -62,7 +62,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
         // Create watch paths for package source and page directory.
         const lWatchPaths: Array<string> = [
-            FileSystem.pathToAbsolute(pPackage.directory, 'source'),
+            pPackage.sourcreDirectory,
             FileSystem.pathToAbsolute(pPackage.directory, 'page')
         ];
 

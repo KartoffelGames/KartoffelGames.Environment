@@ -118,7 +118,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
         // Get source and target path of blueprint files.
         const lProjectName: string = Package.nameToId(pPackageName);
-        const lTargetPath: string = FileSystem.pathToAbsolute(pProject.rootDirectory, 'packages', lProjectName.toLowerCase());
+        const lTargetPath: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lProjectName.toLowerCase());
 
         // Check if package already exists.
         if (pProject.hasPackage(pPackageName)) {

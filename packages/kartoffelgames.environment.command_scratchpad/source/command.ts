@@ -1,5 +1,4 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Project } from '@kartoffelgames/environment-core';
-import { Package } from "../../kartoffelgames.environment.core/source/project/package.ts";
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
 import { ScratchpadBundler } from "./file_handler/scratchpad-bundler.ts";
 import { ScratchpadFileWatcher } from "./file_handler/scratchpad-file-watcher.ts";
 import { ScratchpadHttpServer } from "./file_handler/scratchpad-http-server.ts";
@@ -43,7 +42,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
         // Create watch paths for package source and scratchpad directory.
         const lWatchPaths: Array<string> = [
-            FileSystem.pathToAbsolute(pPackage.directory, 'source'),
+            pPackage.sourcreDirectory,
             FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad')
         ];
 

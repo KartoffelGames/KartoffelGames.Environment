@@ -1,5 +1,4 @@
-import { CliCommand, CliCommandDescription, CliParameter, Console, ICliPackageCommand, Project } from '@kartoffelgames/environment-core';
-import { Package } from "../../kartoffelgames.environment.core/source/project/package.ts";
+import { CliCommand, CliCommandDescription, CliParameter, Console, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand {
     /**

@@ -16,7 +16,7 @@
         ]
     },
     "kg": {
-        "name": "Kartoffelgames.Environment.Command_test",
+        "name": "Kartoffelgames.Environment.Command_Test",
         "config": {
             "blueprint": "kg-main",
             "bundle": {

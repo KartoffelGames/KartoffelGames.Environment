@@ -86,6 +86,13 @@ export class Package {
     }
 
     /**
+     * Get the source directory of the package.
+     */
+    public get sourcreDirectory(): string {
+        return FileSystem.pathToAbsolute(this.mPackageRootPath, this.mPackageConfiguration.kg.source);
+    }
+
+    /**
      * Constructor.
      * 
      * @param pProject - Project the package belongs to.

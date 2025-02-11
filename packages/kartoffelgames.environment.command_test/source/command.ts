@@ -1,7 +1,6 @@
 import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Process, Project } from '@kartoffelgames/environment-core';
-import { ProcessParameter } from "../../kartoffelgames.environment.core/source/index.ts";
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Process, ProcessParameter, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
     /**
@@ -37,7 +36,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
      * @param pParameter - Command parameter.
      * @param pProject - Project.
      */
-    public async run(_pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
+    public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         // Needs a package to run test.
         if (pPackage === null) {
             throw new Error('Package to run test not specified.');
@@ -54,7 +53,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
         // Create all paths.
         const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
-        const lSourceInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, 'source');
+        const lSourceInputDirectory = pPackage.sourcreDirectory;
         const lTestOutputDirectory = FileSystem.pathToAbsolute(pPackage.directory, '.kg-test');
         const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
         const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
@@ -131,8 +130,12 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         if (lPackageConfiguration.bundleRequired) {
             lTestFilesDirectoryList.push(FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile));
         } else {
-            lTestFilesDirectoryList.push(`test/**/*.ts`);
-            lTestFilesDirectoryList.push(`source/**/*.ts`);
+            // Find the package test and source directory.
+            const lRelativeTestDirectory: string = FileSystem.pathToRelative(pPackage.directory, lTestInputDirectory).slice(2).replace(/\\/g, '/');
+            const lRelativeSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, lSourceInputDirectory).slice(2).replace(/\\/g, '/');
+
+            lTestFilesDirectoryList.push(`${lRelativeTestDirectory}/**/*.ts`);
+            lTestFilesDirectoryList.push(`${lRelativeSourceDirectory}/**/*.ts`);
         }
 
         // Test failed flag to throw error only at the end.
@@ -160,10 +163,15 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
             // Get package directory base name.
             const lPackageDirectoryBaseName: string = FileSystem.pathInformation(pPackage.directory).basename;
+            const lPackageSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, pPackage.sourcreDirectory);
+
+            // Get the relative source direcory from project root of the package with correct format
+            const lAbsoluteSourceDirectory: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lPackageDirectoryBaseName, lPackageSourceDirectory);
+            const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.rootDirectory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/');
 
             // Create coverage command parameter.
             const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
-                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=packages/${lPackageDirectoryBaseName}/source/`
+                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=${lRelativeSouceDirectory}`
             ]);
 
             // Run "deno coverage" command in current console process.
