@@ -19,15 +19,14 @@ jobs:
       - uses: actions/checkout@v3
       # Run local composite test.
       - name: 'Test Packages'
-        uses: ./.github/actions/npm-test
+        uses: ./.github/actions/run-test
       # Dry run publish.
       - name: 'Test Publish'
-        uses: ./.github/actions/release-packages
+        uses: ./.github/actions/release-jsr-packages
         with:
           registry-token: ${{ secrets.CI_GITHUB_TOKEN }}
-          registry-url: 'https://npm.pkg.github.com'
-          registry-scope: '@kartoffelgames'
           dry-run: true
+      # TODO: NPM publish dry run.
       
 
 

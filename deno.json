@@ -19,6 +19,7 @@
         "kg": "deno run -A packages/kartoffelgames.environment.cli/source/cli.ts"
     },
     "imports": {},
+    "lock": false,
     "compilerOptions": {
         "allowUnreachableCode": false,
         "exactOptionalPropertyTypes": true,
