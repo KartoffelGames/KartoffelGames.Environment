@@ -131,8 +131,8 @@ export class Package {
             config: {}
         };
 
-        // Set unset kg defaults.
-        this.mPackageConfiguration.kg.name ??= Package.nameToId(this.mPackageConfiguration.name);
+        // Set unset kg defaults. Allways set updated package id.
+        this.mPackageConfiguration.kg.name = Package.nameToId(this.mPackageConfiguration.name);
         this.mPackageConfiguration.kg.source ??= './source';
         this.mPackageConfiguration.kg.config ??= {};
     }
