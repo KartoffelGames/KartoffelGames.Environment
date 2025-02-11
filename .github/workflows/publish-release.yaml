@@ -20,7 +20,19 @@ jobs:
       - uses: actions/checkout@v3
       # Run local composite test.
       - name: 'Test Packages'
-        uses: ./.github/actions/npm-test
+        uses: ./.github/actions/run-tests
+
+  publish-jsr-packages:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout needed for local composite file.
+      - uses: actions/checkout@v3
+      # Run local composite package release.
+      - name: 'Publish JSR Packages'
+        uses: ./.github/actions/release-jsr-packages
+        with:
+          registry-token: ${{ secrets.CI_JSR_TOKEN }}
 
   publish-npm-packages:
     needs: test
