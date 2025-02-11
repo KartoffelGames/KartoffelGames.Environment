@@ -21,9 +21,9 @@ jobs:
       - uses: actions/checkout@v3
       # Run local composite test.
       - name: 'Test Packages'
-        uses: ./.github/actions/npm-test
+        uses: ./.github/actions/run-tests
 
-  publish-npm-packages:
+  publish-package-version:
     needs: test
     runs-on: ubuntu-latest
     steps:
