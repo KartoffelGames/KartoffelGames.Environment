@@ -65,6 +65,13 @@ export class Package {
     }
 
     /**
+     * Get the package configuration file.
+     */
+    public get configuration(): PackageConfigurationFile {
+        return this.mPackageConfiguration;
+    }
+
+    /**
      * The root directory path of the package.
      */
     public get directory(): string {
@@ -252,12 +259,6 @@ export class Package {
     };
 }
 
-export interface PackageRootConfiguration {
-    name: string;
-    source: string;
-    config: Record<string, any>;
-}
-
 export type PackageConfigurationFile = {
     [key: string]: any;
 
@@ -265,3 +266,9 @@ export type PackageConfigurationFile = {
     version: string;
     kg: PackageRootConfiguration;
 };
+
+export interface PackageRootConfiguration {
+    name: string;
+    source: string;
+    config: Record<string, any>;
+}

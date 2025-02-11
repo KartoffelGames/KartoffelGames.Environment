@@ -32,10 +32,16 @@ export class KgCliCommand implements ICliPackageCommand {
 
         // TODO: This command needs a version sync from root deno.json. Or something to bump all versions to the same.
 
+        // Sync package version with the project version.
+        lConsole.writeLine('Sync package version...');
+        pPackage.configuration.version = pProjectHandler.version;
+
         // Update package kg configuration.
         lConsole.writeLine('Sync package configuration...');
-
         await this.updatePackageConfiguration(pProjectHandler, pPackage);
+
+        // Save package configuration.
+        pPackage.save();
 
         lConsole.writeLine('Sync completed');
     }
@@ -47,10 +53,8 @@ export class KgCliCommand implements ICliPackageCommand {
      * @param pProject - Project handler.
      */
     private async updatePackageConfiguration(pProject: Project, pPackage: Package): Promise<void> {
-        // TODO: Maybe remove it and only update version and name.
-
         // Set all available cli configurations for each cli package.
-        for(const lCliCommand of await pProject.cliPackages.readAll('command')) {
+        for (const lCliCommand of await pProject.cliPackages.readAll('command')) {
             const lCliPackage: CliCommand = await pProject.cliPackages.createCommand(lCliCommand.configuration.name);
 
             // Skip cli packages without configuration.
@@ -64,8 +68,6 @@ export class KgCliCommand implements ICliPackageCommand {
             // And set it again.
             pPackage.setCliConfigurationOf(lCliPackage.cliPackageCommand, lCommandConfiguration);
         }
-
-        pPackage.save();
     }
 }
 

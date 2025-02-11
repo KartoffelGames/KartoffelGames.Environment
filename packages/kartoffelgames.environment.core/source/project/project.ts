@@ -67,6 +67,13 @@ export class Project {
     }
 
     /**
+     * Get the project version.
+     */
+    public get version(): string {
+        return this.mProjectConfiguration.version;
+    }
+
+    /**
      * Constructor.
      * 
      * @param pCurrentPath - Project root path.
@@ -101,6 +108,7 @@ export class Project {
 
         // Set project root configuration. Default any missing values.
         this.mProjectConfiguration = lPackageJson;
+        this.mProjectConfiguration.version ??= '0.0.0';
         this.mProjectConfiguration.workspace = lPackageJson.workspace ?? [];
         this.mProjectConfiguration.kg = lPackageJson.kg ?? {
             root: true,
@@ -217,6 +225,7 @@ export interface ProjectRootConfiguration {
 export type ProjectConfigurationFile = {
     [key: string]: any;
 
+    version: string;
     workspace: Array<string>;
     kg: ProjectRootConfiguration;
 };
