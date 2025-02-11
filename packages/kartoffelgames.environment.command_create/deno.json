@@ -18,7 +18,7 @@
         ]
     },
     "kg": {
-        "name": "Kartoffelgames.Environment.Command_Help",
+        "name": "Kartoffelgames.Environment.Command_Create",
         "config": {
             "blueprint": "kg-main",
             "pack": false,
