@@ -1,0 +1,26 @@
+{
+    "name": "@kartoffelgames/environment-command-transform",
+    "version": "0.0.1",
+    "tasks": {},
+    "imports": {
+        "@deno/dnt": "jsr:@deno/dnt"
+    },
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json",
+            "kg-cli.config.json"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Transform",
+        "config": {
+            "package-blueprint": "kg-main"
+        },
+        "source": "./source"
+    }
+}

@@ -49,6 +49,10 @@
             "path": "packages\\kartoffelgames.environment.command_test"
         },
         {
+            "name": "Kartoffelgames.Environment.Command_Transform",
+            "path": "./packages\\kartoffelgames.environment.command_transform"
+        },
+        {
             "name": "Kartoffelgames.Environment.Core",
             "path": "packages\\kartoffelgames.environment.core"
         },

@@ -356,6 +356,10 @@ export type FileSearchOptions = {
          */
         fileNames?: Array<string>;
         directories?: Array<string>;
+
+        /**
+         * Extensions without leading dot.
+         */
         extensions?: Array<string>;
     },
     exclude?: {
@@ -364,6 +368,10 @@ export type FileSearchOptions = {
          */
         fileNames?: Array<string>;
         directories?: Array<string>;
+
+        /**
+         * Extensions without leading dot.
+         */
         extensions?: Array<string>;
     };
     /**
