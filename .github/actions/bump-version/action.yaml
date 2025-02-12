@@ -4,14 +4,10 @@ description: 'Bump Package version and'
 inputs:
   version-type:
     required: true
-    description: 'Version type to update. [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]'
+    description: 'Version type to update. [<newversion> | major | minor | patch]'
   github-token:
     required: true
     description: 'Github Auth-Token'
-  prerelease-id:
-    description: 'Prerelease ID'
-    required: false
-    default: ''
 
 outputs:
   new-version:
@@ -24,35 +20,26 @@ runs:
     - uses: actions/checkout@v3
       with:  
         token: ${{ inputs.github-token }}
-    - uses: actions/setup-node@v3
+    - uses: denoland/setup-deno@v2
       with:
-        node-version: 18
+        deno-version: v2.x 
     # Setup git
     - name: Setup Git
       run: |
         git config --global user.email "github@kartoffelgames.com"
         git config --global user.name "Bump-Action"
       shell: bash
-    # Build for side effects
+    # Install dependencies
     - name: Build
-      run: |
-        npm ci --ignore-scripts
-        npm run build -- --force
+      run: deno install
       shell: bash
-    # Bump root package
+    # Bump root project version
     - name: Bump Root Package Version Numbers
-      id: root-version-bump
-      run: echo "new-version=$(npm version ${{ inputs.version-type }} --git-tag-version false --commit-hooks false --workspaces-update false --preid ${{ inputs.prerelease-id }})" >> $GITHUB_OUTPUT
-      shell: bash
-    # Bump all child package versions
-    - name: Bump Child Package Version Numbers
-      run: npm version ${{ steps.root-version-bump.outputs.new-version }} -ws --git-tag-version false --commit-hooks false --workspaces-update false
+      run: deno task kg bump -t="${{ inputs.version-type }}"
       shell: bash
     # Sync versions between packages.
-    - name: Sync Package Versions
-      run: | 
-        npm run sync
-        npm update
+    - name: Sync Child Package Version Numbers
+      run: deno task kg sync -a
       shell: bash
     # Push updated version with new version number as commit message
     - name: Push updated versions
