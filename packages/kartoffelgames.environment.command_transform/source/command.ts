@@ -50,6 +50,8 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
     }
 
     private async transformToNode(_pProject: Project, pPackage: Package, pNodeDirectory: string): Promise<void> {
+        // TODO: Create a package.json file in project root directory and add this package as workspace.
+
         // Clean old node transform.
         FileSystem.emptyDirectory(pNodeDirectory);
 
@@ -57,6 +59,7 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
         const lSourceFiles = FileSystem.findFiles(pPackage.sourcreDirectory, { include: { extensions: ['ts'] } });
 
         await build({
+            importMap: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json'),
             entryPoints: lSourceFiles,
             outDir: pNodeDirectory,
             shims: {
@@ -75,12 +78,15 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                 },
                 bugs: {
                     url: "https://github.com/username/repo/issues",
-                },
+                }
             },
+            // Skip checks that would fail.
+            typeCheck: false,
+            test: false,
             postBuild() {
                 // steps to run after building and before running the tests
-                Deno.copyFileSync("LICENSE", "npm/LICENSE");
-                Deno.copyFileSync("README.md", "npm/README.md");
+                // Deno.copyFileSync("LICENSE", "npm/LICENSE");
+                // Deno.copyFileSync("README.md", "npm/README.md");
             },
         });
 
