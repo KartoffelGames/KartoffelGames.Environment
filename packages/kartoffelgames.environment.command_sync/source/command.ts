@@ -30,8 +30,6 @@ export class KgCliCommand implements ICliPackageCommand {
 
         const lConsole = new Console();
 
-        // TODO: This command needs a version sync from root deno.json. Or something to bump all versions to the same.
-
         // Sync package version with the project version.
         lConsole.writeLine('Sync package version...');
         pPackage.configuration.version = pProjectHandler.version;
@@ -70,11 +68,3 @@ export class KgCliCommand implements ICliPackageCommand {
         }
     }
 }
-
-type PackageChangeInformation = {
-    packageName: string;
-    path: string;
-    json: any;
-    changed: boolean;
-    version: string;
-};

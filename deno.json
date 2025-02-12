@@ -12,7 +12,8 @@
         "./packages/kartoffelgames.environment.command_scratchpad",
         "./packages/kartoffelgames.environment.command_sync",
         "./packages/kartoffelgames.environment.command_test",
-        "./packages/kartoffelgames.environment.core"
+        "./packages/kartoffelgames.environment.core",
+        "././packages/kartoffelgames.environment.command_bump"
     ],
     "tasks": {
         "lint": "deno run -A npm:eslint --config eslint.config.js",
@@ -62,7 +63,9 @@
             "@kartoffelgames/environment-command-bundle",
             "@kartoffelgames/environment-command-scratchpad",
             "@kartoffelgames/environment-command-page",
-            "@kartoffelgames/environment-command-test"
-        ]
+            "@kartoffelgames/environment-command-test",
+            "@kartoffelgames/environment-command-bump"
+        ],
+        "packages": "./packages"
     }
 }

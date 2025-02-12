@@ -53,6 +53,14 @@ export class Project {
     }
 
     /**
+     * Get the package configuration file.
+     */
+    public get configuration(): ProjectConfigurationFile {
+        return this.mProjectConfiguration;
+    }
+
+
+    /**
      * Project root path.
      */
     public get rootDirectory(): string {

@@ -19,8 +19,8 @@ export class KgCliCommand implements ICliPackageCommand<string> {
                         blueprint: {
                             shortName: 'b'
                         },
-                        package: {
-                            shortName: 'p'
+                        packagename: {
+                            shortName: 'n'
                         }
                     }
                 }
@@ -76,8 +76,8 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         // Find name. Get from command parameter on promt user.
         const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-]+\/)?[a-z0-9-]+$/;
         let lNewPackageName: string;
-        if (pParameter.has('package_name')) {
-            lNewPackageName = pParameter.get('package_name');
+        if (pParameter.has('packagename')) {
+            lNewPackageName = pParameter.get('packagename');
         } else {
             lNewPackageName = await lConsole.promt('Package Name: ', lPackageNameValidation);
         }

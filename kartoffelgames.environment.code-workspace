@@ -17,6 +17,10 @@
             "path": "packages\\kartoffelgames.environment.cli"
         },
         {
+            "name": "Kartoffelgames.Environment.Command_Bump",
+            "path": "./packages\\kartoffelgames.environment.command_bump"
+        },
+        {
             "name": "Kartoffelgames.Environment.Command_Bundle",
             "path": "packages\\kartoffelgames.environment.command_bundle"
         },
