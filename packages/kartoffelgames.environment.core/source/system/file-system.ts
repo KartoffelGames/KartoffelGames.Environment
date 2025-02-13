@@ -1,4 +1,5 @@
 import * as path from '@std/path';
+import * as fs from "@std/fs";
 
 export class FileSystem {
     /**
@@ -327,8 +328,23 @@ export class FileSystem {
         return lTextDecoder.decode(lFileData);
     }
 
+    
     /**
-     * Read file content.
+     * Deletes the file at the specified path.
+     * 
+     * @param pPath - The path to the file to be deleted.
+     * @throws {Deno.errors.PermissionDenied} If the process lacks permissions to delete the file.
+     */
+    public static delete(pPath: string): void {
+        if(!FileSystem.exists(pPath)) {
+            return;
+        }
+
+        Deno.removeSync(pPath);
+    }
+
+    /**
+     * Writes file content.
      * Overrides content.
      *
      * @param pPath - Path to file.

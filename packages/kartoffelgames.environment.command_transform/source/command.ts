@@ -1,5 +1,5 @@
-import { CliCommandDescription, CliParameter, ICliPackageCommand, Package, Project, FileSystem } from '@kartoffelgames/environment-core';
 import { build } from "@deno/dnt";
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> {
     /**
@@ -10,7 +10,15 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
             command: {
                 description: 'Transform packages into another runtime.',
                 parameters: {
-                    root: 'transform'
+                    root: 'transform',
+                    optional: {
+                        node: {
+                            shortName: 'n',
+                        },
+                        clean: {
+                            shortName: 'c',
+                        }
+                    }
                 }
             },
             configuration: {
@@ -29,7 +37,7 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
      * @param _pParameter - Command parameter.
      * @param pCommandPackages - All cli packages grouped by type.
      */
-    public async run(pProject: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
+    public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         // Needs a package to run page.
         if (pPackage === null) {
             throw new Error('Package to run page not specified.');
@@ -38,10 +46,29 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
         // Read cli configuration.
         const lConfiguration: TransformConfiguration = pPackage.cliConfigurationOf(this);
 
+        // Create console.
+        const lConsole: Console = new Console();
+
         // Transform to node when specified.
-        if (lConfiguration.enableNode) {
+        if (pParameter.has('node')) {
+            lConsole.writeLine('Transforming package to node runtime.');
+
+            if (lConfiguration.enableNode) {
+                const lNodeDirectory = FileSystem.pathToAbsolute(pPackage.directory, lConfiguration.nodeDirectory);
+                await this.transformToNode(pProject, pPackage, lNodeDirectory);
+            } else {
+                lConsole.writeLine('Node transformation is disabled in configuration.');
+            }
+        }
+
+        // Clean output directories when specified.
+        if (pParameter.has('clean')) {
+            lConsole.writeLine('Cleaning output directorys.');
+
             const lNodeDirectory = FileSystem.pathToAbsolute(pPackage.directory, lConfiguration.nodeDirectory);
-            await this.transformToNode(pProject, pPackage, lNodeDirectory);
+            if(lConfiguration.enableNode && FileSystem.exists(lNodeDirectory)) {
+                FileSystem.deleteDirectory(lNodeDirectory);
+            }
         }
     }
 
@@ -70,70 +97,76 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
         const lPublishedFiles: Array<string> = new Array<string>();
 
         // Filter all none ts files from exported file list.
-        for (let i = lExportedFiles.length - 1; i > -1; i--) {
-            const lExportedFilePath: string = lExportedFiles[i];
+        for (let lIndex = lExportedFiles.length - 1; lIndex > -1; lIndex--) {
+            const lExportedFilePath: string = lExportedFiles[lIndex];
             const lExportedFileInformation = FileSystem.pathInformation(lExportedFilePath);
 
-            console.log(lExportedFileInformation.extension)
-
-            if(lExportedFileInformation.extension !== '.ts') {
+            if (lExportedFileInformation.extension !== '.ts') {
                 // Remove it from the exported files.
-                lExportedFiles.splice(i, 1);
+                lExportedFiles.splice(lIndex, 1);
 
                 // Add it to the published files.
                 lPublishedFiles.push(lExportedFilePath);
             }
         }
 
+        // Create a temporary ts file that sits at root and forces dnt to keep the original directory structure.
+        const lTemporaryCoreImportPlaceholderFilePath: string = FileSystem.pathToAbsolute(pPackage.directory, 'core-import-placeholder.ts');
+        lExportedFiles.push(lTemporaryCoreImportPlaceholderFilePath);
+
         // Convert all exported files to relative paths.
         const lRelativeExportedFiles: Array<string> = lExportedFiles.map((pFilePath: string) => {
             return FileSystem.pathToRelative(Deno.cwd(), pFilePath);
         });
+
+        // TODO: Add all published files to lPublishedFiles list.
 
         // Convert all published files into relative paths with the package directory as root.
         const lRelativePublishedFiles: Array<string> = lPublishedFiles.map((pFilePath: string) => {
             return FileSystem.pathToRelative(pPackage.directory, pFilePath);
         });
 
-        await build({
-            importMap: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json'),
-            entryPoints: lRelativeExportedFiles,
-            outDir: pNodeDirectory,
-            shims: {
-                // Shim anything available.
-                deno: true,
-                timers: true,
-                prompts: true,
-                blob: true,
-                crypto: true,
-                domException: true,
-                undici: true,
-                webSocket: true
-            },
-            package: {
-                // package.json properties
-                name: pPackage.configuration.name,
-                version: pPackage.configuration.version,
-                description: pPackage.id,
-                license: "MIT",
-                repository: {
-                    type: "git",
-                    url: "git+https://github.com/username/repo.git",
-                },
-                bugs: {
-                    url: "https://github.com/username/repo/issues",
-                }
-            },
-            // Skip checks that would fail.
-            typeCheck: false,
-            test: false,
-            postBuild() {
-                // steps to run after building and before running the tests
-                // Deno.copyFileSync("LICENSE", "npm/LICENSE");
-                // Deno.copyFileSync("README.md", "npm/README.md");
-            },
-        });
+        // Write temporary core-import-placeholder.ts file.
+        FileSystem.write(lTemporaryCoreImportPlaceholderFilePath, `// This file is used to keep the original directory structure.\n`);
 
+        try {
+            await build({
+                importMap: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json'),
+                entryPoints: lRelativeExportedFiles,
+                outDir: pNodeDirectory,
+                shims: {
+                    // Shim anything available.
+                    deno: true,
+                    timers: true,
+                    prompts: true,
+                    blob: true,
+                    crypto: true,
+                    domException: true,
+                    undici: true,
+                    webSocket: true
+                },
+                package: {
+                    // package.json properties
+                    name: pPackage.configuration.name,
+                    version: pPackage.configuration.version,
+                    description: pPackage.id,
+                    license: pPackage.configuration["license"] ?? null
+                },
+                // Skip checks that would fail.
+                typeCheck: false,
+                test: false,
+                postBuild() {
+                    // TODO: Copy all published files to the node esm and script directory.
+
+                    // steps to run after building and before running the tests
+                    // Deno.copyFileSync("LICENSE", "npm/LICENSE");
+                    // Deno.copyFileSync("README.md", "npm/README.md");
+                },
+            });
+        } finally {
+            // Remove temporary core-import-placeholder.ts file.
+            FileSystem.delete(lTemporaryCoreImportPlaceholderFilePath);
+        }
     }
 }
 

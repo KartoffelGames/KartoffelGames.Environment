@@ -19,7 +19,10 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Transform",
         "config": {
-            "package-blueprint": "kg-main"
+            "package-blueprint": "kg-main",
+            "transform": {
+                "enableNode": true
+            }
         },
         "source": "./source"
     }
