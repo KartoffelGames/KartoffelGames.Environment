@@ -35,6 +35,7 @@ jobs:
           registry-token: ${{ secrets.CI_JSR_TOKEN }}
 
   publish-npm-packages:
+    if: ${{ hashFiles('package.json') != '' }}
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -49,6 +50,7 @@ jobs:
           registry-scope: '@kartoffelgames'
 
   publish-github-packages:
+    if: ${{ hashFiles('package.json') != '' }}
     needs: test
     runs-on: ubuntu-latest
     steps:
