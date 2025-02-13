@@ -62,14 +62,6 @@
         }
     ],
     "settings": {
-        "files.exclude": {
-            "**/.nyc_output": true,
-            "**/.turbo": true,
-            "**/*.tsbuildinfo": true,
-            "**/coverage": true,
-            "**/dist": true,
-            "**/node_modules": true
-        },
         "typescript.implementationsCodeLens.enabled": true,
         "typescript.referencesCodeLens.enabled": true,
         "javascript.format.semicolons": "insert",
