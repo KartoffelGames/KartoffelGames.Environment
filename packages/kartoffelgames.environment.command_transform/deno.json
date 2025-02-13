@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "tasks": {},
     "imports": {
-        "@deno/dnt": "jsr:@deno/dnt"
+        "@deno/dnt": "jsr:@deno/dnt@0.41.3"
     },
     "exports": {
         ".": "./source/index.ts",
