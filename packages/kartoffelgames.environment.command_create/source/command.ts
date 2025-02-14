@@ -117,12 +117,12 @@ export class KgCliCommand implements ICliPackageCommand<string> {
      */
     public addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
-        const lVsWorkspaceFilePath: string = FileSystem.findFiles(pProject.rootDirectory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
+        const lVsWorkspaceFilePath: string = FileSystem.findFiles(pProject.directory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
         const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
         const lVsWorkspaceFileJson = JSON.parse(lVsWorkspaceFileText);
 
         // Add new folder to folder list.
-        const lPackageDirectory: string = FileSystem.pathToRelative(pProject.rootDirectory, pPackageDirectory);
+        const lPackageDirectory: string = FileSystem.pathToRelative(pProject.directory, pPackageDirectory);
         const lPackageDirectoryList: Array<{ name: string, path: string; }> = lVsWorkspaceFileJson['folders'];
         lPackageDirectoryList.push({
             name: Package.nameToId(pPackageName),

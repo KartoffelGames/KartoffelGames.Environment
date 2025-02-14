@@ -96,7 +96,7 @@ export class CliPackages {
      */
     private async readAvailableProjectCommandPackages(pNameFilter: string, pType?: string): Promise<Map<string, CliPackageInformation>> {
         // Find root of project and read the json.
-        const lProjectRoot: string = Project.findRoot(this.mProject.rootDirectory);
+        const lProjectRoot: string = Project.findRoot(this.mProject.directory);
         const lProjectRootPackageJsonString: string = FileSystem.read(`${lProjectRoot}/deno.json`);
         const lProjectRootPackageJson: any = JSON.parse(lProjectRootPackageJsonString);
 

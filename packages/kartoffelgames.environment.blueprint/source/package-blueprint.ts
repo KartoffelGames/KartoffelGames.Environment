@@ -15,7 +15,7 @@ export class CliPackageBlueprint implements ICliPackageBlueprintResolver {
         const lPackageFolderName: string = pParameter.packageDirectory.split(/\/|\\/g).pop()!;
 
         // Get root project directory name.
-        const lRootProjectName: string = pProjectHandler.rootDirectory.split(/\/|\\/g).pop()!;
+        const lRootProjectName: string = pProjectHandler.directory.split(/\/|\\/g).pop()!;
 
         // Check all files.
         for (const lFilePath of lPackageFileList) {

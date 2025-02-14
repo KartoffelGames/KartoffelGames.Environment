@@ -65,15 +65,23 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
         if (pParameter.has('clean')) {
             lConsole.writeLine('Cleaning output directorys.');
 
-            const lNodeDirectory = FileSystem.pathToAbsolute(pPackage.directory, lConfiguration.nodeDirectory);
-            if(lConfiguration.enableNode && FileSystem.exists(lNodeDirectory)) {
-                FileSystem.deleteDirectory(lNodeDirectory);
+            // Clean node directory when enabled.
+            if (lConfiguration.enableNode) {
+                this.cleanNodeDirectory(pProject, pPackage, lConfiguration.nodeDirectory);
             }
         }
     }
 
-    private async transformToNode(_pProject: Project, pPackage: Package, pNodeDirectory: string): Promise<void> {
-        // TODO: Create a package.json file in project root directory and add this package as workspace.
+    private async transformToNode(pProject: Project, pPackage: Package, pNodeDirectory: string): Promise<void> {
+        // Create a package.json file in project root directory if it does not exist.
+        const lRootProjectPackageJsonFilePath: string = FileSystem.pathToAbsolute(pProject.directory, 'package.json');
+        if (!FileSystem.exists(lRootProjectPackageJsonFilePath)) {
+            // Create package.json file.
+            FileSystem.write(lRootProjectPackageJsonFilePath, JSON.stringify({
+                private: true,
+                workspaces: []
+            }, null, 4));
+        }
 
         // Clean old node transform.
         FileSystem.emptyDirectory(pNodeDirectory);
@@ -163,9 +171,63 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                     // Deno.copyFileSync("README.md", "npm/README.md");
                 },
             });
+
+            // Add package path to root project's package.json workspaces.
+            const lRootRelativePackagePath = FileSystem.pathToRelative(pProject.directory, pNodeDirectory);
+            const lRootProjectPackageJson = JSON.parse(FileSystem.read(lRootProjectPackageJsonFilePath));
+
+            // Init workspace array if it does not exist.
+            if (!lRootProjectPackageJson.workspaces) {
+                lRootProjectPackageJson.workspaces = new Array<string>();
+            }
+
+            // Check if package path is not already in workspaces.
+            if (!lRootProjectPackageJson.workspaces.includes(lRootRelativePackagePath)) {
+                lRootProjectPackageJson.workspaces.push(lRootRelativePackagePath);
+            }
+
+            // Write package.json file.
+            FileSystem.write(lRootProjectPackageJsonFilePath, JSON.stringify(lRootProjectPackageJson, null, 4));
         } finally {
             // Remove temporary core-import-placeholder.ts file.
             FileSystem.delete(lTemporaryCoreImportPlaceholderFilePath);
+        }
+    }
+
+    /**
+     * Deletes the specified node directory.
+     * Removes the package from the root project's package.json workspaces.
+     * Deletes the root project's package.json if no workspaces are left, otherwise updates it.
+     *
+     * @param pProject - The project containing the node directory.
+     * @param pPackage - The package to be removed from the root project's package.json.
+     * @param pRelativeNodeDirectory - The path to the node directory to be cleaned.
+     */
+    private cleanNodeDirectory(pProject: Project, pPackage: Package, pRelativeNodeDirectory: string): void {
+        const lNodeDirectory = FileSystem.pathToAbsolute(pPackage.directory, pRelativeNodeDirectory);
+
+        // Remove node directory.
+        if (FileSystem.exists(lNodeDirectory)) {
+            FileSystem.emptyDirectory(lNodeDirectory);
+        }
+
+        // Remove package from root package json.
+        const lRootProjectPackageJsonFilePath: string = FileSystem.pathToAbsolute(pProject.directory, 'package.json');
+        if (FileSystem.exists(lRootProjectPackageJsonFilePath)) {
+            // Read package.json file.
+            const lRootProjectPackageJson = JSON.parse(FileSystem.read(lRootProjectPackageJsonFilePath));
+
+            // Remove package path from workspaces.
+            const lPackagePath = FileSystem.pathToRelative(pProject.directory, pPackage.directory);
+            lRootProjectPackageJson.workspaces = lRootProjectPackageJson.workspaces.filter((pWorkspace: string) => pWorkspace !== lPackagePath);
+
+            // Remove package json when no package is left.
+            if (lRootProjectPackageJson.workspaces.length === 0) {
+                FileSystem.delete(lRootProjectPackageJsonFilePath);
+            } else {
+                // Write package.json file.
+                FileSystem.write(lRootProjectPackageJsonFilePath, JSON.stringify(lRootProjectPackageJson, null, 4));
+            }
         }
     }
 }

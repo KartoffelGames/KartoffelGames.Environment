@@ -54,7 +54,7 @@ import { CliCommand, CliParameter, Console, FileSystem, Import, Package, Process
 
         // Print debug information.
         if (lDebugEnabled) {
-            lConsole.writeLine(`Project root: ${lProject.rootDirectory}`, 'green');
+            lConsole.writeLine(`Project root: ${lProject.directory}`, 'green');
 
             // Print all packages.
             lConsole.writeLine(`CLI-Packages:`, 'green');

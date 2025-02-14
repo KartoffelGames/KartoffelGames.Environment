@@ -167,7 +167,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
             // Get the relative source direcory from project root of the package with correct format
             const lAbsoluteSourceDirectory: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lPackageDirectoryBaseName, lPackageSourceDirectory);
-            const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.rootDirectory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/');
+            const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.directory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/');
 
             // Create coverage command parameter.
             const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [

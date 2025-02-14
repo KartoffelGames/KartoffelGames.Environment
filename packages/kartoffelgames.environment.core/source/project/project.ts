@@ -63,7 +63,7 @@ export class Project {
     /**
      * Project root path.
      */
-    public get rootDirectory(): string {
+    public get directory(): string {
         return this.mRootPath;
     }
 
@@ -71,7 +71,7 @@ export class Project {
      * Projects package directory.
      */
     public get packagesDirectory(): string {
-        return FileSystem.pathToAbsolute(this.rootDirectory, this.mProjectConfiguration.kg.packages);
+        return FileSystem.pathToAbsolute(this.directory, this.mProjectConfiguration.kg.packages);
     }
 
     /**
@@ -137,7 +137,7 @@ export class Project {
      */
     public addWorkspace(pPackageDirectory: string): void {
         // Convert to a relative path from the workspace root replace double backslashes with single backslashes and leading with a dot slash.
-        let lRelativePackageDirectory: string = FileSystem.pathToRelative(this.rootDirectory, pPackageDirectory);
+        let lRelativePackageDirectory: string = FileSystem.pathToRelative(this.directory, pPackageDirectory);
         lRelativePackageDirectory = `./${lRelativePackageDirectory.replace(/\\/g, '/')}`;
 
         // Add new workspace folder.
