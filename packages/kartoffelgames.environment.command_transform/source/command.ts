@@ -208,7 +208,7 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
 
         // Remove node directory.
         if (FileSystem.exists(lNodeDirectory)) {
-            FileSystem.emptyDirectory(lNodeDirectory);
+            FileSystem.deleteDirectory(lNodeDirectory);
         }
 
         // Remove package from root package json.
@@ -218,12 +218,24 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
             const lRootProjectPackageJson = JSON.parse(FileSystem.read(lRootProjectPackageJsonFilePath));
 
             // Remove package path from workspaces.
-            const lPackagePath = FileSystem.pathToRelative(pProject.directory, pPackage.directory);
+            const lPackagePath = FileSystem.pathToRelative(pProject.directory, FileSystem.pathToAbsolute(pPackage.directory, pRelativeNodeDirectory));
             lRootProjectPackageJson.workspaces = lRootProjectPackageJson.workspaces.filter((pWorkspace: string) => pWorkspace !== lPackagePath);
 
             // Remove package json when no package is left.
             if (lRootProjectPackageJson.workspaces.length === 0) {
                 FileSystem.delete(lRootProjectPackageJsonFilePath);
+
+                // Remove a possible node_modules directory.
+                const lNodeModulesDirectory = FileSystem.pathToAbsolute(pProject.directory, 'node_modules');
+                if (FileSystem.exists(lNodeModulesDirectory)) {
+                    FileSystem.deleteDirectory(lNodeModulesDirectory);
+                }
+
+                // Remove a possible package-lock.json file.
+                const lPackageLockJsonFilePath = FileSystem.pathToAbsolute(pProject.directory, 'package-lock.json');
+                if (FileSystem.exists(lPackageLockJsonFilePath)) {
+                    FileSystem.delete(lPackageLockJsonFilePath);
+                }
             } else {
                 // Write package.json file.
                 FileSystem.write(lRootProjectPackageJsonFilePath, JSON.stringify(lRootProjectPackageJson, null, 4));
