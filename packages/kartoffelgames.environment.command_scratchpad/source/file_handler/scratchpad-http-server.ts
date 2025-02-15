@@ -1,10 +1,10 @@
 import { Console, FileSystem } from '@kartoffelgames/environment-core';
 
 export class ScratchpadHttpServer {
-    private readonly mScratchpadFiles: ScratchpadHttpServerScratchpadFiles;
-    private readonly mRootPath: string;
-    private readonly mPort: number;
     private readonly mOpenWebsockets: Set<WebSocket>;
+    private readonly mPort: number;
+    private readonly mRootPath: string;
+    private readonly mScratchpadFiles: ScratchpadHttpServerScratchpadFiles;    
     private mServer: Deno.HttpServer<Deno.NetAddr> | null;
 
     /**
@@ -25,17 +25,6 @@ export class ScratchpadHttpServer {
     }
 
     /**
-     * Set scratchpad bundle files served by the server.
-     * 
-     * @param pSourceFile - Javascript source file.
-     * @param pSourceMapFile - Source map file.
-     */
-    public setScratchpadBundle(pSourceFile: Uint8Array, pSourceMapFile: Uint8Array) {
-        this.mScratchpadFiles.source = pSourceFile;
-        this.mScratchpadFiles.map = pSourceMapFile;
-    }
-
-    /**
      * Trigger a browser refresh for all connected websockets.
      */
     public refreshConnectedBrowser(): void {
@@ -45,6 +34,17 @@ export class ScratchpadHttpServer {
         for (const lSocket of this.mOpenWebsockets) {
             lSocket.send('REFRESH');
         }
+    }
+
+    /**
+     * Set scratchpad bundle files served by the server.
+     * 
+     * @param pSourceFile - Javascript source file.
+     * @param pSourceMapFile - Source map file.
+     */
+    public setScratchpadBundle(pSourceFile: Uint8Array, pSourceMapFile: Uint8Array): void {
+        this.mScratchpadFiles.source = pSourceFile;
+        this.mScratchpadFiles.map = pSourceMapFile;
     }
 
     /**
@@ -106,11 +106,11 @@ export class ScratchpadHttpServer {
                     // Try catch when file is locked or locking while reading.
                     try {
                         // Open file and return response.
-                        const file = await Deno.open(lExistigFilePath, { read: true });
-                        return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
-                    } catch (e) {
+                        const lFile = await Deno.open(lExistigFilePath, { read: true });
+                        return new Response(lFile.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
+                    } catch (_pError) {
                         // Somthing went wrong idk what.
-                        return new Response('File could not be read.', { status: 500 });
+                        return new Response('File could not be read. ' + _pError, { status: 500 });
                     }
                 }
             }

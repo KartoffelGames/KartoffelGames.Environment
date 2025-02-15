@@ -3,10 +3,10 @@ import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-c
 import { CliParameter, Console, Project, Package } from '@kartoffelgames/environment-core';
 
 export class PageBundler {
+    private readonly mBundledFiles: PageBundlerFiles;
     private readonly mCoreBundleRequired: boolean;
     private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
-    private readonly mBundledFiles: PageBundlerFiles;
     private readonly mWebsocketPort: number;
 
     /**

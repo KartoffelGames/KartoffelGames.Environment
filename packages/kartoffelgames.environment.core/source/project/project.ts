@@ -168,23 +168,6 @@ export class Project {
     }
 
     /**
-     * Find package information of name. 
-     * 
-     * @param pName - Package id name. Can be the package name too.
-     * 
-     * @returns Package information or null if not found.
-     */
-    private findPackageByName(pName: string): Package | null {
-        // Converts package name to id name. When it is already the id name, the convert does nothing.
-        const lPackageIdName: string = Package.nameToId(pName);
-
-        // Read all available packages and find the package with the provided id name.
-        const lPackageInformation = this.readAllPackages().find(pPackage => pPackage.id === lPackageIdName);
-
-        return lPackageInformation ?? null;
-    }
-
-    /**
      * Read all projects of package.
      */
     public readAllPackages(): Array<Package> {
@@ -215,12 +198,29 @@ export class Project {
     /**
      * Save project configuration.
      */
-    public save() {
+    public save(): void {
         // Create path to deno.json.
         const lPackageJsonPath: string = FileSystem.pathToAbsolute(this.mRootPath, 'deno.json');
 
         // Save deno.json.
         FileSystem.write(lPackageJsonPath, JSON.stringify(this.mProjectConfiguration, null, 4));
+    }
+
+    /**
+     * Find package information of name. 
+     * 
+     * @param pName - Package id name. Can be the package name too.
+     * 
+     * @returns Package information or null if not found.
+     */
+    private findPackageByName(pName: string): Package | null {
+        // Converts package name to id name. When it is already the id name, the convert does nothing.
+        const lPackageIdName: string = Package.nameToId(pName);
+
+        // Read all available packages and find the package with the provided id name.
+        const lPackageInformation = this.readAllPackages().find(pPackage => pPackage.id === lPackageIdName);
+
+        return lPackageInformation ?? null;
     }
 }
 

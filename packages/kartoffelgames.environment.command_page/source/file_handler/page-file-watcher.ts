@@ -1,6 +1,6 @@
 export class PageFileWatcher {
-    private readonly mWatchedPaths: Array<string>;
     private readonly mListener: Array<PageFileWatcherListener>;
+    private readonly mWatchedPaths: Array<string>;
     private mWatcher: Deno.FsWatcher | null;
 
     /**

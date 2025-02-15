@@ -63,7 +63,7 @@ export class CliPackages {
      * 
      * @returns cli package information or null if not found.
      */
-    public async read<TTypeValues extends Record<string, any> = {}>(pName: string, pType: string): Promise<CliPackageInformation<TTypeValues> | null> {
+    public async read<TTypeValues extends Record<string, any> = object>(pName: string, pType: string): Promise<CliPackageInformation<TTypeValues> | null> {
         // Read all packages with by a name filter.
         const lFoundPackages: Map<string, CliPackageInformation> = await this.readAvailableProjectCommandPackages(pName, pType);
 
@@ -78,7 +78,7 @@ export class CliPackages {
      * 
      * @returns all available cli package informations of the provided type.s  
      */
-    public async readAll<TTypeValues extends Record<string, any> = {}>(pType?: string): Promise<Array<CliPackageInformation<TTypeValues>>> {
+    public async readAll<TTypeValues extends Record<string, any> = object>(pType?: string): Promise<Array<CliPackageInformation<TTypeValues>>> {
         // Read all packages with by a name filter.
         const lFoundPackages: Map<string, CliPackageInformation> = await this.readAvailableProjectCommandPackages('', pType);
 
@@ -118,8 +118,8 @@ export class CliPackages {
 
             // Read cli configuration file as json.
             const lCliPackageInformationPromise: Promise<CliPackageInformation> = fetch(lCliConfigFilePath)
-                .then(async (lCliConfigFileRequest) => {
-                    const lCliConfigFile: CliPackageConfiguration = await lCliConfigFileRequest.json();
+                .then(async (pCliConfigFileRequest) => {
+                    const lCliConfigFile: CliPackageConfiguration = await pCliConfigFileRequest.json();
 
                     // Skip when package type does not match.
                     if (pType && lCliConfigFile.type !== pType) {
@@ -167,12 +167,12 @@ export class CliPackages {
     }
 }
 
-export type CliPackageConfiguration<TTypeValues extends Record<string, any> = {}> = TTypeValues & {
+export type CliPackageConfiguration<TTypeValues extends Record<string, any> = object> = TTypeValues & {
     type: string;
     name: string;
 };
 
-export type CliPackageInformation<TTypeValues extends Record<string, any> = {}> = {
+export type CliPackageInformation<TTypeValues extends Record<string, any> = object> = {
     packageName: string;
     configuration: CliPackageConfiguration<TTypeValues>;
 };

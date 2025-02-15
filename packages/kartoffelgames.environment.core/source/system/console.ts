@@ -46,8 +46,10 @@ export class Console {
      */
     public writeLine(pText: string, pColor?: string): void {
         if (pColor) {
+            // eslint-disable-next-line no-console
             console.log(`%c${pText}`, `color: ${pColor}`);
         } else {
+            // eslint-disable-next-line no-console
             console.log(pText);
         }
     }

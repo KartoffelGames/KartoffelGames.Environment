@@ -20,52 +20,6 @@ export class CliParameter {
         return lGlobalParameters;
     })();
 
-    public static globals(pParameter: Array<string>): CliParameter {
-        // At least one parameter (the root) is required.
-        if (pParameter.length === 0) {
-            throw new Error('No command parameter found');
-        }
-
-        // Create copy specified parameter.
-        const lUncheckedParameters: Array<string> = [...pParameter];
-
-        // Read root command.
-        const lRootCommand: string = lUncheckedParameters.shift()!;
-
-        // Construct cli parameter with the root parameter.
-        const lCliParameter: CliParameter = new CliParameter(lRootCommand);
-
-        // Read all optional parameters. Optional parameters must start with dashes.
-        // Convert and check all optional named parameters.
-        while (lUncheckedParameters.length > 0) {
-            // Read next parameter.
-            const lParameter: string = lUncheckedParameters.shift()!;
-
-            // Continue when parameter is a not a named parameter.
-            if (!lParameter.startsWith('-')) {
-                continue;
-            }
-
-            // Get parameter name.
-            let [lParameterName, lParameterValue] = lParameter.split('=');
-
-            // Get parameter configuration by name.
-            const lOptionalParameter: CliParameterOptionalParameter | undefined = CliParameter.mGlobalParameters.get(lParameterName);
-            if (!lOptionalParameter) {
-                continue;
-            }
-
-            // Format parameter value when it is set as string.
-            if (lParameterValue && lParameterValue.startsWith('"')) {
-                lParameterValue = lParameter.substring(1, lParameter.length - 1);
-            }
-            // Set optional named parameter.
-            lCliParameter.set(lOptionalParameter.fullname, lParameterValue);
-        }
-
-        return lCliParameter;
-    }
-
     /**
      * Creates a `CliParameter` instance for a given command and its parameters.
      *
@@ -157,7 +111,7 @@ export class CliParameter {
             }
 
             // Get parameter name.
-            let [lParameterName, lParameterValue] = lParameter.split('=');
+            const [lParameterName, lParameterValue] = lParameter.split('=');
 
             // Get parameter configuration by name.
             const lOptionalParameter: CliParameterOptionalParameter | undefined = lOptionalParameters.get(lParameterName);
@@ -165,12 +119,14 @@ export class CliParameter {
                 throw new Error(`Unexpected parameter "${lParameter}". Parameter does not exist.`);
             }
 
+            let lClearedParameterValue: string = lParameterValue;
+
             // Format parameter value when it is set as string.
-            if (lParameterValue && lParameterValue.startsWith('"')) {
-                lParameterValue = lParameter.substring(1, lParameter.length - 1);
+            if (lClearedParameterValue && lClearedParameterValue.startsWith('"')) {
+                lClearedParameterValue = lParameter.substring(1, lParameter.length - 1);
             }
             // Set optional named parameter.
-            lCliParameter.set(lOptionalParameter.fullname, lParameterValue);
+            lCliParameter.set(lOptionalParameter.fullname, lClearedParameterValue);
         }
 
         // Fill in default values for optional parameters.
@@ -183,6 +139,63 @@ export class CliParameter {
             if (!lCliParameter.has(lOptionalParameterName)) {
                 lCliParameter.set(lOptionalParameterName, lOptionalParameter.default);
             }
+        }
+
+        return lCliParameter;
+    }
+
+    /**
+     * Parses an array of command-line parameters and constructs a `CliParameter` object that only contains global parameters.
+     * 
+     * @param pParameter - An array of strings representing the command-line parameters.
+     * 
+     * @returns A `CliParameter` object constructed from the provided parameters.
+     * 
+     * @throws {Error} If no command parameter value was specified.
+     */
+    public static globals(pParameter: Array<string>): CliParameter {
+        // At least one parameter (the root) is required.
+        if (pParameter.length === 0) {
+            throw new Error('No command parameter found');
+        }
+
+        // Create copy specified parameter.
+        const lUncheckedParameters: Array<string> = [...pParameter];
+
+        // Read root command.
+        const lRootCommand: string = lUncheckedParameters.shift()!;
+
+        // Construct cli parameter with the root parameter.
+        const lCliParameter: CliParameter = new CliParameter(lRootCommand);
+
+        // Read all optional parameters. Optional parameters must start with dashes.
+        // Convert and check all optional named parameters.
+        while (lUncheckedParameters.length > 0) {
+            // Read next parameter.
+            const lParameter: string = lUncheckedParameters.shift()!;
+
+            // Continue when parameter is a not a named parameter.
+            if (!lParameter.startsWith('-')) {
+                continue;
+            }
+
+            // Get parameter name.
+            const [lParameterName, lParameterValue] = lParameter.split('=');
+
+            // Get parameter configuration by name.
+            const lOptionalParameter: CliParameterOptionalParameter | undefined = CliParameter.mGlobalParameters.get(lParameterName);
+            if (!lOptionalParameter) {
+                continue;
+            }
+
+            let lClearedParameterValue: string = lParameterValue;
+
+            // Format parameter value when it is set as string.
+            if (lClearedParameterValue && lClearedParameterValue.startsWith('"')) {
+                lClearedParameterValue = lParameter.substring(1, lParameter.length - 1);
+            }
+            // Set optional named parameter.
+            lCliParameter.set(lOptionalParameter.fullname, lClearedParameterValue);
         }
 
         return lCliParameter;
@@ -209,25 +222,15 @@ export class CliParameter {
     }
 
     /**
-     * Check if parameter exists.
-     * Parameter can exist but have no value.
+     * Delete parameter.
      * 
      * @param pParameterName - Parameter name.
-     * 
-     * @returns - True if parameter exists.
      */
-    public has(pParameterName: string): boolean {
-        return this.mParameters.has(pParameterName);
+    public delete(pParameterName: string): void {
+        this.mParameters.delete(pParameterName);
     }
 
-    /**
-     * Get parameter value.
-     * Throws error if parameter does not exist or has no value.
-     * 
-     * @param pParameterName - Parameter name.
-     * 
-     * @returns - Parameter value.
-     */
+    
     /**
      * Retrieves the value of a specified parameter.
      *
@@ -256,6 +259,18 @@ export class CliParameter {
     }
 
     /**
+     * Check if parameter exists.
+     * Parameter can exist but have no value.
+     * 
+     * @param pParameterName - Parameter name.
+     * 
+     * @returns - True if parameter exists.
+     */
+    public has(pParameterName: string): boolean {
+        return this.mParameters.has(pParameterName);
+    }
+
+    /**
      * Set parameter value.
      * Setting null value sets parameter to exist but have no value.
      * 
@@ -264,15 +279,6 @@ export class CliParameter {
      */
     public set(pParameterName: string, pValue: string | null): void {
         this.mParameters.set(pParameterName, pValue);
-    }
-
-    /**
-     * Delete parameter.
-     * 
-     * @param pParameterName - Parameter name.
-     */
-    public delete(pParameterName: string): void {
-        this.mParameters.delete(pParameterName);
     }
 }
 

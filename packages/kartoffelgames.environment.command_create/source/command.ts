@@ -115,7 +115,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
      * @param pWorkspaceName - Name of workspace. 
      * @param pWorkspaceFolder - Folder name of workspace.
      */
-    public addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
+    private addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
         const lVsWorkspaceFilePath: string = FileSystem.findFiles(pProject.directory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
         const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
@@ -234,6 +234,31 @@ export class KgCliCommand implements ICliPackageCommand<string> {
     }
 
     /**
+     * Create a new instance of a package blueprint resolver.
+     * 
+     * @param pPackage - Package information.
+     * 
+     * @returns - Cli package resolver instance. 
+     */
+    private async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliBlueprintPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
+        if (!pPackage.configuration.packageBlueprints?.resolveClass) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
+        }
+
+        // Catch any create errors for malfunctioning packages.
+        try {
+            // Import package and get command constructor.
+            const lPackageImport: any = await Import.import(pPackage.packageName);
+            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints.resolveClass] as CliPackageBlueprintResolverConstructor;
+
+            // Create command instance
+            return new lPackageCliConstructor();
+        } catch (e) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
+        }
+    }
+
+    /**
      * Create all package blueprint definition class. 
      * @param pBlueprintPackages - Cli packages.
      */
@@ -263,32 +288,6 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
         return lAvailableBlueprint;
     }
-
-    /**
-     * Create a new instance of a package blueprint resolver.
-     * 
-     * @param pPackage - Package information.
-     * 
-     * @returns - Cli package resolver instance. 
-     */
-    private async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliBlueprintPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
-        if (!pPackage.configuration.packageBlueprints?.resolveClass) {
-            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
-        }
-
-        // Catch any create errors for malfunctioning packages.
-        try {
-            // Import package and get command constructor.
-            const lPackageImport: any = await Import.import(pPackage.packageName);
-            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints.resolveClass] as CliPackageBlueprintResolverConstructor;
-
-            // Create command instance
-            return new lPackageCliConstructor();
-        } catch (e) {
-            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
-        }
-    }
-
 }
 
 type Blueprint = {

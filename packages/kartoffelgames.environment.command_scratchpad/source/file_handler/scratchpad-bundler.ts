@@ -3,10 +3,10 @@ import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-c
 import { CliParameter, Console, Package, Project } from '@kartoffelgames/environment-core';
 
 export class ScratchpadBundler {
+    private readonly mBundledFiles: ScratchpadBundlerFiles;
     private readonly mCoreBundleRequired: boolean;
     private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
-    private readonly mBundledFiles: ScratchpadBundlerFiles;
     private readonly mWebsocketPort: number;
 
     /**

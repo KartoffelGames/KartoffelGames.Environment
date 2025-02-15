@@ -53,7 +53,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
         // Create all paths.
         const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
-        const lSourceInputDirectory = pPackage.sourcreDirectory;
+        const lSourceInputDirectory = pPackage.sourceDirectory;
         const lTestOutputDirectory = FileSystem.pathToAbsolute(pPackage.directory, '.kg-test');
         const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
         const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
@@ -163,7 +163,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
             // Get package directory base name.
             const lPackageDirectoryBaseName: string = FileSystem.pathInformation(pPackage.directory).basename;
-            const lPackageSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, pPackage.sourcreDirectory);
+            const lPackageSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, pPackage.sourceDirectory);
 
             // Get the relative source direcory from project root of the package with correct format
             const lAbsoluteSourceDirectory: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lPackageDirectoryBaseName, lPackageSourceDirectory);

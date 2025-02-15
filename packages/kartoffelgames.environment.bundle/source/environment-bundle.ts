@@ -31,14 +31,14 @@ export class EnvironmentBundle {
      *  
      * @returns Build output of esbuild build. 
      */
-    private async bundlePackageContent(pPackage: Package, pInputContent: EnvironmentBundleInputContent, lLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
+    private async bundlePackageContent(pPackage: Package, pInputContent: EnvironmentBundleInputContent, pLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
         // Convert the relative resolve path into a absolute path.
         pInputContent.outputBasename = pInputContent.outputBasename.replace('<packagename>', pPackage.id);
         pInputContent.inputResolveDirectory = FileSystem.pathToAbsolute(pPackage.directory, pInputContent.inputResolveDirectory);
 
         // Build bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
-            loader: lLoader,
+            loader: pLoader,
 
             // For some higher reason the deno plugins does not have the correct type definition.
             plugins: [

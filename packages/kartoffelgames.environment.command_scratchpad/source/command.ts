@@ -42,7 +42,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
         // Create watch paths for package source and scratchpad directory.
         const lWatchPaths: Array<string> = [
-            pPackage.sourcreDirectory,
+            pPackage.sourceDirectory,
             FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad')
         ];
 
@@ -96,10 +96,18 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         await lHttpServer.start();
     }
 
-    /***
-     * Initialize scratchpad files.
+    
+    /**
+     * Initializes the scratchpad files for the given package.
+     * 
+     * This method creates a scratchpad directory and initializes the following files:
+     * - `index.html`: A basic HTML file with a linked CSS file and a script.
+     * - `index.css`: A basic CSS file that styles a paragraph element.
+     * - `index.ts`: A TypeScript file that logs "Hello World!!!" to the console.
+     * 
+     * @param pPackage - The package for which the scratchpad files are to be initialized.
      */
-    public initScratchpadFiles(pPackage: Package): void {
+    private initScratchpadFiles(pPackage: Package): void {
         const lScratchpadDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad');
 
         // Create scratchpad directorys.

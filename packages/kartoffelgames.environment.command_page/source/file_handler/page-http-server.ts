@@ -1,9 +1,9 @@
 import { Console, FileSystem } from '@kartoffelgames/environment-core';
 
 export class PageHttpServer {
-    private readonly mRootPath: string;
-    private readonly mPort: number;
     private readonly mOpenWebsockets: Set<WebSocket>;
+    private readonly mPort: number;
+    private readonly mRootPath: string;
     private mServer: Deno.HttpServer<Deno.NetAddr> | null;
 
     /**
@@ -90,11 +90,11 @@ export class PageHttpServer {
                     // Try catch when file is locked or locking while reading.
                     try {
                         // Open file and return response.
-                        const file = await Deno.open(lExistigFilePath, { read: true });
-                        return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
-                    } catch (e) {
+                        const lFile = await Deno.open(lExistigFilePath, { read: true });
+                        return new Response(lFile.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
+                    } catch (pError) {
                         // Somthing went wrong idk what.
-                        return new Response('File could not be read.', { status: 500 });
+                        return new Response('File could not be read.' + pError, { status: 500 });
                     }
                 }
             }
