@@ -2,10 +2,6 @@ name: 'Release Packages'
 description: 'Release All packages To Set Registry'
 
 inputs:
-  registry-token:
-    required: false
-    description: 'Auth-Token to push packages to registry'
-    default: ''
   dry-run:
     required: false
     description: 'Dry run release'
@@ -32,7 +28,7 @@ runs:
     # Release Public Packages
     - name: Release
       if: ${{ inputs.dry-run == 'false' }}
-      run: deno publish --token ${{ inputs.registry-token }}
+      run: deno publish
       shell: bash
       
     # Release Public Packages on dry run
