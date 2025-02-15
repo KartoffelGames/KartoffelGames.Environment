@@ -61,7 +61,7 @@ export class Command implements ICliPackageCommand<string> {
         import.meta.resolve;
 
         // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
-        const lProjectBlueprintZipUrlString: string = import.meta.url.replace('command.ts', 'project-blueprint.zip');
+        const lProjectBlueprintZipUrlString: string = import.meta.url.replace('source/command.ts', 'blueprint/project-blueprint.zip');
         const lProjectBlueprintZipUrl: URL = new URL(lProjectBlueprintZipUrlString);
 
         // Fetch project blueprint zip.
@@ -76,9 +76,6 @@ export class Command implements ICliPackageCommand<string> {
         try {
             // Copy files.
             lConsole.writeLine('Copy files...');
-
-            // Create target directory.
-            FileSystem.createDirectory(lTargetPath);
 
             // Decompress blueprint into target directory.
             for await (const lZipEntry of lZipReader.getEntriesGenerator()) {
@@ -108,7 +105,7 @@ export class Command implements ICliPackageCommand<string> {
             lConsole.writeLine('ERROR: Try rollback.');
 
             // Rollback by deleting package directory.
-            FileSystem.deleteDirectory(lTargetPath);
+            FileSystem.emptyDirectory(lTargetPath);
 
             // Rethrow error.
             throw lError;
