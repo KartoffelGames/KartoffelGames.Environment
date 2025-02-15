@@ -44,7 +44,7 @@ runs:
     # Export new version number to action output
     - name: Bump Root Package Version Numbers
       id: root-version
-      run: echo "new-version=$(deno eval \"console.log('v'+JSON.parse(new TextDecoder('utf-8').decode(Deno.readFileSync('./deno.json'))).version);\")" >> $GITHUB_OUTPUT
+      run: echo "new-version=$(deno eval "console.log('v'+JSON.parse(new TextDecoder('utf-8').decode(Deno.readFileSync('./deno.json'))).version);")" >> $GITHUB_OUTPUT
       shell: bash
     # Push updated version with new version number as commit message
     - name: Push updated versions
