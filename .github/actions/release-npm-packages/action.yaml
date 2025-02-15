@@ -36,7 +36,7 @@ runs:
 
     # Start node transformation
     - name: Node Transformation
-      run: deno task kg transform --node -all
+      run: deno task kg transform --node --all
       shell: bash
 
     # Release Public Packages
