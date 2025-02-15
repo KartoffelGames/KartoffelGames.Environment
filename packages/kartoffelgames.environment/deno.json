@@ -4,7 +4,7 @@
     "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
-        "@zip-js/zip-js": "jsr:@zip-js/zip-js"
+        "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.7.57"
     },
     "exports": {
         ".": "./source/index.ts"
