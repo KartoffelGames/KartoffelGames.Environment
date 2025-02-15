@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment-command-sync",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {},
