@@ -23,15 +23,18 @@ runs:
     - name: Deno install
       run: deno install
       shell: bash
-    # Build
+
+    # Bundle packages.
     - name: Build
       run: deno task kg bundle --all
       shell: bash
+
     # Release Public Packages
     - name: Release
       if: ${{ inputs.dry-run == 'false' }}
       run: deno publish --token ${{ inputs.registry-token }}
       shell: bash
+      
     # Release Public Packages on dry run
     - name: Release dry run
       if: ${{ inputs.dry-run == 'true' }}

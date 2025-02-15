@@ -20,8 +20,8 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[Version-Bump]') }}
     runs-on: ubuntu-latest
     steps:
-      # Checkout needed for local composite file.
       - uses: actions/checkout@v3
+
       # Run local composite test.
       - name: 'Test Packages'
         uses: ./.github/actions/run-tests
@@ -31,8 +31,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      # Checkout needed for local composite file.
       - uses: actions/checkout@v3
+      
       # Run local composite bump version.
       - name: 'Bump Version'
         uses: ./.github/actions/bump-version

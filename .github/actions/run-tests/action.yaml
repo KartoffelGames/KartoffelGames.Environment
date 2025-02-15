@@ -8,11 +8,13 @@ runs:
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x 
+
     # Init deno cache 
     - name: Deno Install
       run: deno install
       shell: bash
-    # Run NPM Test
+      
+    # Run Test
     - name: Tests
       run: deno task kg test --all
       shell: bash

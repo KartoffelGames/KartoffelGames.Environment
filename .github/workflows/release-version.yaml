@@ -17,8 +17,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      # Checkout needed for local composite file.
       - uses: actions/checkout@v3
+
       # Run local composite test.
       - name: 'Test Packages'
         uses: ./.github/actions/run-tests
@@ -27,14 +27,16 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      # Checkout needed for local composite file.
       - uses: actions/checkout@v3
+
       # Create bad changelog
       - name: Generate Changelog
         uses: scottbrenner/generate-changelog-action@master
         id: generate-changelog
         env:
           REPO: ${{ github.repository }}
+      
+      # Create github release
       - name: Create Release
         uses: softprops/action-gh-release@v1
         env:

@@ -25,25 +25,31 @@ runs:
         node-version: 18
         registry-url: ${{ inputs.registry-url }}
         scope: ${{ inputs.registry-scope }}
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x 
 
-    # Clean NPM Install
-    - name: NPM install
-      run: npm ci --ignore-scripts
-      shell: bash
-    # Build
+    # Bundle packages.
     - name: Build
-      run: npm run build -- --force
+      run: deno task kg bundle --all
       shell: bash
+
+    # Start node transformation
+    - name: Node Transformation
+      run: deno task kg transform --node -all
+      shell: bash
+
     # Release Public Packages
     - name: Release
-      if: ${{ inputs.dry-run == 'false' }}
+      if: ${{ (inputs.dry-run == 'false') && (hashFiles('package.json') != '') }}
       run: npm publish -ws --access public
       env:
         NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
       shell: bash
+      
     # Release Public Packages on dry run
     - name: Release dry run
-      if: ${{ inputs.dry-run == 'true' }}
+      if: ${{ (inputs.dry-run == 'true') && (hashFiles('package.json') != '') }}
       run: npm publish --dry-run -ws --access public
       env:
         NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
