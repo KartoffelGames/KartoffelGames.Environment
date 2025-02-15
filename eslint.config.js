@@ -16,7 +16,7 @@ export default typescriptlint.config(
         "languageOptions": {
             "parser": tsPluginParser,
             "parserOptions": {
-                project: './deno.json'
+                project: './tsconfig.json'
             },
         },
         "plugins": {
