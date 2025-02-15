@@ -1,5 +1,5 @@
 import { build } from "@deno/dnt";
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, ProcessContext, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> {
     /**
@@ -124,7 +124,7 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
 
         // Convert all exported files to relative paths.
         const lRelativeExportedFiles: Array<string> = lExportedFiles.map((pFilePath: string) => {
-            return FileSystem.pathToRelative(Deno.cwd(), pFilePath);
+            return FileSystem.pathToRelative(ProcessContext.workingDirectory, pFilePath);
         });
 
         // Add all published files to lPublishedFiles list.
@@ -222,12 +222,12 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                 typeCheck: false,
                 test: false,
                 postBuild() {
-                    for(const lRelativePublishedFile of lRelativePublishedFiles) {
+                    for (const lRelativePublishedFile of lRelativePublishedFiles) {
                         // Create absolute paths for the source and target copy paths.
                         const lSourceAbsoluteTargetPath: string = FileSystem.pathToAbsolute(pPackage.directory, lRelativePublishedFile);
                         const lTargetAbsoluteEsmPath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'esm', lRelativePublishedFile);
                         const lTargetAbsoluteScriptPath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'script', lRelativePublishedFile);
-                        const lTargetAbsoluteSourcePath: string =  FileSystem.pathToAbsolute(pNodeDirectory, 'src', lRelativePublishedFile);
+                        const lTargetAbsoluteSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'src', lRelativePublishedFile);
 
                         // Create directories.
                         FileSystem.createDirectory(FileSystem.pathInformation(lTargetAbsoluteEsmPath).directory);
