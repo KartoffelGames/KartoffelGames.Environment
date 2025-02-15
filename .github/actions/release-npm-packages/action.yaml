@@ -44,7 +44,7 @@ runs:
     # Release Public Packages on dry run
     - name: Release dry run
       if: ${{ inputs.dry-run == 'true' }}
-      run: npm publish -dry-run -ws --access public
+      run: npm publish --dry-run -ws --access public
       env:
         NODE_AUTH_TOKEN: ${{ inputs.registry-token }}
       shell: bash
