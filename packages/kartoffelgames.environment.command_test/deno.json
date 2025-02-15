@@ -37,7 +37,11 @@
                 "bundleRequired": false,
                 "directory": "./test"
             },
-            "package-blueprint": ""
+            "package-blueprint": "",
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
         },
         "source": "./source"
     }

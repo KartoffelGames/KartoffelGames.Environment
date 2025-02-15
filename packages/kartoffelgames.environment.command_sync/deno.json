@@ -38,6 +38,10 @@
             "test": {
                 "bundleRequired": false,
                 "directory": "./test"
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
             }
         },
         "source": "./source"

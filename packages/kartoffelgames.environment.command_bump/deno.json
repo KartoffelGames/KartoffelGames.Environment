@@ -19,7 +19,28 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Bump",
         "config": {
-            "package-blueprint": "kg-main"
+            "package-blueprint": "kg-main",
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "directory": "./test",
+                "bundleRequired": false
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
         },
         "source": "./source"
     }
