@@ -102,7 +102,7 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
         }
 
         // Store any file that is not exported so it is included in the installed package.
-        const lPublishedFiles: Array<string> = new Array<string>();
+        let lPublishedFiles: Array<string> = new Array<string>();
 
         // Filter all none ts files from exported file list.
         for (let lIndex = lExportedFiles.length - 1; lIndex > -1; lIndex--) {
@@ -127,7 +127,65 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
             return FileSystem.pathToRelative(Deno.cwd(), pFilePath);
         });
 
-        // TODO: Add all published files to lPublishedFiles list.
+        // Add all published files to lPublishedFiles list.
+        for (const lIncludedPublishedFile of pPackage.configuration['publish']?.['include'] ?? []) {
+            // When it is a single file, add it to the published files.
+            const lSingleFileOrDirectoryPath: string = FileSystem.pathToAbsolute(pPackage.directory, lIncludedPublishedFile);
+            if (FileSystem.exists(lSingleFileOrDirectoryPath) && FileSystem.pathInformation(lSingleFileOrDirectoryPath).isFile) {
+                lPublishedFiles.push(lSingleFileOrDirectoryPath);
+                continue;
+            }
+
+            // When it is a directory, add all files in the directory to the published files.
+            if (FileSystem.exists(lSingleFileOrDirectoryPath) && FileSystem.pathInformation(lSingleFileOrDirectoryPath).isDirectory) {
+                lPublishedFiles.push(...FileSystem.findFiles(lSingleFileOrDirectoryPath));
+                continue;
+            }
+
+            // When it is neighter a file or directory, it might be a glob pattern.
+            lPublishedFiles.push(...FileSystem.glob(pPackage.directory, lSingleFileOrDirectoryPath));
+        }
+
+        // Find all paths that are set in the exclude export property.
+        const lExcludedExportFiles: Array<string> = new Array<string>();
+        for (const lIncludedPublishedFile of pPackage.configuration['publish']?.['exclude'] ?? []) {
+            // When it is a single file, add it to the published files.
+            const lSingleFileOrDirectoryPath: string = FileSystem.pathToAbsolute(pPackage.directory, lIncludedPublishedFile);
+            if (FileSystem.exists(lSingleFileOrDirectoryPath) && FileSystem.pathInformation(lSingleFileOrDirectoryPath).isFile) {
+                lExcludedExportFiles.push(lSingleFileOrDirectoryPath);
+                continue;
+            }
+
+            // When it is a directory, add all files in the directory to the published files.
+            if (FileSystem.exists(lSingleFileOrDirectoryPath) && FileSystem.pathInformation(lSingleFileOrDirectoryPath).isDirectory) {
+                lExcludedExportFiles.push(...FileSystem.findFiles(lSingleFileOrDirectoryPath));
+                continue;
+            }
+
+            // When it is neighter a file or directory, it might be a glob pattern.
+            lExcludedExportFiles.push(...FileSystem.glob(pPackage.directory, lSingleFileOrDirectoryPath));
+        }
+
+        // Remove all excluded files from the published files.
+        for (const lExcludedExportFile of lExcludedExportFiles) {
+            const lExcludedExportFileIndex = lPublishedFiles.indexOf(lExcludedExportFile);
+            if (lExcludedExportFileIndex !== -1) {
+                lPublishedFiles.splice(lExcludedExportFileIndex, 1);
+            }
+        }
+
+        // Remove all ts files from the published files.
+        for (let lIndex = lPublishedFiles.length - 1; lIndex > -1; lIndex--) {
+            const lPublishedFilePath: string = lPublishedFiles[lIndex];
+            const lPublishedFileInformation = FileSystem.pathInformation(lPublishedFilePath);
+
+            if (lPublishedFileInformation.extension === '.ts') {
+                lPublishedFiles.splice(lIndex, 1);
+            }
+        }
+
+        // Remove dublicates from published files.
+        lPublishedFiles = Array.from(new Set(lPublishedFiles));
 
         // Convert all published files into relative paths with the package directory as root.
         const lRelativePublishedFiles: Array<string> = lPublishedFiles.map((pFilePath: string) => {
@@ -164,11 +222,16 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                 typeCheck: false,
                 test: false,
                 postBuild() {
-                    // TODO: Copy all published files to the node esm and script directory.
+                    for(const lRelativePublishedFile of lRelativePublishedFiles) {
+                        // Create absolute paths for the source and target copy paths.
+                        const lSourceAbsoluteTargetPath: string = FileSystem.pathToAbsolute(pPackage.directory, lRelativePublishedFile);
+                        const lSourceAbsoluteEsmSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'esm', lRelativePublishedFile);
+                        const lSourceAbsoluteScriptSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'script', lRelativePublishedFile);
 
-                    // steps to run after building and before running the tests
-                    // Deno.copyFileSync("LICENSE", "npm/LICENSE");
-                    // Deno.copyFileSync("README.md", "npm/README.md");
+                        // Copy.
+                        FileSystem.copyFile(lSourceAbsoluteTargetPath, lSourceAbsoluteEsmSourcePath);
+                        FileSystem.copyFile(lSourceAbsoluteTargetPath, lSourceAbsoluteScriptSourcePath);
+                    }
                 },
             });
 

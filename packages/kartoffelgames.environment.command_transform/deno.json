@@ -11,7 +11,7 @@
     },
     "publish": {
         "include": [
-            "source/",
+            "source/**/*.ts",
             "deno.json",
             "kg-cli.config.json"
         ]

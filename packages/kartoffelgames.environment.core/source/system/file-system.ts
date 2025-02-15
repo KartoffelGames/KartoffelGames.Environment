@@ -46,6 +46,16 @@ export class FileSystem {
     }
 
     /**
+     * Copy file to destination.
+     * 
+     * @param pSource - Source file path.
+     * @param pDestination - Destination file path.
+     */
+    public static copyFile(pSource: string, pDestination: string): void {
+        Deno.copyFileSync(pSource, pDestination,);
+    }
+
+    /**
      * Remove directory.
      * @param pPath - Directory path.
      */
@@ -267,6 +277,25 @@ export class FileSystem {
     }
 
     /**
+     * Find files by a glob pattern.
+     * 
+     * @param pRootDirectory - Root directory.
+     * @param pPattern - Glob pattern.
+     */
+    public static glob(pRootDirectory: string, pPattern: string): Array<string> {
+        const lGlobFiles: Array<fs.WalkEntry> = [...fs.expandGlobSync(pPattern, {
+            root: pRootDirectory,
+            includeDirs: false,
+            globstar: true,
+            extended: true,
+            caseInsensitive: true,
+            followSymlinks: true,
+        })];
+
+        return lGlobFiles.map(pFile => pFile.path);
+    }
+
+    /**
      * Check if directory is empty.
      * @param pPath - Directory.
      */
@@ -295,10 +324,10 @@ export class FileSystem {
      */
     public static pathToRelative(pBasePath: string, pPath: string): string {
         const lRelativePath: string = path.relative(pBasePath, pPath);
-        if(lRelativePath.startsWith('.')) {
+        if (lRelativePath.startsWith('.')) {
             return lRelativePath;
         }
-        
+
         return `./${path.relative(pBasePath, pPath)}`;
     }
 
@@ -328,7 +357,7 @@ export class FileSystem {
         return lTextDecoder.decode(lFileData);
     }
 
-    
+
     /**
      * Deletes the file at the specified path.
      * 
@@ -336,7 +365,7 @@ export class FileSystem {
      * @throws {Deno.errors.PermissionDenied} If the process lacks permissions to delete the file.
      */
     public static delete(pPath: string): void {
-        if(!FileSystem.exists(pPath)) {
+        if (!FileSystem.exists(pPath)) {
             return;
         }
 
