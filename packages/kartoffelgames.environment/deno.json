@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment",
     "version": "0.0.1",
-    "license": "MIT",
+    "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
         "@zip-js/zip-js": "jsr:@zip-js/zip-js"
@@ -13,7 +13,8 @@
         "include": [
             "source/",
             "blueprint/",
-            "deno.json"
+            "deno.json",
+            "LICENSE"
         ]
     },
     "kg": {

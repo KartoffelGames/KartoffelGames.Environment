@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment-command-test",
     "version": "0.0.1",
-    "license": "MIT",
+    "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {},
     "exports": {
@@ -12,7 +12,8 @@
         "include": [
             "source/",
             "deno.json",
-            "kg-cli.config.json"
+            "kg-cli.config.json",
+            "LICENSE"
         ]
     },
     "kg": {

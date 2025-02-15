@@ -1,7 +1,7 @@
 {
     "name": "@kartoffelgames/environment-core",
     "version": "0.0.1",
-    "license": "MIT",
+    "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
         "@std/path": "jsr:@std/path@^1.0.8",
@@ -11,7 +11,8 @@
     "publish": {
         "include": [
             "source/",
-            "deno.json"
+            "deno.json",
+            "LICENSE"
         ]
     },
     "kg": {

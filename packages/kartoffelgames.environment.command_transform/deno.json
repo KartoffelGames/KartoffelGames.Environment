@@ -1,6 +1,7 @@
 {
     "name": "@kartoffelgames/environment-command-transform",
     "version": "0.0.1",
+    "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
         "@deno/dnt": "jsr:@deno/dnt@0.41.3"
@@ -13,7 +14,8 @@
         "include": [
             "source/**/*.ts",
             "deno.json",
-            "kg-cli.config.json"
+            "kg-cli.config.json",
+            "LICENSE"
         ]
     },
     "kg": {
