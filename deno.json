@@ -28,8 +28,7 @@
         "exactOptionalPropertyTypes": true,
         "lib": [
             "ES2021",
-            "DOM",
-            "deno.ns"
+            "DOM"
         ],
         "noImplicitAny": true,
         "noImplicitOverride": true,

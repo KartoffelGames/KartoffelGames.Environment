@@ -65,7 +65,6 @@
         "typescript.implementationsCodeLens.enabled": true,
         "typescript.referencesCodeLens.enabled": true,
         "javascript.format.semicolons": "insert",
-        "typescript.referencesCodeLens.showOnAllFunctions": true,
-        "typescript.tsdk": "node_modules\\typescript\\lib"
+        "typescript.referencesCodeLens.showOnAllFunctions": false
     }
 }
