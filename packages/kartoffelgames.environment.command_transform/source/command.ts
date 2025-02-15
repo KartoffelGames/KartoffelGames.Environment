@@ -225,16 +225,19 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                     for(const lRelativePublishedFile of lRelativePublishedFiles) {
                         // Create absolute paths for the source and target copy paths.
                         const lSourceAbsoluteTargetPath: string = FileSystem.pathToAbsolute(pPackage.directory, lRelativePublishedFile);
-                        const lSourceAbsoluteEsmSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'esm', lRelativePublishedFile);
-                        const lSourceAbsoluteScriptSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'script', lRelativePublishedFile);
+                        const lTargetAbsoluteEsmPath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'esm', lRelativePublishedFile);
+                        const lTargetAbsoluteScriptPath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'script', lRelativePublishedFile);
+                        const lTargetAbsoluteSourcePath: string =  FileSystem.pathToAbsolute(pNodeDirectory, 'src', lRelativePublishedFile);
 
                         // Create directories.
-                        FileSystem.createDirectory(FileSystem.pathInformation(lSourceAbsoluteEsmSourcePath).directory);
-                        FileSystem.createDirectory(FileSystem.pathInformation(lSourceAbsoluteScriptSourcePath).directory);
+                        FileSystem.createDirectory(FileSystem.pathInformation(lTargetAbsoluteEsmPath).directory);
+                        FileSystem.createDirectory(FileSystem.pathInformation(lTargetAbsoluteScriptPath).directory);
+                        FileSystem.createDirectory(FileSystem.pathInformation(lTargetAbsoluteSourcePath).directory);
 
                         // Copy.
-                        FileSystem.copyFile(lSourceAbsoluteTargetPath, lSourceAbsoluteEsmSourcePath);
-                        FileSystem.copyFile(lSourceAbsoluteTargetPath, lSourceAbsoluteScriptSourcePath);
+                        FileSystem.copyFile(lSourceAbsoluteTargetPath, lTargetAbsoluteEsmPath);
+                        FileSystem.copyFile(lSourceAbsoluteTargetPath, lTargetAbsoluteScriptPath);
+                        FileSystem.copyFile(lSourceAbsoluteTargetPath, lTargetAbsoluteSourcePath);
                     }
                 },
             });
