@@ -1,0 +1,49 @@
+{
+    "name": "@kartoffelgames/environment-command-transform",
+    "version": "0.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {
+        "@deno/dnt": "jsr:@deno/dnt@0.41.3"
+    },
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/**/*.ts",
+            "deno.json",
+            "kg-cli.config.json",
+            "LICENSE"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Transform",
+        "config": {
+            "package-blueprint": "kg-main",
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            },
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "directory": "./test",
+                "bundleRequired": false
+            }
+        },
+        "source": "./source"
+    }
+}

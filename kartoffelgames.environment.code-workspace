@@ -2,31 +2,35 @@
     "folders": [
         {
             "name": "Kartoffelgames.Environment",
-            "path": "./packages/kartoffelgames.environment"
+            "path": "packages\\kartoffelgames.environment"
         },
         {
-            "name": "Kartoffelgames.Environment.Blueprint_Kg_Main",
-            "path": "./packages/kartoffelgames.environment.blueprint_kg_main"
+            "name": "Kartoffelgames.Environment.Blueprint",
+            "path": "packages\\kartoffelgames.environment.blueprint"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Bundle",
+            "path": "packages\\kartoffelgames.environment.bundle"
         },
         {
             "name": "Kartoffelgames.Environment.Cli",
-            "path": "./packages/kartoffelgames.environment.cli"
+            "path": "packages\\kartoffelgames.environment.cli"
         },
         {
-            "name": "Kartoffelgames.Environment.Command_Build",
-            "path": "packages\\kartoffelgames.environment.command_build"
+            "name": "Kartoffelgames.Environment.Command_Bump",
+            "path": "./packages\\kartoffelgames.environment.command_bump"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Command_Bundle",
+            "path": "packages\\kartoffelgames.environment.command_bundle"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Create",
-            "path": "./packages/kartoffelgames.environment.command_create"
+            "path": "packages\\kartoffelgames.environment.command_create"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Help",
-            "path": "./packages/kartoffelgames.environment.command_help"
-        },
-        {
-            "name": "Kartoffelgames.Environment.Command_Init",
-            "path": "packages\\kartoffelgames.environment.command_init"
+            "path": "packages\\kartoffelgames.environment.command_help"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Page",
@@ -45,12 +49,12 @@
             "path": "packages\\kartoffelgames.environment.command_test"
         },
         {
-            "name": "Kartoffelgames.Environment.Core",
-            "path": "./packages/kartoffelgames.environment.core"
+            "name": "Kartoffelgames.Environment.Command_Transform",
+            "path": "./packages\\kartoffelgames.environment.command_transform"
         },
         {
-            "name": "Test Project",
-            "path": "./test_project"
+            "name": "Kartoffelgames.Environment.Core",
+            "path": "packages\\kartoffelgames.environment.core"
         },
         {
             "name": "_ROOT",
@@ -58,14 +62,6 @@
         }
     ],
     "settings": {
-        "files.exclude": {
-            "**/.nyc_output": true,
-            "**/.turbo": true,
-            "**/*.tsbuildinfo": true,
-            "**/coverage": true,
-            "**/dist": true,
-            "**/node_modules": true
-        },
         "typescript.implementationsCodeLens.enabled": true,
         "typescript.referencesCodeLens.enabled": true,
         "javascript.format.semicolons": "insert",

@@ -1,0 +1,47 @@
+{
+    "name": "@kartoffelgames/environment-command-bump",
+    "version": "0.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {},
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json",
+            "kg-cli.config.json",
+            "LICENSE"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Bump",
+        "config": {
+            "package-blueprint": "kg-main",
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "directory": "./test",
+                "bundleRequired": false
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
+        },
+        "source": "./source"
+    }
+}

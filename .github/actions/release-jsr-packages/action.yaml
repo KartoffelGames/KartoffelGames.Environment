@@ -1,0 +1,42 @@
+name: 'Release Packages'
+description: 'Release All packages To Set Registry'
+
+inputs:
+  registry-token:
+    required: false
+    description: 'Auth-Token to push packages to registry'
+    default: ''
+  dry-run:
+    required: false
+    description: 'Dry run release'
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x 
+
+    # Clean deno Install
+    - name: Deno install
+      run: deno install
+      shell: bash
+
+    # Bundle packages.
+    - name: Build
+      run: deno task kg bundle --all
+      shell: bash
+
+    # Release Public Packages
+    - name: Release
+      if: ${{ inputs.dry-run == 'false' }}
+      run: deno publish --token ${{ inputs.registry-token }}
+      shell: bash
+      
+    # Release Public Packages on dry run
+    - name: Release dry run
+      if: ${{ inputs.dry-run == 'true' }}
+      run: deno publish --dry-run
+      shell: bash

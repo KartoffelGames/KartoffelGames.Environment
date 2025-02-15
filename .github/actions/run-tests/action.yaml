@@ -1,0 +1,20 @@
+name: 'Test Packages'
+description: 'Test Packages'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x 
+
+    # Init deno cache 
+    - name: Deno Install
+      run: deno install
+      shell: bash
+      
+    # Run Test
+    - name: Tests
+      run: deno task kg test --all
+      shell: bash

@@ -1,96 +1,211 @@
-import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console, Project, Shell } from '@kartoffelgames/environment.core';
-import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment.command-build';
-import * as path from 'path';
+import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Process, ProcessParameter, Project } from '@kartoffelgames/environment-core';
 
-export class KgCliCommand implements IKgCliCommand<KgBuildConfiguration> {
+export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription<KgBuildConfiguration> {
+    public get information(): CliCommandDescription<TestConfiguration> {
         return {
             command: {
-                pattern: 'test <package_name> --coverage --no-timeout',
                 description: 'Test package',
+                parameters: {
+                    root: 'test',
+                    required: [],
+                    optional: {
+                        coverage: {
+                            shortName: 'c'
+                        }
+                    }
+                },
             },
             configuration: {
-                name: 'tests',
-                default: ['unit'],
+                name: 'test',
+                default: {
+                    directory: './test',
+                    bundleRequired: false
+                },
             }
         };
     }
 
     /**
      * Execute command.
+     * 
      * @param pParameter - Command parameter.
-     * @param _pPackages - All cli packages grouped by type.
-     * @param pProjectHandler - Project handling.
+     * @param pProject - Project.
      */
-    public async run(pParameter: CliParameter, _pPackages: Array<string>, pProjectHandler: Project): Promise<void> {
-        const lConsole = new Console();
+    public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
+        // Needs a package to run test.
+        if (pPackage === null) {
+            throw new Error('Package to run test not specified.');
+        }
 
         // Cli parameter.
-        const lPackageName: string = <string>pParameter.parameter.get('package_name');
+        const lCoverageEnabled: boolean = pParameter.has('coverage');
 
-        // Construct paths.
-        const lPackage = pProjectHandler.getPackageConfiguration(lPackageName);
-        const lPackagePath = lPackage.directory;
+        // Read cli configuration from cli package.
+        const lPackageConfiguration = await pPackage?.cliConfigurationOf(this);
 
-        // Build test webpack information.
-        lConsole.writeLine('Build Test');
+        // initialize test directory.
+        this.initialTestDirectory(pPackage);
 
-        // Add extened parameter.
-        const lExtendedParameter: { [key: string]: boolean | string; } = {};
-        for (const [lParameterKey, lParameterValue] of pParameter.parameter) {
-            lExtendedParameter[lParameterKey] = lParameterValue ?? true;
+        // Create all paths.
+        const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
+        const lSourceInputDirectory = pPackage.sourcreDirectory;
+        const lTestOutputDirectory = FileSystem.pathToAbsolute(pPackage.directory, '.kg-test');
+        const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
+        const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
+        const lBundleResultSourceMapFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js.map');
+        const lCoverageFileDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'coverage');
+        const lConsole: Console = new Console();
+
+        // Skip testing when no test files are specified.
+        if (FileSystem.findFiles(lTestInputDirectory, { include: { extensions: ['ts'] } }).length === 0) {
+            lConsole.writeLine('No test files found.', 'yellow');
+            return;
         }
 
-        // Add build type as extended parameter.
-        lExtendedParameter['buildType'] = 'test';
+        // Initialize test output directory.        
+        if (!FileSystem.exists(lTestOutputDirectory)) {
+            FileSystem.createDirectory(lTestOutputDirectory);
+        }
 
-        // Run build command.
-        const lBuildCommand: BuildCommand = new BuildCommand();
-        await lBuildCommand.build(pProjectHandler, {
-            packgeName: lPackage.packageName,
-            pack: 'TestLib',
-            target: 'node',
-            scope: 'main',
-            serve: false,
-            buildTs: false,
-            extended: lExtendedParameter
+        // Bundle result directory.    
+        if (!FileSystem.exists(lBundleResultDirectory)) {
+            FileSystem.createDirectory(lBundleResultDirectory);
+        }
+
+        // Bundle test files when bundle is required.
+        if (lPackageConfiguration.bundleRequired) {
+            // Read all .test.ts files from the test directory.
+            const lTestFileList: Array<string> = FileSystem.findFiles(lTestInputDirectory, { include: { extensions: ['ts'] } });
+            const lSourceFileList: Array<string> = FileSystem.findFiles(lSourceInputDirectory, { include: { extensions: ['ts'] } });
+
+            // Create bundle input content with all imports.
+            let lTestBundleContent: string = '';
+            for (const lTestFile of [...lTestFileList, ...lSourceFileList]) {
+                const lRelativePath: string = FileSystem.pathToRelative(lTestInputDirectory, lTestFile).replace(/\\/g, '/');
+
+                // Add import to bundle content.
+                lTestBundleContent += `import "${lRelativePath}";\n`;
+            }
+
+            // Create bundle command.
+            const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
+
+            // Run bundle.
+            const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(pPackage, (pOptions: EnvironmentBundleOptions) => {
+                // Override entry file with the test bundle.ts
+                pOptions.entry = {
+                    content: {
+                        inputResolveDirectory: lTestInputDirectory,
+                        inputFileContent: lTestBundleContent,
+                        outputBasename: 'bundle.test',
+                        outputExtension: 'js'
+                    }
+                };
+            });
+
+            // Write source files.
+            FileSystem.writeBinary(lBundleResultJavascriptFile, lBundleResult[0].content);
+            FileSystem.writeBinary(lBundleResultSourceMapFile, lBundleResult[0].sourceMap);
+        }
+
+        // Create coverage directory.
+        if (!FileSystem.exists(lCoverageFileDirectory)) {
+            FileSystem.createDirectory(lCoverageFileDirectory);
+        }
+
+        // Create test with coverage command extension.
+        const lTestWithCoverageCommand: Array<string> = [];
+        if (lCoverageEnabled) {
+            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
+            lTestWithCoverageCommand.push(`--coverage=${lRelativeCoverageFileDirectory}`);
+        }
+
+        // Eighter test the test directory or the bundle result directory when bundle is required.
+        let lTestFilesDirectoryList: Array<string> = [];
+        if (lPackageConfiguration.bundleRequired) {
+            lTestFilesDirectoryList.push(FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile));
+        } else {
+            // Find the package test and source directory.
+            const lRelativeTestDirectory: string = FileSystem.pathToRelative(pPackage.directory, lTestInputDirectory).slice(2).replace(/\\/g, '/');
+            const lRelativeSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, lSourceInputDirectory).slice(2).replace(/\\/g, '/');
+
+            lTestFilesDirectoryList.push(`${lRelativeTestDirectory}/**/*.ts`);
+            lTestFilesDirectoryList.push(`${lRelativeSourceDirectory}/**/*.ts`);
+        }
+
+        // Test failed flag to throw error only at the end.
+        let lTestFailed: boolean = false;
+
+        // Create test command parameter.
+        const lTestCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
+            'deno', 'test', '-A', ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
+        ]);
+
+        // Run "deno test" command in current console process.
+        const lTestProcess: Process = new Process();
+        await lTestProcess.executeInConsole(lTestCommandParameter).catch(() => {
+            lTestFailed = true;
         });
 
-        // Run test information.
-        lConsole.writeLine('Run Test');
-
-        // Load mocha and nyc from local node-modules.
-        const lMochaCli: string = require.resolve('mocha/bin/mocha');
-        const lNycCli: string = require.resolve('nyc/bin/nyc.js');
-
-        // Load mocha and nyc configuration
-        // Load essentials.
-        const lMochaConfigPath = path.resolve(__dirname, '..', '..', 'configuration/mocha.config.js');
-        const lNycConfigPath = path.resolve(__dirname, '..', '..', 'configuration/nyc.config.json');
-
-        // Create package shell command executor.
-        const lPackageShell: Shell = new Shell(lPackagePath);
-
-        // Construct mocha command.
-        let lMochaCommand: string = '';
-        if (pParameter.parameter.has('coverage')) {
-            lMochaCommand = `node "${lNycCli}" --nycrc-path "${lNycConfigPath}" mocha --config "${lMochaConfigPath}"`;
-        } else {
-            lMochaCommand = `node "${lMochaCli}" --config "${lMochaConfigPath}" `;
+        // Somehow tell that coverage does not work for bundled tests... for now. 
+        if (lCoverageEnabled && lPackageConfiguration.bundleRequired) {
+            lConsole.writeLine('Coverage is not supported for bundled tests.', 'yellow');
         }
 
-        // Append no timout setting to mocha command.
-        if (pParameter.parameter.has('no-timeout')) {
-            lMochaCommand += ' --no-timeouts';
+        // When coverage is on, run 'deno coverage' command.
+        if (lCoverageEnabled && !lPackageConfiguration.bundleRequired) {
+            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
+
+            // Get package directory base name.
+            const lPackageDirectoryBaseName: string = FileSystem.pathInformation(pPackage.directory).basename;
+            const lPackageSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, pPackage.sourcreDirectory);
+
+            // Get the relative source direcory from project root of the package with correct format
+            const lAbsoluteSourceDirectory: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lPackageDirectoryBaseName, lPackageSourceDirectory);
+            const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.directory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/');
+
+            // Create coverage command parameter.
+            const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
+                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=${lRelativeSouceDirectory}`
+            ]);
+
+            // Run "deno coverage" command in current console process.
+            const lCoverageProcess: Process = new Process();
+            await lCoverageProcess.executeInConsole(lCoverageCommandParameter).catch(() => {
+                lTestFailed = true;
+            });
         }
 
-        // Run test
-        await lPackageShell.console(lMochaCommand);
+        // Remove test output directory.
+        FileSystem.deleteDirectory(lTestOutputDirectory);
+
+        // Throw error when test failed.
+        if (lTestFailed) {
+            throw new Error('Test failed.');
+        }
+    }
+
+    /**
+     * Initialize test directory.
+     * 
+     * @param pPackage - Package.
+     */
+    private initialTestDirectory(pPackage: Package): void {
+        const lTestDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'test');
+
+        // Create test directory when not exists.
+        if (!FileSystem.exists(lTestDirectory)) {
+            FileSystem.createDirectory(lTestDirectory);
+        }
     }
 }
 
-type KgBuildConfiguration = Array<'unit'>;
+type TestConfiguration = {
+    directory: string;
+    bundleRequired: boolean;
+};

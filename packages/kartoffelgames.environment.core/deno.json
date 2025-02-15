@@ -1,0 +1,51 @@
+{
+    "name": "@kartoffelgames/environment-core",
+    "version": "0.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {
+        "@std/path": "jsr:@std/path@^1.0.8",
+        "@std/fs": "jsr:@std/fs@^1.0.8"
+    },
+    "exports": "./source/index.ts",
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json",
+            "LICENSE"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Core",
+        "root": false,
+        "config": {
+            "package_blueprint": "kg-main",
+            "tests": [
+                "unit"
+            ],
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "package-blueprint": "",
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "bundleRequired": false,
+                "directory": "./test"
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
+        },
+        "source": "./source"
+    }
+}

@@ -1,1 +1,0 @@
-export { KgCliCommand } from './command';

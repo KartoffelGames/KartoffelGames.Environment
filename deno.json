@@ -1,0 +1,74 @@
+{
+    "version": "0.0.1",
+    "workspace": [
+        "./packages/kartoffelgames.environment",
+        "./packages/kartoffelgames.environment.blueprint",
+        "./packages/kartoffelgames.environment.bundle",
+        "./packages/kartoffelgames.environment.cli",
+        "./packages/kartoffelgames.environment.command_bundle",
+        "./packages/kartoffelgames.environment.command_create",
+        "./packages/kartoffelgames.environment.command_help",
+        "./packages/kartoffelgames.environment.command_page",
+        "./packages/kartoffelgames.environment.command_scratchpad",
+        "./packages/kartoffelgames.environment.command_sync",
+        "./packages/kartoffelgames.environment.command_test",
+        "./packages/kartoffelgames.environment.core",
+        "././packages/kartoffelgames.environment.command_bump",
+        "././packages/kartoffelgames.environment.command_transform"
+    ],
+    "tasks": {
+        "lint": "deno run -A npm:eslint --config eslint.config.js",
+        "kg": "deno run -A packages/kartoffelgames.environment.cli/source/cli.ts"
+    },
+    "license": "LGPL-3.0-only",
+    "imports": {},
+    "lock": false,
+    "compilerOptions": {
+        "allowUnreachableCode": false,
+        "exactOptionalPropertyTypes": true,
+        "lib": [
+            "ES2021",
+            "DOM",
+            "deno.ns"
+        ],
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUnusedParameters": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "useUnknownInCatchVariables": true
+    },
+    "fmt": {
+        "useTabs": false,
+        "indent-width": 4,
+        "line-width": 9999,
+        "semiColons": true,
+        "singleQuote": true
+    },
+    "lint": {
+        "exclude": [
+            "**/*"
+        ]
+    },
+    "kg": {
+        "root": true,
+        "cli": [
+            "@kartoffelgames/environment-command-help",
+            "@kartoffelgames/environment-command-sync",
+            "@kartoffelgames/environment-command-create",
+            "@kartoffelgames/environment-blueprint",
+            "@kartoffelgames/environment-command-bundle",
+            "@kartoffelgames/environment-command-scratchpad",
+            "@kartoffelgames/environment-command-page",
+            "@kartoffelgames/environment-command-test",
+            "@kartoffelgames/environment-command-bump",
+            "@kartoffelgames/environment-command-transform"
+        ],
+        "packages": "./packages"
+    }
+}

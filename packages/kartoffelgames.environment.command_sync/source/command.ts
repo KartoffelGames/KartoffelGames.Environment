@@ -1,117 +1,70 @@
-import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console, FileUtil, Project, ProjectInformation } from '@kartoffelgames/environment.core';
-import * as path from 'path';
+import { CliCommand, CliCommandDescription, CliParameter, Console, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
 
-export class KgCliCommand implements IKgCliCommand {
+export class KgCliCommand implements ICliPackageCommand {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription {
+    public get information(): CliCommandDescription {
         return {
             command: {
                 description: 'Sync local package versions into all package.json files.',
-                pattern: 'sync'
-            }
+                parameters: {
+                    root: 'sync'
+                },
+            },
+            configuration: null
         };
     }
 
     /**
      * Execute command.
+     * 
      * @param _pParameter - Command parameter.
      * @param _pCliPackages - All cli packages grouped by type.
      */
-    public async run(_pParameter: CliParameter, _pCliPackages: Array<string>, pProjectHandler: Project): Promise<void> {
+    public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
+        // Needs a package to run test.
+        if (pPackage === null) {
+            throw new Error('Package to sync not specified.');
+        }
+
         const lConsole = new Console();
 
-        // Find all packages.
-        const lPackageList: Array<ProjectInformation> = pProjectHandler.readAllProject();
-
-        // Sync package versions.
-        lConsole.writeLine('Sync package version numbers...');
-        this.updatePackageVersions(lPackageList);
+        // Sync package version with the project version.
+        lConsole.writeLine('Sync package version...');
+        pPackage.configuration.version = pProjectHandler.version;
 
         // Update package kg configuration.
         lConsole.writeLine('Sync package configuration...');
-        this.updatePackageVersion(lPackageList, pProjectHandler);
+        await this.updatePackageConfiguration(pProjectHandler, pPackage);
+
+        // Save package configuration.
+        pPackage.save();
 
         lConsole.writeLine('Sync completed');
     }
 
     /**
      * Update kg project configuration to updated structure.
+     * 
      * @param pProjectList - Local project list.
-     * @param pProjectHander - Project handler.
+     * @param pProject - Project handler.
      */
-    private updatePackageVersion(pProjectList: Array<ProjectInformation>, pProjectHander: Project): void {
-        for (const lProject of pProjectList) {
-            pProjectHander.updateProjectConfiguration(lProject.packageName, lProject);
-        }
-    }
+    private async updatePackageConfiguration(pProject: Project, pPackage: Package): Promise<void> {
+        // Set all available cli configurations for each cli package.
+        for (const lCliCommand of await pProject.cliPackages.readAll('command')) {
+            const lCliPackage: CliCommand = await pProject.cliPackages.createCommand(lCliCommand.configuration.name);
 
-    /**
-     * Update local package dependencies with current project versions.
-     * @param pProjectList - Local project list.
-     */
-    private updatePackageVersions(pProjectList: Array<ProjectInformation>): void {
-        // Map each package.json with its path.
-        const lPackageInformations: Map<string, PackageChangeInformation> = new Map<string, PackageChangeInformation>();
-        for (const lProject of pProjectList) {
-            const lFileText = FileUtil.read(path.resolve(lProject.directory, 'package.json'));
-            const lPackageJson = JSON.parse(lFileText);
-
-            // Map package information.
-            lPackageInformations.set(lPackageJson['name'], {
-                packageName: lProject.packageName,
-                path: lProject.directory,
-                json: lPackageJson,
-                changed: false,
-                version: lProject.version
-            });
-        }
-
-        // Replace local dependencies.
-        for (const lPackageInformation of lPackageInformations.values()) {
-            const lCurrentPackageJson = lPackageInformation.json;
-
-            // Sync development and productive dependencies.
-            const lDependencyTypeList = ['devDependencies', 'dependencies'];
-            for (const lDependencyType of lDependencyTypeList) {
-                // Check if package.json has dependency property.
-                if (lDependencyType in lCurrentPackageJson) {
-                    for (const lDependencyName in lCurrentPackageJson[lDependencyType]) {
-                        // On local package exists.
-                        if (lPackageInformations.has(lDependencyName)) {
-                            const lOldDependency = lCurrentPackageJson[lDependencyType][lDependencyName];
-                            const lNewDependency = `^${(<PackageChangeInformation>lPackageInformations.get(lDependencyName)).version}`;
-
-                            // Check for possible changes before applying.
-                            if (lNewDependency !== null && lNewDependency !== lOldDependency) {
-                                lCurrentPackageJson[lDependencyType][lDependencyName] = lNewDependency;
-                                lPackageInformation.changed = true;
-                            }
-                        }
-                    }
-                }
+            // Skip cli packages without configuration.
+            if (!lCliPackage.cliPackageCommand.information.configuration) {
+                continue;
             }
-        }
 
-        // Replace json files with altered jsons.
-        for (const lPackageInformation of lPackageInformations.values()) {
-            if (lPackageInformation.changed) {
-                const lPackageJsonText = JSON.stringify(lPackageInformation.json, null, 4);
-                const lPackageFilePath = path.resolve(lPackageInformation.path, 'package.json');
+            // Read configuration of command. Unset fields are filled with default values.
+            const lCommandConfiguration: any = pPackage.cliConfigurationOf(lCliPackage.cliPackageCommand);
 
-                // Write altered data to package.json.
-                FileUtil.write(lPackageFilePath, lPackageJsonText);
-            }
+            // And set it again.
+            pPackage.setCliConfigurationOf(lCliPackage.cliPackageCommand, lCommandConfiguration);
         }
     }
 }
-
-type PackageChangeInformation = {
-    packageName: string;
-    path: string;
-    json: any;
-    changed: boolean;
-    version: string;
-};

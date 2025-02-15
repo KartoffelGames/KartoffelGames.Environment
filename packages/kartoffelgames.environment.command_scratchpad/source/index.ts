@@ -1,1 +1,1 @@
-export { KgCliCommand } from './command';
+export { KgCliCommand } from './command.ts';

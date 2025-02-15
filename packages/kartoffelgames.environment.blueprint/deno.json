@@ -1,0 +1,50 @@
+{
+    "name": "@kartoffelgames/environment-blueprint",
+    "version": "0.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {},
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "blueprint/",
+            "deno.json",
+            "kg-cli.config.json",
+            "LICENSE"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Blueprint",
+        "config": {
+            "blueprint": "kg-main",
+            "pack": false,
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "package-blueprint": "",
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "test": {
+                "bundleRequired": false,
+                "directory": "./test"
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
+        },
+        "source": "./source"
+    }
+}

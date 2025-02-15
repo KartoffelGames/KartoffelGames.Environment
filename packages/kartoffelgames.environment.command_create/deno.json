@@ -1,0 +1,51 @@
+{
+    "name": "@kartoffelgames/environment-command-create",
+    "version": "0.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {
+        "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.7.57"
+    },
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json",
+            "kg-cli.config.json",
+            "LICENSE"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Create",
+        "config": {
+            "blueprint": "kg-main",
+            "pack": false,
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "package-blueprint": "",
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "bundleRequired": false,
+                "directory": "./test"
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
+        },
+        "source": "./source"
+    }
+}

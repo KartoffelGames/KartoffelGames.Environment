@@ -1,23 +1,33 @@
-import { CliParameter, IKgCliCommand, KgCliCommandDescription } from '@kartoffelgames/environment.cli';
-import { Console, FileUtil, Project, Shell } from '@kartoffelgames/environment.core';
-import * as path from 'path';
-import { IKgCliPackageBlueprint } from './interfaces/i-kg-cli-package-blueprint';
-import { PackageParameter } from './package/package-parameter';
+import { CliCommandDescription, CliPackageInformation, CliParameter, Console, FileSystem, ICliPackageCommand, Import, Package, Project } from '@kartoffelgames/environment-core';
+import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
+import { CliPackageBlueprintParameter, ICliPackageBlueprintResolver } from "./i-cli-package-blueprint-resolver.interface.ts";
 
-export class KgCliCommand implements IKgCliCommand<string | undefined> {
+export class KgCliCommand implements ICliPackageCommand<string> {
     /**
      * Command description.
      */
-    public get information(): KgCliCommandDescription<string | undefined> {
+    public get information(): CliCommandDescription<string> {
         return {
             command: {
-                pattern: 'create <blueprint_name> [package_name] --list',
                 description: 'Create new package.',
+                parameters: {
+                    root: 'create',
+                    optional: {
+                        list: {
+                            shortName: 'l'
+                        },
+                        blueprint: {
+                            shortName: 'b'
+                        },
+                        packagename: {
+                            shortName: 'n'
+                        }
+                    }
+                }
             },
-            resourceGroup: 'blueprint',
             configuration: {
                 name: 'package-blueprint',
-                default: undefined,
+                default: '',
             }
         };
     }
@@ -27,26 +37,21 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
      * @param pParameter - Command parameter.
      * @param pBlueprintPackages - All cli packages grouped by type.
      */
-    public async run(pParameter: CliParameter, pBlueprintPackages: Array<string>, pProjectHandler: Project): Promise<void> {
+    public async run(pProject: Project, _pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         const lConsole = new Console();
 
-        // Read required parameter.
-        const lBlueprintName: string = <string>pParameter.parameter.get('blueprint_name')?.toLowerCase();
+        // Read all available cli packages.
+        const lCliPackageList: Array<CliPackageInformation<CliBlueprintPackageConfiguration>> = await pProject.cliPackages.readAll<CliBlueprintPackageConfiguration>('blueprint');
 
         // Read all KG_Cli_Blueprint packages informations.
-        const lBlueprintList: Array<IKgCliPackageBlueprint> = this.readBlueprintList(pBlueprintPackages);
+        const lBlueprintList: Map<string, Blueprint> = this.readBlueprintList(lCliPackageList);
 
         // List blueprints on --list parameter and exit command.
-        if (pParameter.parameter.has('list')) {
-            // Find max length of commands.
-            const lMaxLength: number = lBlueprintList.reduce((pCurrent: number, pNext: IKgCliPackageBlueprint) => {
-                return pNext.information.name.length > pCurrent ? pNext.information.name.length : pCurrent;
-            }, 0);
-
+        if (pParameter.has('list')) {
             // Output all commands.
             lConsole.writeLine('Available blueprints:');
-            for (const lBlueprint of lBlueprintList) {
-                lConsole.writeLine(`${lBlueprint.information.name.padEnd(lMaxLength, ' ')} - ${lBlueprint.information.description}`);
+            for (const [lBlueprintName,] of lBlueprintList) {
+                lConsole.writeLine(`-- ${lBlueprintName}`);
             }
             return;
         }
@@ -54,49 +59,86 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
         // Output heading.
         lConsole.writeLine('Create Package');
 
+        // Read required parameter.
+        let lBlueprintName: string;
+        if (pParameter.has('blueprint')) {
+            lBlueprintName = pParameter.get('blueprint').toLowerCase();
+        } else {
+            lBlueprintName = await lConsole.promt('Bluprint name: ', /^[a-z0-9-]+$/);
+        }
+
         // Find blueprint by name.
-        const lBlueprint: IKgCliPackageBlueprint | undefined = lBlueprintList.find(pBlueprint => pBlueprint.information.name.toLowerCase() === lBlueprintName);
+        const lBlueprint: Blueprint | undefined = lBlueprintList.get(lBlueprintName);
         if (!lBlueprint) {
             throw `Blueprint "${lBlueprintName}" not found.`;
         }
 
         // Find name. Get from command parameter on promt user.
-        const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
-        let lNewPackageName: string = pParameter.parameter.get('package_name') ?? '';
-        if (lNewPackageName === '') {
+        const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-]+\/)?[a-z0-9-]+$/;
+        let lNewPackageName: string;
+        if (pParameter.has('packagename')) {
+            lNewPackageName = pParameter.get('packagename');
+        } else {
             lNewPackageName = await lConsole.promt('Package Name: ', lPackageNameValidation);
         }
 
         // Validate packag name again or for the first time.
         if (!lPackageNameValidation.test(lNewPackageName)) {
-            throw 'Package name does not match NPM package name convention';
+            throw 'Package name does not match JSR package name convention';
         }
 
         // Create blueprint.
-        const lNewPackageDirectory: string = await this.createBlueprint(lNewPackageName, lBlueprint, pParameter, pProjectHandler);
+        const lNewPackageDirectory: string = await this.createBlueprint(lNewPackageName, lBlueprint, pProject);
 
         // Update vs code workspaces.
         lConsole.writeLine('Add VsCode Workspace...');
-        pProjectHandler.addWorkspace(lNewPackageName, lNewPackageDirectory);
+        pProject.addWorkspace(lNewPackageDirectory);
+        pProject.save();
 
-        // Add package information to package.json.
+        // Update vs code workspaces.
+        this.addWorkspace(pProject, lNewPackageName, lNewPackageDirectory);
+
+        // Read package information of newly created package.
+        const lPackage: Package = pProject.getPackage(lNewPackageName);
+
+        // Add package information to deno.json.
         lConsole.writeLine('Set package configuration...');
-        pProjectHandler.updateProjectConfiguration(lNewPackageName, {
-            workspace: {
-                root: false,
-                config: {
-                    'package-blueprint': lBlueprint.information.name
-                }
-            }
-        });
-
-        // Call npm install.
-        lConsole.writeLine('Install packages...');
-        const lShell: Shell = new Shell(pProjectHandler.projectRootDirectory);
-        await lShell.console('npm install');
+        lPackage.setCliConfigurationOf(this, lBlueprintName);
+        await lPackage.save();
 
         // Display init information.
         lConsole.writeLine('Package successfully created.');
+    }
+
+    /**
+     * Add packages as vs code workspace to workspace settings.
+     * @param pWorkspaceName - Name of workspace. 
+     * @param pWorkspaceFolder - Folder name of workspace.
+     */
+    public addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
+        // Read workspace file json.
+        const lVsWorkspaceFilePath: string = FileSystem.findFiles(pProject.directory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
+        const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
+        const lVsWorkspaceFileJson = JSON.parse(lVsWorkspaceFileText);
+
+        // Add new folder to folder list.
+        const lPackageDirectory: string = FileSystem.pathToRelative(pProject.directory, pPackageDirectory);
+        const lPackageDirectoryList: Array<{ name: string, path: string; }> = lVsWorkspaceFileJson['folders'];
+        lPackageDirectoryList.push({
+            name: Package.nameToId(pPackageName),
+            path: lPackageDirectory
+        });
+
+        // Sort folder alphabeticaly.
+        lPackageDirectoryList.sort((pFirst, pSecond) => {
+            if (pFirst.name < pSecond.name) { return -1; }
+            if (pFirst.name > pSecond.name) { return 1; }
+            return 0;
+        });
+
+        // Update workspace file.
+        const lAlteredVsWorkspaceFileText = JSON.stringify(lVsWorkspaceFileJson, null, 4);
+        FileSystem.write(lVsWorkspaceFilePath, lAlteredVsWorkspaceFileText);
     }
 
     /**
@@ -106,45 +148,83 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
      * @param pCommandParameter - Command parameter.
      * @returns 
      */
-    private async createBlueprint(pPackageName: string, pBlueprint: IKgCliPackageBlueprint, pCommandParameter: CliParameter, pProjectHandler: Project): Promise<string> {
+    private async createBlueprint(pPackageName: string, pBlueprint: Blueprint, pProject: Project): Promise<string> {
         const lConsole = new Console();
 
         // Get source and target path of blueprint files.
-        const lProjectName: string = pProjectHandler.convertToProjectName(pPackageName);
-        const lSourcePath: string = path.resolve(pBlueprint.information.blueprintDirectory);
-        const lTargetPath: string = path.resolve(pProjectHandler.projectRootDirectory, 'packages', lProjectName.toLowerCase());
+        const lProjectName: string = Package.nameToId(pPackageName);
+        const lTargetPath: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lProjectName.toLowerCase());
 
         // Check if package already exists.
-        if (pProjectHandler.packageExists(pPackageName)) {
+        if (pProject.hasPackage(pPackageName)) {
             throw `Package "${pPackageName}" already exists.`;
         }
 
         // Check existing target directory.
-        if (FileUtil.exists(lTargetPath)) {
+        if (FileSystem.exists(lTargetPath)) {
             throw `Target directory "${lTargetPath}" already exists.`;
         }
+
+        // Create blueprint resolver instance.
+        const lPackageResolver: ICliPackageBlueprintResolver = await this.createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
+
+        // Get url path of project blueprint and fetch it.
+        const lProjectBlueprintZipUrl: URL = pBlueprint.blueprintFileUrl;
+        const lProjectBlueprintZipRequest: Response = await fetch(lProjectBlueprintZipUrl);
+        const lProjectBlueprintZipBlob: Blob = await lProjectBlueprintZipRequest.blob();
+
+        // Create zip reader from zip blob.
+        const lZipBlobReader: BlobReader = new BlobReader(lProjectBlueprintZipBlob);
+        const lZipReader: ZipReader<unknown> = new ZipReader(lZipBlobReader);
 
         // Rollback on error.
         try {
             // Copy files.
             lConsole.writeLine('Copy files...');
-            FileUtil.createDirectory(lTargetPath);
-            FileUtil.copyDirectory(lSourcePath, lTargetPath, true);
 
-            // Create package parameter.
-            const lPackageParameter: PackageParameter = new PackageParameter(pPackageName, lProjectName);
-            for (const [lParameterName, lParameterValue] of pCommandParameter.parameter.entries()) {
-                lPackageParameter.parameter.set(lParameterName, lParameterValue);
+            // Create target directory.
+            FileSystem.createDirectory(lTargetPath);
+
+            // Decompress blueprint into target directory.
+            for await (const lZipEntry of lZipReader.getEntriesGenerator()) {
+                // Skip directories.
+                if (lZipEntry.directory) {
+                    continue;
+                }
+
+                const lTargetFilePath: string = FileSystem.pathToAbsolute(lTargetPath, lZipEntry.filename);
+
+                // Read Directory part of target file path.
+                const lTargetFileDirectoryPath: string = FileSystem.directoryOfFile(lTargetFilePath);
+
+                // Create directory if it does not exist.
+                if (!FileSystem.exists(lTargetFileDirectoryPath)) {
+                    FileSystem.createDirectory(lTargetFileDirectoryPath);
+                }
+
+                // Output copy information.
+                lConsole.writeLine("Copy " + lZipEntry.filename);
+
+                // Read zipped file.
+                const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());
+                FileSystem.writeBinary(lTargetFilePath, lZipFileData);
             }
 
+            // Create package parameter.
+            const lPackageParameter: CliPackageBlueprintParameter = {
+                packageName: pPackageName,
+                packageIdName: lProjectName,
+                packageDirectory: lTargetPath
+            };
+
             // Execute blueprint after copy handler.
-            lConsole.writeLine('Execute blueprint handler...');
-            await pBlueprint.afterCopy(lTargetPath, lPackageParameter, pProjectHandler);
+            lConsole.writeLine('Execute blueprint resolver...');
+            await lPackageResolver.afterCopy(lPackageParameter, pProject);
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
 
             // Rollback by deleting package directory.
-            FileUtil.deleteDirectory(lTargetPath);
+            FileSystem.deleteDirectory(lTargetPath);
 
             // Rethrow error.
             throw lError;
@@ -157,33 +237,73 @@ export class KgCliCommand implements IKgCliCommand<string | undefined> {
      * Create all package blueprint definition class. 
      * @param pBlueprintPackages - Cli packages.
      */
-    private readBlueprintList(pBlueprintPackages: Array<string>): Array<IKgCliPackageBlueprint> {
-        const lBlueprintList: Array<IKgCliPackageBlueprint> = new Array<IKgCliPackageBlueprint>();
+    private readBlueprintList(pPackages: Array<CliPackageInformation<CliBlueprintPackageConfiguration>>): Map<string, Blueprint> {
+        const lAvailableBlueprint: Map<string, Blueprint> = new Map<string, Blueprint>();
 
         // Create each package blueprint package.
-        for (const lPackage of pBlueprintPackages) {
-            // Catch any create errors for malfunctioning packages.
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const lPackageLibrary: any = require(lPackage);
+        for (const lPackage of pPackages) {
+            // Skip non package blueprints.
+            if (!lPackage.configuration.packageBlueprints) {
+                continue;
+            }
 
-                // Check for correct blueprint type.
-                if ('KgCliPackageBlueprint' in lPackageLibrary) {
-                    const lCommandConstructor: KgCliPackageBlueprintConstructor = lPackageLibrary.KgCliPackageBlueprint;
+            // Convert all available blueprints to an absolute path.
+            for (const [lBlueprintPackageName, lBlueprintPackagePath] of Object.entries(lPackage.configuration.packageBlueprints.packages)) {
+                // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
+                const lBlueprintFileUrlString: string = Import.resolveToUrl(`${lPackage.packageName}/kg-cli.config.json`).href
+                    .replace('kg-cli.config.json', lBlueprintPackagePath);
 
-                    // Add blueprint class to list.
-                    lBlueprintList.push(new lCommandConstructor());
-                }
-            } catch (e) {
-                // eslint-disable-next-line no-console
-                console.warn(`Can't initialize package blueprint ${lPackage}.`);
+                lAvailableBlueprint.set(lBlueprintPackageName, {
+                    packageInformation: lPackage,
+                    resolverClass: lPackage.configuration.packageBlueprints.resolveClass,
+                    blueprintFileUrl: new URL(lBlueprintFileUrlString)
+                });
             }
         }
 
-        return lBlueprintList;
+        return lAvailableBlueprint;
     }
+
+    /**
+     * Create a new instance of a package blueprint resolver.
+     * 
+     * @param pPackage - Package information.
+     * 
+     * @returns - Cli package resolver instance. 
+     */
+    private async createPackagePackageBlueprintResolverInstance(pPackage: CliPackageInformation<CliBlueprintPackageConfiguration>): Promise<ICliPackageBlueprintResolver> {
+        if (!pPackage.configuration.packageBlueprints?.resolveClass) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. No entry class defined.`);
+        }
+
+        // Catch any create errors for malfunctioning packages.
+        try {
+            // Import package and get command constructor.
+            const lPackageImport: any = await Import.import(pPackage.packageName);
+            const lPackageCliConstructor: CliPackageBlueprintResolverConstructor = lPackageImport[pPackage.configuration.packageBlueprints.resolveClass] as CliPackageBlueprintResolverConstructor;
+
+            // Create command instance
+            return new lPackageCliConstructor();
+        } catch (e) {
+            throw new Error(`Can't initialize blueprint resolver ${pPackage.configuration.name}. ${e}`);
+        }
+    }
+
 }
 
-type KgCliPackageBlueprintConstructor = {
-    new(): IKgCliPackageBlueprint;
+type Blueprint = {
+    packageInformation: CliPackageInformation<CliBlueprintPackageConfiguration>;
+    resolverClass: string;
+    blueprintFileUrl: URL;
+};
+
+type CliPackageBlueprintResolverConstructor = {
+    new(): ICliPackageBlueprintResolver;
+};
+
+export type CliBlueprintPackageConfiguration = {
+    packageBlueprints: {
+        resolveClass: string;
+        packages: { [name: string]: string; };
+    };
 };

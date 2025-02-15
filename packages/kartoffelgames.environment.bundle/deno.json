@@ -1,0 +1,50 @@
+{
+    "name": "@kartoffelgames/environment-bundle",
+    "version": "0.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {
+        "esbuild": "npm:esbuild@^0.24.2",
+        "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@^0.11.1"
+    },
+    "exports": "./source/index.ts",
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json",
+            "LICENSE"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Bundle",
+        "config": {
+            "package_blueprint": "kg-main",
+            "tests": [
+                "unit"
+            ],
+            "page": {
+                "enabled": false,
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "bundle": {
+                "enabled": false,
+                "bundleSettingsFile": ""
+            },
+            "package-blueprint": "",
+            "scratchpad": {
+                "mainBundleRequired": false,
+                "port": 8088
+            },
+            "test": {
+                "bundleRequired": false,
+                "directory": "./test"
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
+        },
+        "source": "./source"
+    }
+}

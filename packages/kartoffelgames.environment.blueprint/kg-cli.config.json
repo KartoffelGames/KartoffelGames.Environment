@@ -1,0 +1,10 @@
+{
+    "type": "blueprint",
+    "name": "blueprint",
+    "packageBlueprints": {
+        "resolveClass": "CliPackageBlueprint",
+        "packages": {
+            "kg-main": "blueprint/package-blueprint.zip"
+        }
+    }
+}
