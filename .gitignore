@@ -10,3 +10,4 @@ debug.log
 library
 node
 package.json
+package-lock.json

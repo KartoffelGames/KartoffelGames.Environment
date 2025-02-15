@@ -228,6 +228,10 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                         const lSourceAbsoluteEsmSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'esm', lRelativePublishedFile);
                         const lSourceAbsoluteScriptSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'script', lRelativePublishedFile);
 
+                        // Create directories.
+                        FileSystem.createDirectory(FileSystem.pathInformation(lSourceAbsoluteEsmSourcePath).directory);
+                        FileSystem.createDirectory(FileSystem.pathInformation(lSourceAbsoluteScriptSourcePath).directory);
+
                         // Copy.
                         FileSystem.copyFile(lSourceAbsoluteTargetPath, lSourceAbsoluteEsmSourcePath);
                         FileSystem.copyFile(lSourceAbsoluteTargetPath, lSourceAbsoluteScriptSourcePath);
