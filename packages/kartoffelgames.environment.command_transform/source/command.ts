@@ -1,4 +1,4 @@
-import { build } from "@deno/dnt";
+import { build } from '@deno/dnt';
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, ProcessContext, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> {
@@ -88,10 +88,10 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
 
         // Find all files used in the export deno.json property.
         const lExportedFiles: Array<string> = new Array<string>();
-        if (typeof pPackage.configuration["exports"] === 'string') {
-            lExportedFiles.push(FileSystem.pathToAbsolute(pPackage.directory, pPackage.configuration["exports"]));
+        if (typeof pPackage.configuration['exports'] === 'string') {
+            lExportedFiles.push(FileSystem.pathToAbsolute(pPackage.directory, pPackage.configuration['exports']));
         } else {
-            for (const lExportPath of Object.values(pPackage.configuration["exports"] ?? {})) {
+            for (const lExportPath of Object.values(pPackage.configuration['exports'] ?? {})) {
                 // export path must be a string.
                 if (typeof lExportPath !== 'string') {
                     continue;
@@ -216,7 +216,7 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                     name: pPackage.configuration.name,
                     version: pPackage.configuration.version,
                     description: pPackage.id,
-                    license: pPackage.configuration["license"] ?? null
+                    license: pPackage.configuration['license'] ?? null
                 },
                 // Skip checks that would fail.
                 typeCheck: false,

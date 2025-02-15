@@ -1,7 +1,7 @@
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
-import { PageBundler } from "./file_handler/page-bundler.ts";
-import { PageFileWatcher } from "./file_handler/page-file-watcher.ts";
-import { PageHttpServer } from "./file_handler/page-http-server.ts";
+import { PageBundler } from './file_handler/page-bundler.ts';
+import { PageFileWatcher } from './file_handler/page-file-watcher.ts';
+import { PageHttpServer } from './file_handler/page-http-server.ts';
 
 export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     /**
@@ -83,7 +83,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         });
 
         // Build initial build files.
-        lConsole.writeLine("Starting initial bundle...");
+        lConsole.writeLine('Starting initial bundle...');
         await lPageBundler.bundle();
         this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
 
@@ -106,11 +106,11 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         });
 
         // Start watcher.
-        lConsole.writeLine("Starting watcher...");
+        lConsole.writeLine('Starting watcher...');
         lWatcher.start();
 
         // Start http server asnyc and keep process running as long as server is running.
-        lConsole.writeLine("Starting page server...");
+        lConsole.writeLine('Starting page server...');
         await lHttpServer.start();
     }
 

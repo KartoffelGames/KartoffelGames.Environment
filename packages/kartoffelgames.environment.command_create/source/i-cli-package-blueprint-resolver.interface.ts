@@ -1,4 +1,4 @@
-import { Project } from "@kartoffelgames/environment-core";
+import { Project } from '@kartoffelgames/environment-core';
 
 export interface ICliPackageBlueprintResolver {
     /**

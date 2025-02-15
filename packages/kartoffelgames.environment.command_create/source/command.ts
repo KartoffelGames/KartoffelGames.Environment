@@ -1,6 +1,6 @@
 import { CliCommandDescription, CliPackageInformation, CliParameter, Console, FileSystem, ICliPackageCommand, Import, Package, Project } from '@kartoffelgames/environment-core';
 import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
-import { CliPackageBlueprintParameter, ICliPackageBlueprintResolver } from "./i-cli-package-blueprint-resolver.interface.ts";
+import { CliPackageBlueprintParameter, ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface.ts';
 
 export class KgCliCommand implements ICliPackageCommand<string> {
     /**
@@ -203,7 +203,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
                 }
 
                 // Output copy information.
-                lConsole.writeLine("Copy " + lZipEntry.filename);
+                lConsole.writeLine('Copy ' + lZipEntry.filename);
 
                 // Read zipped file.
                 const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());

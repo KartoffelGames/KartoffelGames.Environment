@@ -1,6 +1,6 @@
 import { ICliPackageCommand } from '../cli/i-cli-package-command.interface.ts';
-import { Project } from "../index.ts";
-import { FileSystem } from "../system/file-system.ts";
+import { Project } from '../index.ts';
+import { FileSystem } from '../system/file-system.ts';
 
 export class Package {
     /**

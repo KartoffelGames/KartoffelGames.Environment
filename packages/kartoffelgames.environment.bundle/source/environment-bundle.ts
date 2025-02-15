@@ -1,5 +1,5 @@
 import { FileSystem, Package, PathInformation } from '@kartoffelgames/environment-core';
-import { denoPlugins } from "@luca/esbuild-deno-loader";
+import { denoPlugins } from '@luca/esbuild-deno-loader';
 import * as esbuild from 'esbuild';
 
 export class EnvironmentBundle {
@@ -111,9 +111,9 @@ export class EnvironmentBundle {
 
             // Default settings.
             bundle: true,
-            platform: "neutral",
-            format: "esm",
-            target: "esnext",
+            platform: 'neutral',
+            format: 'esm',
+            target: 'esnext',
 
             // Optimization.
             minify: true,
@@ -251,7 +251,7 @@ export class EnvironmentBundle {
     }
 }
 
-export type EnvironmentBundleExtentionLoader = { [extension: string]: "base64" | "dataurl" | "empty" | "js" | "json" | "text" | "ts"; };
+export type EnvironmentBundleExtentionLoader = { [extension: string]: 'base64' | 'dataurl' | 'empty' | 'js' | 'json' | 'text' | 'ts'; };
 
 export type EnvironmentBundleInputFiles = Array<{
     /**

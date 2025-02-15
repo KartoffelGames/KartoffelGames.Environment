@@ -1,5 +1,5 @@
 import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
+import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Process, ProcessParameter, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
@@ -126,7 +126,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         }
 
         // Eighter test the test directory or the bundle result directory when bundle is required.
-        let lTestFilesDirectoryList: Array<string> = [];
+        const lTestFilesDirectoryList: Array<string> = [];
         if (lPackageConfiguration.bundleRequired) {
             lTestFilesDirectoryList.push(FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile));
         } else {

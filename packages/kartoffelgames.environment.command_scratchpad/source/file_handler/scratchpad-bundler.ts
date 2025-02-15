@@ -1,5 +1,5 @@
 import { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
+import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
 import { CliParameter, Console, Package, Project } from '@kartoffelgames/environment-core';
 
 export class ScratchpadBundler {

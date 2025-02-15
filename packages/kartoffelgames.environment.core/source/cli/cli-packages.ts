@@ -1,6 +1,6 @@
-import { CliCommand } from "../index.ts";
+import { CliCommand } from '../index.ts';
 import { Import } from '../project/import.ts';
-import { Project } from "../project/project.ts";
+import { Project } from '../project/project.ts';
 import { FileSystem } from '../system/file-system.ts';
 import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
@@ -147,7 +147,7 @@ export class CliPackages {
         }
 
         // Wait for all packages to be read.
-        const lFailablePackagePromiseList: Array<Promise<CliPackageInformation | null>> = lReadPackageInformationList.map((pPromise) => {
+        const lFailablePackagePromiseList: Array<Promise<CliPackageInformation | null>> = lReadPackageInformationList.map(async (pPromise) => {
             return pPromise.catch(() => null);
         });
         const lFoundPackageList: Array<CliPackageInformation| null> = await Promise.all(lFailablePackagePromiseList);

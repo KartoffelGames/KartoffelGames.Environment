@@ -78,7 +78,7 @@ export class ScratchpadHttpServer {
         // Start webserver on defined port.
         this.mServer = Deno.serve({ port: this.mPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
             // Upgrade to websocket.
-            if (pReqest.headers.get("upgrade") === "websocket") {
+            if (pReqest.headers.get('upgrade') === 'websocket') {
                 return this.upgradeToWebsocketConnection(pReqest);
             }
 
@@ -110,7 +110,7 @@ export class ScratchpadHttpServer {
                         return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
                     } catch (e) {
                         // Somthing went wrong idk what.
-                        return new Response("File could not be read.", { status: 500 });
+                        return new Response('File could not be read.', { status: 500 });
                     }
                 }
             }
@@ -125,7 +125,7 @@ export class ScratchpadHttpServer {
                 return new Response(this.mScratchpadFiles.map, { headers: { 'Content-Type': 'application/json' } });
             }
 
-            return new Response("404 Not Found", { status: 404 });
+            return new Response('404 Not Found', { status: 404 });
         });
 
         // Return promise that resolves once the server is closed.
@@ -156,7 +156,7 @@ export class ScratchpadHttpServer {
         const { socket: lSocket, response: lResponse } = Deno.upgradeWebSocket(pReqest);
 
         // Save socket connection on open.
-        lSocket.addEventListener("open", () => {
+        lSocket.addEventListener('open', () => {
             lConsole.writeLine('Browser connection established');
             this.mOpenWebsockets.add(lSocket);
         });

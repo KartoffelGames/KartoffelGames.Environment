@@ -1,6 +1,6 @@
 import { CliPackages } from '../cli/cli-packages.ts';
 import { FileSystem } from '../system/file-system.ts';
-import { Package } from "./package.ts";
+import { Package } from './package.ts';
 
 export class Project {
     /**

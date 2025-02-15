@@ -1,7 +1,7 @@
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
-import { ScratchpadBundler } from "./file_handler/scratchpad-bundler.ts";
-import { ScratchpadFileWatcher } from "./file_handler/scratchpad-file-watcher.ts";
-import { ScratchpadHttpServer } from "./file_handler/scratchpad-http-server.ts";
+import { ScratchpadBundler } from './file_handler/scratchpad-bundler.ts';
+import { ScratchpadFileWatcher } from './file_handler/scratchpad-file-watcher.ts';
+import { ScratchpadHttpServer } from './file_handler/scratchpad-http-server.ts';
 
 export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration> {
     /**
@@ -66,7 +66,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         });
 
         // Build initial build files.
-        lConsole.writeLine("Starting initial bundle...");
+        lConsole.writeLine('Starting initial bundle...');
         await lScratchpadBundler.bundle();
         lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
 
@@ -88,11 +88,11 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         });
 
         // Start watcher.
-        lConsole.writeLine("Starting watcher...");
+        lConsole.writeLine('Starting watcher...');
         lWatcher.start();
 
         // Start http server asnyc and keep process running as long as server is running.
-        lConsole.writeLine("Starting scratchpad server...");
+        lConsole.writeLine('Starting scratchpad server...');
         await lHttpServer.start();
     }
 

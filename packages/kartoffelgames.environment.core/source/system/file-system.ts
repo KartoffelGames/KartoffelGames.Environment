@@ -1,5 +1,5 @@
 import * as path from '@std/path';
-import * as fs from "@std/fs";
+import * as fs from '@std/fs';
 
 export class FileSystem {
     /**
@@ -102,7 +102,7 @@ export class FileSystem {
         const lParsedPath: path.ParsedPath = path.parse(pPath);
 
         // Only check file stats if path exists.
-        let lPathStats: { isFile: boolean; isDirectory: boolean; } = { isFile: false, isDirectory: false };
+        const lPathStats: { isFile: boolean; isDirectory: boolean; } = { isFile: false, isDirectory: false };
         if (FileSystem.exists(pPath)) {
             const lStats: Deno.FileInfo = Deno.lstatSync(pPath);
             lPathStats.isFile = lStats.isFile;
@@ -337,7 +337,7 @@ export class FileSystem {
      */
     public static read(pPath: string): string {
         // Create text decoder to decode file data to text.
-        const lTextDecoder: TextDecoder = new TextDecoder("utf-8");
+        const lTextDecoder: TextDecoder = new TextDecoder('utf-8');
 
         // Read file data and decode binary to text.
         const lFileData: Uint8Array = Deno.readFileSync(pPath);
@@ -350,7 +350,7 @@ export class FileSystem {
      */
     public static async readAsync(pPath: string): Promise<string> {
         // Create text decoder to decode file data to text.
-        const lTextDecoder: TextDecoder = new TextDecoder("utf-8");
+        const lTextDecoder: TextDecoder = new TextDecoder('utf-8');
 
         // Read file data and decode binary to text.
         const lFileData: Uint8Array = await Deno.readFile(pPath);

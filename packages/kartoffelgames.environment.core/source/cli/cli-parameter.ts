@@ -1,4 +1,4 @@
-import { ICliPackageCommand } from "./i-cli-package-command.interface.ts";
+import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
 /**
  * The `CliParameter` class provides methods to manage command-line parameters.
@@ -52,7 +52,7 @@ export class CliParameter {
             // Get parameter configuration by name.
             const lOptionalParameter: CliParameterOptionalParameter | undefined = CliParameter.mGlobalParameters.get(lParameterName);
             if (!lOptionalParameter) {
-                continue
+                continue;
             }
 
             // Format parameter value when it is set as string.
