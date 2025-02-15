@@ -1,6 +1,9 @@
 import { CliCommandDescription, Console, FileSystem, ICliPackageCommand, Import, ProcessContext } from '@kartoffelgames/environment-core';
 import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
 
+/**
+ * Command to initialize new monorepo project.
+ */
 export class Command implements ICliPackageCommand<string> {
     /**
      * Command description.
@@ -38,6 +41,7 @@ export class Command implements ICliPackageCommand<string> {
 
     /**
      * Create blueprint files.
+     * 
      * @param pProjectName - Package name.
      * @param pBlueprint - Blueprint name.
      * @param pCommandParameter - Command parameter.
