@@ -8,7 +8,13 @@ import { CliCommand, CliParameter, Console, FileSystem, Import, Package, Process
     // Read parameter and cut before cli.js parameter.
     const lParameter: Array<string> = (() => {
         const lCliCommandStartIndex: number = ProcessContext.parameters.findIndex((pParameter) => {
-            return pParameter.toLowerCase().endsWith(FileSystem.fileOfPath(import.meta.filename!));
+            // Read file path. Opt into url when file was loaded over network.
+            let lFilePath: string | undefined = import.meta.filename;
+            if(!lFilePath) {
+                lFilePath = new URL(import.meta.url).pathname;
+            }
+
+            return pParameter.toLowerCase().endsWith(FileSystem.fileOfPath(lFilePath));
         });
         return ProcessContext.parameters.slice(lCliCommandStartIndex + 1);
     })();

@@ -171,6 +171,11 @@ export class Project {
      * Read all projects of package.
      */
     public readAllPackages(): Array<Package> {
+        // When directory does not exists, no package could exist eighter.
+        if (!FileSystem.exists(this.packagesDirectory)) {
+            return new Array<Package>();
+        }
+
         // Search all deno.json files of root workspaces. Exclude node_modules.
         const lAllFiles: Array<string> = FileSystem.findFiles(FileSystem.pathToAbsolute(this.packagesDirectory), {
             depth: 1, // ./packages/{package_name}/deno.json
