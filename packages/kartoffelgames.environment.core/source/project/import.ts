@@ -10,7 +10,18 @@ export class Import {
      * @returns imported package. 
      */
     public static async import(pImportPath: string): Promise<any> {
-        return import(pImportPath);
+        return import(pImportPath, {});
+    }
+
+    /**
+     * Import a json file.
+     * 
+     * @param pImportPath - Import. Uses default import or path.
+     * 
+     * @returns imported package. 
+     */
+    public static async importJson(pImportPath: string): Promise<any> {
+        return import(pImportPath, { with: { type: 'json' } });
     }
 
     /**

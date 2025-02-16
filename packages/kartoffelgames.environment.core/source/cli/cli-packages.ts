@@ -114,12 +114,12 @@ export class CliPackages {
         // Read all cli packages in seperate promises.
         for (const lPackageImport of lPackageImports) {
             // Import "kg-cli.config.json" from package.
-            const lCliConfigFilePath: URL = Import.resolveToUrl(`${lPackageImport}/kg-cli.config.json`);
+            const lCliConfigFileImportPath: string = `${lPackageImport}/kg-cli.config.json`;
 
             // Read cli configuration file as json.
-            const lCliPackageInformationPromise: Promise<CliPackageInformation> = fetch(lCliConfigFilePath)
-                .then(async (pCliConfigFileRequest) => {
-                    const lCliConfigFile: CliPackageConfiguration = await pCliConfigFileRequest.json();
+            const lCliPackageInformationPromise: Promise<CliPackageInformation> = Import.importJson(lCliConfigFileImportPath)
+                .then(async (pCliConfigFileModule) => {
+                    const lCliConfigFile: any = pCliConfigFileModule.default;
 
                     // Skip when package type does not match.
                     if (pType && lCliConfigFile.type !== pType) {
@@ -150,7 +150,7 @@ export class CliPackages {
         const lFailablePackagePromiseList: Array<Promise<CliPackageInformation | null>> = lReadPackageInformationList.map(async (pPromise) => {
             return pPromise.catch(() => null);
         });
-        const lFoundPackageList: Array<CliPackageInformation| null> = await Promise.all(lFailablePackagePromiseList);
+        const lFoundPackageList: Array<CliPackageInformation | null> = await Promise.all(lFailablePackagePromiseList);
 
         // All found cli packages.
         const lCliPackages: Map<string, CliPackageInformation> = new Map<string, CliPackageInformation>();
