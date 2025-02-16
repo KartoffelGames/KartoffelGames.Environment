@@ -1,5 +1,5 @@
 import { FileSystem, Package, PathInformation } from '@kartoffelgames/environment-core';
-import { denoPlugins } from "@luca/esbuild-deno-loader";
+import { denoPlugins } from '@luca/esbuild-deno-loader';
 import * as esbuild from 'esbuild';
 
 export class EnvironmentBundle {
@@ -31,14 +31,14 @@ export class EnvironmentBundle {
      *  
      * @returns Build output of esbuild build. 
      */
-    private async bundlePackageContent(pPackage: Package, pInputContent: EnvironmentBundleInputContent, lLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
+    private async bundlePackageContent(pPackage: Package, pInputContent: EnvironmentBundleInputContent, pLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
         // Convert the relative resolve path into a absolute path.
         pInputContent.outputBasename = pInputContent.outputBasename.replace('<packagename>', pPackage.id);
         pInputContent.inputResolveDirectory = FileSystem.pathToAbsolute(pPackage.directory, pInputContent.inputResolveDirectory);
 
         // Build bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
-            loader: lLoader,
+            loader: pLoader,
 
             // For some higher reason the deno plugins does not have the correct type definition.
             plugins: [
@@ -111,9 +111,9 @@ export class EnvironmentBundle {
 
             // Default settings.
             bundle: true,
-            platform: "neutral",
-            format: "esm",
-            target: "esnext",
+            platform: 'neutral',
+            format: 'esm',
+            target: 'esnext',
 
             // Optimization.
             minify: true,
@@ -251,7 +251,7 @@ export class EnvironmentBundle {
     }
 }
 
-export type EnvironmentBundleExtentionLoader = { [extension: string]: "base64" | "dataurl" | "empty" | "js" | "json" | "text" | "ts"; };
+export type EnvironmentBundleExtentionLoader = { [extension: string]: 'base64' | 'dataurl' | 'empty' | 'js' | 'json' | 'text' | 'ts'; };
 
 export type EnvironmentBundleInputFiles = Array<{
     /**

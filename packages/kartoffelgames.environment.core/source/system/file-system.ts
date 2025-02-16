@@ -1,5 +1,5 @@
+import * as fs from '@std/fs';
 import * as path from '@std/path';
-import * as fs from "@std/fs";
 
 export class FileSystem {
     /**
@@ -38,6 +38,16 @@ export class FileSystem {
     }
 
     /**
+     * Copy file to destination.
+     * 
+     * @param pSource - Source file path.
+     * @param pDestination - Destination file path.
+     */
+    public static copyFile(pSource: string, pDestination: string): void {
+        Deno.copyFileSync(pSource, pDestination,);
+    }
+
+    /**
      * Create directory.
      * @param pPath - Path.
      */
@@ -46,13 +56,17 @@ export class FileSystem {
     }
 
     /**
-     * Copy file to destination.
+     * Deletes the file at the specified path.
      * 
-     * @param pSource - Source file path.
-     * @param pDestination - Destination file path.
+     * @param pPath - The path to the file to be deleted.
+     * @throws {Deno.errors.PermissionDenied} If the process lacks permissions to delete the file.
      */
-    public static copyFile(pSource: string, pDestination: string): void {
-        Deno.copyFileSync(pSource, pDestination,);
+    public static delete(pPath: string): void {
+        if (!FileSystem.exists(pPath)) {
+            return;
+        }
+
+        Deno.removeSync(pPath);
     }
 
     /**
@@ -89,34 +103,6 @@ export class FileSystem {
             const lFilePath: string = FileSystem.pathToAbsolute(pPath, lFile.name);
             Deno.removeSync(lFilePath, { recursive: true });
         }
-    }
-
-    /**
-     * Get path information.
-     * 
-     * @param pPath - Path to file.
-     * 
-     * @returns - Information about path. 
-     */
-    public static pathInformation(pPath: string): PathInformation {
-        const lParsedPath: path.ParsedPath = path.parse(pPath);
-
-        // Only check file stats if path exists.
-        let lPathStats: { isFile: boolean; isDirectory: boolean; } = { isFile: false, isDirectory: false };
-        if (FileSystem.exists(pPath)) {
-            const lStats: Deno.FileInfo = Deno.lstatSync(pPath);
-            lPathStats.isFile = lStats.isFile;
-            lPathStats.isDirectory = lStats.isDirectory;
-        }
-
-        return {
-            isDirectory: lPathStats.isDirectory,
-            isFile: lPathStats.isFile,
-            basename: lParsedPath.base,
-            directory: lParsedPath.dir,
-            extension: lParsedPath.ext,
-            filename: lParsedPath.name,
-        };
     }
 
     /**
@@ -304,6 +290,34 @@ export class FileSystem {
     }
 
     /**
+     * Get path information.
+     * 
+     * @param pPath - Path to file.
+     * 
+     * @returns - Information about path. 
+     */
+    public static pathInformation(pPath: string): PathInformation {
+        const lParsedPath: path.ParsedPath = path.parse(pPath);
+
+        // Only check file stats if path exists.
+        const lPathStats: { isFile: boolean; isDirectory: boolean; } = { isFile: false, isDirectory: false };
+        if (FileSystem.exists(pPath)) {
+            const lStats: Deno.FileInfo = Deno.lstatSync(pPath);
+            lPathStats.isFile = lStats.isFile;
+            lPathStats.isDirectory = lStats.isDirectory;
+        }
+
+        return {
+            isDirectory: lPathStats.isDirectory,
+            isFile: lPathStats.isFile,
+            basename: lParsedPath.base,
+            directory: lParsedPath.dir,
+            extension: lParsedPath.ext,
+            filename: lParsedPath.name,
+        };
+    }
+
+    /**
      * Joins and resolves path parts to an absolute path.
      *
      * @param pPathParts - Path parts to join.
@@ -337,7 +351,7 @@ export class FileSystem {
      */
     public static read(pPath: string): string {
         // Create text decoder to decode file data to text.
-        const lTextDecoder: TextDecoder = new TextDecoder("utf-8");
+        const lTextDecoder: TextDecoder = new TextDecoder('utf-8');
 
         // Read file data and decode binary to text.
         const lFileData: Uint8Array = Deno.readFileSync(pPath);
@@ -350,26 +364,11 @@ export class FileSystem {
      */
     public static async readAsync(pPath: string): Promise<string> {
         // Create text decoder to decode file data to text.
-        const lTextDecoder: TextDecoder = new TextDecoder("utf-8");
+        const lTextDecoder: TextDecoder = new TextDecoder('utf-8');
 
         // Read file data and decode binary to text.
         const lFileData: Uint8Array = await Deno.readFile(pPath);
         return lTextDecoder.decode(lFileData);
-    }
-
-
-    /**
-     * Deletes the file at the specified path.
-     * 
-     * @param pPath - The path to the file to be deleted.
-     * @throws {Deno.errors.PermissionDenied} If the process lacks permissions to delete the file.
-     */
-    public static delete(pPath: string): void {
-        if (!FileSystem.exists(pPath)) {
-            return;
-        }
-
-        Deno.removeSync(pPath);
     }
 
     /**

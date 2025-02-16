@@ -1,7 +1,7 @@
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
-import { PageBundler } from "./file_handler/page-bundler.ts";
-import { PageFileWatcher } from "./file_handler/page-file-watcher.ts";
-import { PageHttpServer } from "./file_handler/page-http-server.ts";
+import { PageBundler } from './file_handler/page-bundler.ts';
+import { PageFileWatcher } from './file_handler/page-file-watcher.ts';
+import { PageHttpServer } from './file_handler/page-http-server.ts';
 
 export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     /**
@@ -62,7 +62,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
         // Create watch paths for package source and page directory.
         const lWatchPaths: Array<string> = [
-            pPackage.sourcreDirectory,
+            pPackage.sourceDirectory,
             FileSystem.pathToAbsolute(pPackage.directory, 'page')
         ];
 
@@ -83,7 +83,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         });
 
         // Build initial build files.
-        lConsole.writeLine("Starting initial bundle...");
+        lConsole.writeLine('Starting initial bundle...');
         await lPageBundler.bundle();
         this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
 
@@ -106,18 +106,30 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         });
 
         // Start watcher.
-        lConsole.writeLine("Starting watcher...");
+        lConsole.writeLine('Starting watcher...');
         lWatcher.start();
 
         // Start http server asnyc and keep process running as long as server is running.
-        lConsole.writeLine("Starting page server...");
+        lConsole.writeLine('Starting page server...');
         await lHttpServer.start();
     }
 
-    /***
-     * Initialize page files.
+    /**
+     * Initializes the initial page files for the given package.
+     * 
+     * This method creates the necessary directory structure and initializes
+     * the HTML, CSS, and TypeScript files if they do not already exist.
+     * 
+     * @param pPackage - The package for which the page files are to be initialized.
+     * 
+     * @remarks
+     * - Creates a 'page' directory inside the package directory.
+     * - Creates a 'source' directory inside the 'page' directory.
+     * - Initializes an 'index.html' file with basic HTML content.
+     * - Initializes an 'index.css' file with basic CSS content.
+     * - Initializes an 'index.ts' file inside the 'source' directory with basic TypeScript content.
      */
-    public initPageFiles(pPackage: Package): void {
+    private initPageFiles(pPackage: Package): void {
         const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
 
         // Create page directorys.

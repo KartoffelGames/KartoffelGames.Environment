@@ -1,4 +1,4 @@
-import { Package } from "../project/package.ts";
+import { Package } from '../project/package.ts';
 import { Project } from '../project/project.ts';
 import { CliParameter } from './cli-parameter.ts';
 

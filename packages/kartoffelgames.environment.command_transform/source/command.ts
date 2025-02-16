@@ -1,5 +1,5 @@
-import { build } from "@deno/dnt";
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
+import { build } from '@deno/dnt';
+import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, ProcessContext, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> {
     /**
@@ -72,6 +72,81 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
         }
     }
 
+    /**
+     * Deletes the specified node directory.
+     * Removes the package from the root project's package.json workspaces.
+     * Deletes the root project's package.json if no workspaces are left, otherwise updates it.
+     *
+     * @param pProject - The project containing the node directory.
+     * @param pPackage - The package to be removed from the root project's package.json.
+     * @param pRelativeNodeDirectory - The path to the node directory to be cleaned.
+     */
+    private cleanNodeDirectory(pProject: Project, pPackage: Package, pRelativeNodeDirectory: string): void {
+        const lNodeDirectory = FileSystem.pathToAbsolute(pPackage.directory, pRelativeNodeDirectory);
+
+        // Remove node directory.
+        if (FileSystem.exists(lNodeDirectory)) {
+            FileSystem.deleteDirectory(lNodeDirectory);
+        }
+
+        // Remove package from root package json.
+        const lRootProjectPackageJsonFilePath: string = FileSystem.pathToAbsolute(pProject.directory, 'package.json');
+        if (FileSystem.exists(lRootProjectPackageJsonFilePath)) {
+            // Read package.json file.
+            const lRootProjectPackageJson = JSON.parse(FileSystem.read(lRootProjectPackageJsonFilePath));
+
+            // Remove package path from workspaces.
+            const lPackagePath = FileSystem.pathToRelative(pProject.directory, FileSystem.pathToAbsolute(pPackage.directory, pRelativeNodeDirectory));
+            lRootProjectPackageJson.workspaces = lRootProjectPackageJson.workspaces.filter((pWorkspace: string) => pWorkspace !== lPackagePath);
+
+            // Remove package json when no package is left.
+            if (lRootProjectPackageJson.workspaces.length === 0) {
+                FileSystem.delete(lRootProjectPackageJsonFilePath);
+
+                // Remove a possible node_modules directory.
+                const lNodeModulesDirectory = FileSystem.pathToAbsolute(pProject.directory, 'node_modules');
+                if (FileSystem.exists(lNodeModulesDirectory)) {
+                    FileSystem.deleteDirectory(lNodeModulesDirectory);
+                }
+
+                // Remove a possible package-lock.json file.
+                const lPackageLockJsonFilePath = FileSystem.pathToAbsolute(pProject.directory, 'package-lock.json');
+                if (FileSystem.exists(lPackageLockJsonFilePath)) {
+                    FileSystem.delete(lPackageLockJsonFilePath);
+                }
+            } else {
+                // Write package.json file.
+                FileSystem.write(lRootProjectPackageJsonFilePath, JSON.stringify(lRootProjectPackageJson, null, 4));
+            }
+        }
+    }
+
+    /**
+     * Transforms a Deno project to a Node.js compatible project.
+     * 
+     * @param pProject - The project to transform.
+     * @param pPackage - The package within the project to transform.
+     * @param pNodeDirectory - The directory where the transformed Node.js project will be output.
+     * @returns A promise that resolves when the transformation is complete.
+     * 
+     * @remarks
+     * This function performs the following steps:
+     * 1. Ensures a `package.json` file exists in the project root directory.
+     * 2. Cleans the old Node.js transformation directory.
+     * 3. Identifies all files used in the export `deno.json` property.
+     * 4. Filters out non-TypeScript files from the exported file list.
+     * 5. Creates a temporary TypeScript file to maintain the original directory structure.
+     * 6. Converts all exported files to relative paths.
+     * 7. Identifies and includes additional files specified in the `publish.include` configuration.
+     * 8. Excludes files specified in the `publish.exclude` configuration.
+     * 9. Removes TypeScript files from the published files list.
+     * 10. Removes duplicate entries from the published files list.
+     * 11. Converts all published files to relative paths.
+     * 12. Writes the temporary core-import-placeholder TypeScript file.
+     * 13. Uses the `build` function to transform the project to Node.js.
+     * 14. Adds the package path to the root project's `package.json` workspaces.
+     * 15. Cleans up the temporary core-import-placeholder TypeScript file.
+     */
     private async transformToNode(pProject: Project, pPackage: Package, pNodeDirectory: string): Promise<void> {
         // Create a package.json file in project root directory if it does not exist.
         const lRootProjectPackageJsonFilePath: string = FileSystem.pathToAbsolute(pProject.directory, 'package.json');
@@ -88,10 +163,10 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
 
         // Find all files used in the export deno.json property.
         const lExportedFiles: Array<string> = new Array<string>();
-        if (typeof pPackage.configuration["exports"] === 'string') {
-            lExportedFiles.push(FileSystem.pathToAbsolute(pPackage.directory, pPackage.configuration["exports"]));
+        if (typeof pPackage.configuration['exports'] === 'string') {
+            lExportedFiles.push(FileSystem.pathToAbsolute(pPackage.directory, pPackage.configuration['exports']));
         } else {
-            for (const lExportPath of Object.values(pPackage.configuration["exports"] ?? {})) {
+            for (const lExportPath of Object.values(pPackage.configuration['exports'] ?? {})) {
                 // export path must be a string.
                 if (typeof lExportPath !== 'string') {
                     continue;
@@ -124,7 +199,7 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
 
         // Convert all exported files to relative paths.
         const lRelativeExportedFiles: Array<string> = lExportedFiles.map((pFilePath: string) => {
-            return FileSystem.pathToRelative(Deno.cwd(), pFilePath);
+            return FileSystem.pathToRelative(ProcessContext.workingDirectory, pFilePath);
         });
 
         // Add all published files to lPublishedFiles list.
@@ -216,18 +291,18 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
                     name: pPackage.configuration.name,
                     version: pPackage.configuration.version,
                     description: pPackage.id,
-                    license: pPackage.configuration["license"] ?? null
+                    license: pPackage.configuration['license'] ?? null
                 },
                 // Skip checks that would fail.
                 typeCheck: false,
                 test: false,
                 postBuild() {
-                    for(const lRelativePublishedFile of lRelativePublishedFiles) {
+                    for (const lRelativePublishedFile of lRelativePublishedFiles) {
                         // Create absolute paths for the source and target copy paths.
                         const lSourceAbsoluteTargetPath: string = FileSystem.pathToAbsolute(pPackage.directory, lRelativePublishedFile);
                         const lTargetAbsoluteEsmPath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'esm', lRelativePublishedFile);
                         const lTargetAbsoluteScriptPath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'script', lRelativePublishedFile);
-                        const lTargetAbsoluteSourcePath: string =  FileSystem.pathToAbsolute(pNodeDirectory, 'src', lRelativePublishedFile);
+                        const lTargetAbsoluteSourcePath: string = FileSystem.pathToAbsolute(pNodeDirectory, 'src', lRelativePublishedFile);
 
                         // Create directories.
                         FileSystem.createDirectory(FileSystem.pathInformation(lTargetAbsoluteEsmPath).directory);
@@ -261,55 +336,6 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
         } finally {
             // Remove temporary core-import-placeholder.ts file.
             FileSystem.delete(lTemporaryCoreImportPlaceholderFilePath);
-        }
-    }
-
-    /**
-     * Deletes the specified node directory.
-     * Removes the package from the root project's package.json workspaces.
-     * Deletes the root project's package.json if no workspaces are left, otherwise updates it.
-     *
-     * @param pProject - The project containing the node directory.
-     * @param pPackage - The package to be removed from the root project's package.json.
-     * @param pRelativeNodeDirectory - The path to the node directory to be cleaned.
-     */
-    private cleanNodeDirectory(pProject: Project, pPackage: Package, pRelativeNodeDirectory: string): void {
-        const lNodeDirectory = FileSystem.pathToAbsolute(pPackage.directory, pRelativeNodeDirectory);
-
-        // Remove node directory.
-        if (FileSystem.exists(lNodeDirectory)) {
-            FileSystem.deleteDirectory(lNodeDirectory);
-        }
-
-        // Remove package from root package json.
-        const lRootProjectPackageJsonFilePath: string = FileSystem.pathToAbsolute(pProject.directory, 'package.json');
-        if (FileSystem.exists(lRootProjectPackageJsonFilePath)) {
-            // Read package.json file.
-            const lRootProjectPackageJson = JSON.parse(FileSystem.read(lRootProjectPackageJsonFilePath));
-
-            // Remove package path from workspaces.
-            const lPackagePath = FileSystem.pathToRelative(pProject.directory, FileSystem.pathToAbsolute(pPackage.directory, pRelativeNodeDirectory));
-            lRootProjectPackageJson.workspaces = lRootProjectPackageJson.workspaces.filter((pWorkspace: string) => pWorkspace !== lPackagePath);
-
-            // Remove package json when no package is left.
-            if (lRootProjectPackageJson.workspaces.length === 0) {
-                FileSystem.delete(lRootProjectPackageJsonFilePath);
-
-                // Remove a possible node_modules directory.
-                const lNodeModulesDirectory = FileSystem.pathToAbsolute(pProject.directory, 'node_modules');
-                if (FileSystem.exists(lNodeModulesDirectory)) {
-                    FileSystem.deleteDirectory(lNodeModulesDirectory);
-                }
-
-                // Remove a possible package-lock.json file.
-                const lPackageLockJsonFilePath = FileSystem.pathToAbsolute(pProject.directory, 'package-lock.json');
-                if (FileSystem.exists(lPackageLockJsonFilePath)) {
-                    FileSystem.delete(lPackageLockJsonFilePath);
-                }
-            } else {
-                // Write package.json file.
-                FileSystem.write(lRootProjectPackageJsonFilePath, JSON.stringify(lRootProjectPackageJson, null, 4));
-            }
         }
     }
 }

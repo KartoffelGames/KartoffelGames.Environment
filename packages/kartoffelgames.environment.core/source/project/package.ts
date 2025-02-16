@@ -1,6 +1,6 @@
 import { ICliPackageCommand } from '../cli/i-cli-package-command.interface.ts';
-import { Project } from "../index.ts";
-import { FileSystem } from "../system/file-system.ts";
+import { Project } from '../index.ts';
+import { FileSystem } from '../system/file-system.ts';
 
 export class Package {
     /**
@@ -53,16 +53,10 @@ export class Package {
         return lPackageNameId;
     }
 
-    private readonly mProject: Project;
-    private readonly mPackageRootPath: string;
     private readonly mPackageConfiguration: PackageConfigurationFile;
+    private readonly mPackageRootPath: string;
+    private readonly mProject: Project;
 
-    /**
-     * Get the package id name.
-     */
-    public get id(): string {
-        return this.mPackageConfiguration.kg.name;
-    }
 
     /**
      * Get the package configuration file.
@@ -79,10 +73,10 @@ export class Package {
     }
 
     /**
-     * Get the package version.
+     * Get the package id name.
      */
-    public get version(): string {
-        return this.mPackageConfiguration.version;
+    public get id(): string {
+        return this.mPackageConfiguration.kg.name;
     }
 
     /**
@@ -95,8 +89,15 @@ export class Package {
     /**
      * Get the source directory of the package.
      */
-    public get sourcreDirectory(): string {
+    public get sourceDirectory(): string {
         return FileSystem.pathToAbsolute(this.mPackageRootPath, this.mPackageConfiguration.kg.source);
+    }
+
+    /**
+     * Get the package version.
+     */
+    public get version(): string {
+        return this.mPackageConfiguration.version;
     }
 
     /**

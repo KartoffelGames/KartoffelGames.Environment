@@ -1,6 +1,6 @@
 export class ScratchpadFileWatcher {
-    private readonly mWatchedPaths: Array<string>;
     private readonly mListener: Array<ScratchpadFileWatcherListener>;
+    private readonly mWatchedPaths: Array<string>;
     private mWatcher: Deno.FsWatcher | null;
 
     /**
@@ -41,7 +41,7 @@ export class ScratchpadFileWatcher {
         // Init debounce timer.
         let lDebounceTimer: number = 0;
 
-        const lWatchedEvents: Array<string> = ["create", "modify", "rename", "remove"];
+        const lWatchedEvents: Array<string> = ['create', 'modify', 'rename', 'remove'];
 
         // Start watcher loop asyncron.
         for await (const lEvent of this.mWatcher) {

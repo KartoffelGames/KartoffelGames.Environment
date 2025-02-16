@@ -29,56 +29,6 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
     }
 
     /**
-     * Execute command.
-     * 
-     * @param pParameter - Command parameter.
-     * @param pProject - Project handling.
-     */
-    public async run(_pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
-        // Needs a package to run page.
-        if (pPackage === null) {
-            throw new Error('Package to run page not specified.');
-        }
-
-        // Read cli parameter.
-        const lForceBundle: boolean = <boolean>pParameter.has('force');
-
-        // Read cli configuration from cli package.
-        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
-
-        const lConsole = new Console();
-
-        // Skip anything when bundling is disabled.
-        if (!lPackageConfiguration.enabled && !lForceBundle) {
-            lConsole.writeLine(`Bundling disabled, Skip bundling.`);
-            return;
-        } else if (lForceBundle) {
-            // Message forced bundling.
-            lConsole.writeLine(`Forced bundling.`);
-        }
-
-        // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await this.bundle(pPackage);
-
-        // Create output file directory.
-        const lBuildOutput: string = FileSystem.pathToAbsolute(pPackage.directory, 'library');
-        FileSystem.createDirectory(lBuildOutput);
-
-        // Output build result.
-        for (const lOutput of lBundleResult) {
-            // Write content file.
-            const lContentFilePath = FileSystem.pathToAbsolute(lBuildOutput, lOutput.fileName);
-            FileSystem.writeBinary(lContentFilePath, lOutput.content);
-
-            // Write map file.
-            const lMapFilePath = FileSystem.pathToAbsolute(lBuildOutput, `${lOutput.fileName}.map`);
-            FileSystem.writeBinary(lMapFilePath, lOutput.sourceMap);
-        }
-
-        lConsole.writeLine('Bundle successful');
-    }
-
-    /**
      * Bundle package with the bundle options specified in the package deno.json.
      * 
      * @param pPackage - Package bundle.
@@ -149,7 +99,57 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         }
 
         // Start bundling.
-        return await lEnvironmentBundle.bundle(pPackage, lBundleOptions as EnvironmentBundleOptions);
+        return lEnvironmentBundle.bundle(pPackage, lBundleOptions as EnvironmentBundleOptions);
+    }
+
+    /**
+     * Execute command.
+     * 
+     * @param pParameter - Command parameter.
+     * @param pProject - Project handling.
+     */
+    public async run(_pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
+        // Needs a package to run page.
+        if (pPackage === null) {
+            throw new Error('Package to run page not specified.');
+        }
+
+        // Read cli parameter.
+        const lForceBundle: boolean = <boolean>pParameter.has('force');
+
+        // Read cli configuration from cli package.
+        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
+
+        const lConsole = new Console();
+
+        // Skip anything when bundling is disabled.
+        if (!lPackageConfiguration.enabled && !lForceBundle) {
+            lConsole.writeLine(`Bundling disabled, Skip bundling.`);
+            return;
+        } else if (lForceBundle) {
+            // Message forced bundling.
+            lConsole.writeLine(`Forced bundling.`);
+        }
+
+        // Start bundling.
+        const lBundleResult: EnvironmentBundleOutput = await this.bundle(pPackage);
+
+        // Create output file directory.
+        const lBuildOutput: string = FileSystem.pathToAbsolute(pPackage.directory, 'library');
+        FileSystem.createDirectory(lBuildOutput);
+
+        // Output build result.
+        for (const lOutput of lBundleResult) {
+            // Write content file.
+            const lContentFilePath = FileSystem.pathToAbsolute(lBuildOutput, lOutput.fileName);
+            FileSystem.writeBinary(lContentFilePath, lOutput.content);
+
+            // Write map file.
+            const lMapFilePath = FileSystem.pathToAbsolute(lBuildOutput, `${lOutput.fileName}.map`);
+            FileSystem.writeBinary(lMapFilePath, lOutput.sourceMap);
+        }
+
+        lConsole.writeLine('Bundle successful');
     }
 }
 

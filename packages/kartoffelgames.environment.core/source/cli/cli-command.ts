@@ -1,4 +1,4 @@
-import { Package } from "../project/package.ts";
+import { Package } from '../project/package.ts';
 import { Project } from '../project/project.ts';
 import { CliParameter } from './cli-parameter.ts';
 import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
@@ -8,21 +8,21 @@ import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
  * Converts and validates environment split commands into a easy to use command pattern.
  */
 export class CliCommand {
-    private readonly mProject: Project;
     private readonly mCliPackageCommand: ICliPackageCommand;
+    private readonly mProject: Project;
+    
+    /**
+     * Gets the CLI package command.
+     */
+    public get cliPackageCommand(): ICliPackageCommand {
+        return this.mCliPackageCommand; 
+    }
 
     /**
      * Cli packages.
      */
     public get project(): Project {
         return this.mProject;
-    }
-
-    /**
-     * Gets the CLI package command.
-     */
-    public get cliPackageCommand(): ICliPackageCommand {
-        return this.mCliPackageCommand; 
     }
 
     /**

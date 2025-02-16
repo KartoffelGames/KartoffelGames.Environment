@@ -1,6 +1,6 @@
-import { CliCommand } from "../index.ts";
+import { CliCommand } from '../index.ts';
 import { Import } from '../project/import.ts';
-import { Project } from "../project/project.ts";
+import { Project } from '../project/project.ts';
 import { FileSystem } from '../system/file-system.ts';
 import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
@@ -63,7 +63,7 @@ export class CliPackages {
      * 
      * @returns cli package information or null if not found.
      */
-    public async read<TTypeValues extends Record<string, any> = {}>(pName: string, pType: string): Promise<CliPackageInformation<TTypeValues> | null> {
+    public async read<TTypeValues extends Record<string, any> = object>(pName: string, pType: string): Promise<CliPackageInformation<TTypeValues> | null> {
         // Read all packages with by a name filter.
         const lFoundPackages: Map<string, CliPackageInformation> = await this.readAvailableProjectCommandPackages(pName, pType);
 
@@ -78,7 +78,7 @@ export class CliPackages {
      * 
      * @returns all available cli package informations of the provided type.s  
      */
-    public async readAll<TTypeValues extends Record<string, any> = {}>(pType?: string): Promise<Array<CliPackageInformation<TTypeValues>>> {
+    public async readAll<TTypeValues extends Record<string, any> = object>(pType?: string): Promise<Array<CliPackageInformation<TTypeValues>>> {
         // Read all packages with by a name filter.
         const lFoundPackages: Map<string, CliPackageInformation> = await this.readAvailableProjectCommandPackages('', pType);
 
@@ -114,12 +114,12 @@ export class CliPackages {
         // Read all cli packages in seperate promises.
         for (const lPackageImport of lPackageImports) {
             // Import "kg-cli.config.json" from package.
-            const lCliConfigFilePath: URL = Import.resolveToUrl(`${lPackageImport}/kg-cli.config.json`);
+            const lCliConfigFileImportPath: string = `${lPackageImport}/kg-cli.config.json`;
 
             // Read cli configuration file as json.
-            const lCliPackageInformationPromise: Promise<CliPackageInformation> = fetch(lCliConfigFilePath)
-                .then(async (lCliConfigFileRequest) => {
-                    const lCliConfigFile: CliPackageConfiguration = await lCliConfigFileRequest.json();
+            const lCliPackageInformationPromise: Promise<CliPackageInformation> = Import.importJson(lCliConfigFileImportPath)
+                .then(async (pCliConfigFileModule) => {
+                    const lCliConfigFile: any = pCliConfigFileModule.default;
 
                     // Skip when package type does not match.
                     if (pType && lCliConfigFile.type !== pType) {
@@ -147,10 +147,10 @@ export class CliPackages {
         }
 
         // Wait for all packages to be read.
-        const lFailablePackagePromiseList: Array<Promise<CliPackageInformation | null>> = lReadPackageInformationList.map((pPromise) => {
+        const lFailablePackagePromiseList: Array<Promise<CliPackageInformation | null>> = lReadPackageInformationList.map(async (pPromise) => {
             return pPromise.catch(() => null);
         });
-        const lFoundPackageList: Array<CliPackageInformation| null> = await Promise.all(lFailablePackagePromiseList);
+        const lFoundPackageList: Array<CliPackageInformation | null> = await Promise.all(lFailablePackagePromiseList);
 
         // All found cli packages.
         const lCliPackages: Map<string, CliPackageInformation> = new Map<string, CliPackageInformation>();
@@ -167,12 +167,12 @@ export class CliPackages {
     }
 }
 
-export type CliPackageConfiguration<TTypeValues extends Record<string, any> = {}> = TTypeValues & {
+export type CliPackageConfiguration<TTypeValues extends Record<string, any> = object> = TTypeValues & {
     type: string;
     name: string;
 };
 
-export type CliPackageInformation<TTypeValues extends Record<string, any> = {}> = {
+export type CliPackageInformation<TTypeValues extends Record<string, any> = object> = {
     packageName: string;
     configuration: CliPackageConfiguration<TTypeValues>;
 };

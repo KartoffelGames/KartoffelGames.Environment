@@ -1,6 +1,6 @@
 import { CliCommandDescription, CliPackageInformation, CliParameter, Console, FileSystem, ICliPackageCommand, Import, Package, Project } from '@kartoffelgames/environment-core';
 import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
-import { CliPackageBlueprintParameter, ICliPackageBlueprintResolver } from "./i-cli-package-blueprint-resolver.interface.ts";
+import { CliPackageBlueprintParameter, ICliPackageBlueprintResolver } from './i-cli-package-blueprint-resolver.interface.ts';
 
 export class KgCliCommand implements ICliPackageCommand<string> {
     /**
@@ -44,7 +44,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         const lCliPackageList: Array<CliPackageInformation<CliBlueprintPackageConfiguration>> = await pProject.cliPackages.readAll<CliBlueprintPackageConfiguration>('blueprint');
 
         // Read all KG_Cli_Blueprint packages informations.
-        const lBlueprintList: Map<string, Blueprint> = this.readBlueprintList(lCliPackageList);
+        const lBlueprintList: Map<string, Blueprint> = await this.readBlueprintList(lCliPackageList);
 
         // List blueprints on --list parameter and exit command.
         if (pParameter.has('list')) {
@@ -115,7 +115,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
      * @param pWorkspaceName - Name of workspace. 
      * @param pWorkspaceFolder - Folder name of workspace.
      */
-    public addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
+    private addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
         const lVsWorkspaceFilePath: string = FileSystem.findFiles(pProject.directory, { depth: 0, include: { extensions: ['code-workspace'] } })[0];
         const lVsWorkspaceFileText = FileSystem.read(lVsWorkspaceFilePath);
@@ -166,7 +166,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         }
 
         // Create blueprint resolver instance.
-        const lPackageResolver: ICliPackageBlueprintResolver = await this.createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
+        const lPackageResolver: ICliPackageBlueprintResolver = pBlueprint.resolver;
 
         // Get url path of project blueprint and fetch it.
         const lProjectBlueprintZipUrl: URL = pBlueprint.blueprintFileUrl;
@@ -203,7 +203,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
                 }
 
                 // Output copy information.
-                lConsole.writeLine("Copy " + lZipEntry.filename);
+                lConsole.writeLine('Copy ' + lZipEntry.filename);
 
                 // Read zipped file.
                 const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());
@@ -234,37 +234,6 @@ export class KgCliCommand implements ICliPackageCommand<string> {
     }
 
     /**
-     * Create all package blueprint definition class. 
-     * @param pBlueprintPackages - Cli packages.
-     */
-    private readBlueprintList(pPackages: Array<CliPackageInformation<CliBlueprintPackageConfiguration>>): Map<string, Blueprint> {
-        const lAvailableBlueprint: Map<string, Blueprint> = new Map<string, Blueprint>();
-
-        // Create each package blueprint package.
-        for (const lPackage of pPackages) {
-            // Skip non package blueprints.
-            if (!lPackage.configuration.packageBlueprints) {
-                continue;
-            }
-
-            // Convert all available blueprints to an absolute path.
-            for (const [lBlueprintPackageName, lBlueprintPackagePath] of Object.entries(lPackage.configuration.packageBlueprints.packages)) {
-                // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
-                const lBlueprintFileUrlString: string = Import.resolveToUrl(`${lPackage.packageName}/kg-cli.config.json`).href
-                    .replace('kg-cli.config.json', lBlueprintPackagePath);
-
-                lAvailableBlueprint.set(lBlueprintPackageName, {
-                    packageInformation: lPackage,
-                    resolverClass: lPackage.configuration.packageBlueprints.resolveClass,
-                    blueprintFileUrl: new URL(lBlueprintFileUrlString)
-                });
-            }
-        }
-
-        return lAvailableBlueprint;
-    }
-
-    /**
      * Create a new instance of a package blueprint resolver.
      * 
      * @param pPackage - Package information.
@@ -289,11 +258,40 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         }
     }
 
+    /**
+     * Create all package blueprint definition class. 
+     * @param pBlueprintPackages - Cli packages.
+     */
+    private async readBlueprintList(pPackages: Array<CliPackageInformation<CliBlueprintPackageConfiguration>>): Promise<Map<string, Blueprint>> {
+        const lAvailableBlueprint: Map<string, Blueprint> = new Map<string, Blueprint>();
+
+        // Create each package blueprint package.
+        for (const lPackage of pPackages) {
+            // Skip non package blueprints.
+            if (!lPackage.configuration.packageBlueprints) {
+                continue;
+            }
+
+            // Create package blueprint resolver instance.
+            const lPackageBlueprintResolver: ICliPackageBlueprintResolver = await this.createPackagePackageBlueprintResolverInstance(lPackage);
+
+            // Add every available blueprint to the list.
+            for (const [lBlueprintName, lBlueprintUrl] of lPackageBlueprintResolver.availableBlueprints().entries()) {
+                lAvailableBlueprint.set(lBlueprintName, {
+                    resolver: lPackageBlueprintResolver,
+                    bluepprintName: lBlueprintName,
+                    blueprintFileUrl: lBlueprintUrl
+                });
+            }
+        }
+
+        return lAvailableBlueprint;
+    }
 }
 
 type Blueprint = {
-    packageInformation: CliPackageInformation<CliBlueprintPackageConfiguration>;
-    resolverClass: string;
+    resolver: ICliPackageBlueprintResolver;
+    bluepprintName: string;
     blueprintFileUrl: URL;
 };
 
@@ -304,6 +302,5 @@ type CliPackageBlueprintResolverConstructor = {
 export type CliBlueprintPackageConfiguration = {
     packageBlueprints: {
         resolveClass: string;
-        packages: { [name: string]: string; };
     };
 };

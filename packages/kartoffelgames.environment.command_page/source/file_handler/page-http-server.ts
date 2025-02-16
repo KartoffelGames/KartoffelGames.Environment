@@ -1,9 +1,9 @@
 import { Console, FileSystem } from '@kartoffelgames/environment-core';
 
 export class PageHttpServer {
-    private readonly mRootPath: string;
-    private readonly mPort: number;
     private readonly mOpenWebsockets: Set<WebSocket>;
+    private readonly mPort: number;
+    private readonly mRootPath: string;
     private mServer: Deno.HttpServer<Deno.NetAddr> | null;
 
     /**
@@ -62,7 +62,7 @@ export class PageHttpServer {
         // Start webserver on defined port.
         this.mServer = Deno.serve({ port: this.mPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
             // Upgrade to websocket.
-            if (pReqest.headers.get("upgrade") === "websocket") {
+            if (pReqest.headers.get('upgrade') === 'websocket') {
                 return this.upgradeToWebsocketConnection(pReqest);
             }
 
@@ -90,16 +90,16 @@ export class PageHttpServer {
                     // Try catch when file is locked or locking while reading.
                     try {
                         // Open file and return response.
-                        const file = await Deno.open(lExistigFilePath, { read: true });
-                        return new Response(file.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
-                    } catch (e) {
+                        const lFile = await Deno.open(lExistigFilePath, { read: true });
+                        return new Response(lFile.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
+                    } catch (pError) {
                         // Somthing went wrong idk what.
-                        return new Response("File could not be read.", { status: 500 });
+                        return new Response('File could not be read.' + pError, { status: 500 });
                     }
                 }
             }
 
-            return new Response("404 Not Found", { status: 404 });
+            return new Response('404 Not Found', { status: 404 });
         });
 
         // Return promise that resolves once the server is closed.
@@ -130,7 +130,7 @@ export class PageHttpServer {
         const { socket: lSocket, response: lResponse } = Deno.upgradeWebSocket(pReqest);
 
         // Save socket connection on open.
-        lSocket.addEventListener("open", () => {
+        lSocket.addEventListener('open', () => {
             lConsole.writeLine('Browser connection established');
             this.mOpenWebsockets.add(lSocket);
         });

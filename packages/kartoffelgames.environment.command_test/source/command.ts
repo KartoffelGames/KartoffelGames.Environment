@@ -1,5 +1,5 @@
 import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { KgCliCommand as MainBundleCommand } from "@kartoffelgames/environment-command-bundle";
+import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
 import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Process, ProcessParameter, Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
@@ -16,6 +16,9 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
                     optional: {
                         coverage: {
                             shortName: 'c'
+                        },
+                        inspect: {
+                            shortName: 'i'
                         }
                     }
                 },
@@ -53,7 +56,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
         // Create all paths.
         const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
-        const lSourceInputDirectory = pPackage.sourcreDirectory;
+        const lSourceInputDirectory = pPackage.sourceDirectory;
         const lTestOutputDirectory = FileSystem.pathToAbsolute(pPackage.directory, '.kg-test');
         const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
         const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
@@ -126,7 +129,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         }
 
         // Eighter test the test directory or the bundle result directory when bundle is required.
-        let lTestFilesDirectoryList: Array<string> = [];
+        const lTestFilesDirectoryList: Array<string> = [];
         if (lPackageConfiguration.bundleRequired) {
             lTestFilesDirectoryList.push(FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile));
         } else {
@@ -138,12 +141,15 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             lTestFilesDirectoryList.push(`${lRelativeSourceDirectory}/**/*.ts`);
         }
 
+        // Add inspect command when inspect is enabled.
+        const lTestInspectCommand: Array<string> = pParameter.has('inspect') ? ['--inspect-brk'] : [];
+
         // Test failed flag to throw error only at the end.
         let lTestFailed: boolean = false;
 
         // Create test command parameter.
         const lTestCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
-            'deno', 'test', '-A', ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
+            'deno', 'test', '-A', ...lTestInspectCommand, ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
         ]);
 
         // Run "deno test" command in current console process.
@@ -163,7 +169,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
             // Get package directory base name.
             const lPackageDirectoryBaseName: string = FileSystem.pathInformation(pPackage.directory).basename;
-            const lPackageSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, pPackage.sourcreDirectory);
+            const lPackageSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, pPackage.sourceDirectory);
 
             // Get the relative source direcory from project root of the package with correct format
             const lAbsoluteSourceDirectory: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lPackageDirectoryBaseName, lPackageSourceDirectory);

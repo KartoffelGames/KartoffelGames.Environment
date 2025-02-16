@@ -1,5 +1,5 @@
-import { CliCommandDescription, Console, FileSystem, ICliPackageCommand, Import, ProcessContext } from '@kartoffelgames/environment-core';
-import { BlobReader, ZipReader, Uint8ArrayWriter } from '@zip-js/zip-js';
+import { CliCommandDescription, Console, FileSystem, ICliPackageCommand, ProcessContext } from '@kartoffelgames/environment-core';
+import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
 
 /**
  * Command to initialize new monorepo project.
@@ -58,8 +58,6 @@ export class Command implements ICliPackageCommand<string> {
             throw `Target directory "${lTargetPath}" is not empty.`;
         }
 
-        import.meta.resolve;
-
         // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
         const lProjectBlueprintZipUrlString: string = import.meta.url.replace('source/command.ts', 'blueprint/project-blueprint.zip');
         const lProjectBlueprintZipUrl: URL = new URL(lProjectBlueprintZipUrlString);
@@ -95,7 +93,7 @@ export class Command implements ICliPackageCommand<string> {
                 }
 
                 // Output copy information.
-                lConsole.writeLine("Copy " + lZipEntry.filename);
+                lConsole.writeLine('Copy ' + lZipEntry.filename);
 
                 // Read zipped file.
                 const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());
