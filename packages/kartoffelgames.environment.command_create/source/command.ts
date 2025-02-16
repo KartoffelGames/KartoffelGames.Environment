@@ -44,7 +44,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         const lCliPackageList: Array<CliPackageInformation<CliBlueprintPackageConfiguration>> = await pProject.cliPackages.readAll<CliBlueprintPackageConfiguration>('blueprint');
 
         // Read all KG_Cli_Blueprint packages informations.
-        const lBlueprintList: Map<string, Blueprint> = this.readBlueprintList(lCliPackageList);
+        const lBlueprintList: Map<string, Blueprint> = await this.readBlueprintList(lCliPackageList);
 
         // List blueprints on --list parameter and exit command.
         if (pParameter.has('list')) {
@@ -166,7 +166,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         }
 
         // Create blueprint resolver instance.
-        const lPackageResolver: ICliPackageBlueprintResolver = await this.createPackagePackageBlueprintResolverInstance(pBlueprint.packageInformation);
+        const lPackageResolver: ICliPackageBlueprintResolver = pBlueprint.resolver;
 
         // Get url path of project blueprint and fetch it.
         const lProjectBlueprintZipUrl: URL = pBlueprint.blueprintFileUrl;
@@ -262,7 +262,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
      * Create all package blueprint definition class. 
      * @param pBlueprintPackages - Cli packages.
      */
-    private readBlueprintList(pPackages: Array<CliPackageInformation<CliBlueprintPackageConfiguration>>): Map<string, Blueprint> {
+    private async readBlueprintList(pPackages: Array<CliPackageInformation<CliBlueprintPackageConfiguration>>): Promise<Map<string, Blueprint>> {
         const lAvailableBlueprint: Map<string, Blueprint> = new Map<string, Blueprint>();
 
         // Create each package blueprint package.
@@ -272,16 +272,15 @@ export class KgCliCommand implements ICliPackageCommand<string> {
                 continue;
             }
 
-            // Convert all available blueprints to an absolute path.
-            for (const [lBlueprintPackageName, lBlueprintPackagePath] of Object.entries(lPackage.configuration.packageBlueprints.packages)) {
-                // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
-                const lBlueprintFileUrlString: string = Import.resolveToUrl(`${lPackage.packageName}/kg-cli.config.json`).href
-                    .replace('kg-cli.config.json', lBlueprintPackagePath);
+            // Create package blueprint resolver instance.
+            const lPackageBlueprintResolver: ICliPackageBlueprintResolver = await this.createPackagePackageBlueprintResolverInstance(lPackage);
 
-                lAvailableBlueprint.set(lBlueprintPackageName, {
-                    packageInformation: lPackage,
-                    resolverClass: lPackage.configuration.packageBlueprints.resolveClass,
-                    blueprintFileUrl: new URL(lBlueprintFileUrlString)
+            // Add every available blueprint to the list.
+            for (const [lBlueprintName, lBlueprintUrl] of lPackageBlueprintResolver.availableBlueprints().entries()) {
+                lAvailableBlueprint.set(lBlueprintName, {
+                    resolver: lPackageBlueprintResolver,
+                    bluepprintName: lBlueprintName,
+                    blueprintFileUrl: lBlueprintUrl
                 });
             }
         }
@@ -291,8 +290,8 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 }
 
 type Blueprint = {
-    packageInformation: CliPackageInformation<CliBlueprintPackageConfiguration>;
-    resolverClass: string;
+    resolver: ICliPackageBlueprintResolver;
+    bluepprintName: string;
     blueprintFileUrl: URL;
 };
 
@@ -303,6 +302,5 @@ type CliPackageBlueprintResolverConstructor = {
 export type CliBlueprintPackageConfiguration = {
     packageBlueprints: {
         resolveClass: string;
-        packages: { [name: string]: string; };
     };
 };

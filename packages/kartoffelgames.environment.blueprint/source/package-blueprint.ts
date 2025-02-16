@@ -32,4 +32,14 @@ export class CliPackageBlueprint implements ICliPackageBlueprintResolver {
             FileSystem.write(lFilePath, lFileContent);
         }
     }
+
+    /**
+     * List of all available blueprints.
+     */
+    public availableBlueprints(): Map<string, URL> {
+        const lBlueprints: Map<string, URL> = new Map<string, URL>();
+        lBlueprints.set('kg-main', new URL('../blueprint/package-blueprint.zip', import.meta.url));
+
+        return lBlueprints;
+    }
 }
