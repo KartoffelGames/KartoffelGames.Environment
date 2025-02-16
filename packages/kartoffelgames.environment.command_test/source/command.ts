@@ -16,6 +16,9 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
                     optional: {
                         coverage: {
                             shortName: 'c'
+                        },
+                        inspect: {
+                            shortName: 'i'
                         }
                     }
                 },
@@ -138,12 +141,15 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             lTestFilesDirectoryList.push(`${lRelativeSourceDirectory}/**/*.ts`);
         }
 
+        // Add inspect command when inspect is enabled.
+        const lTestInspectCommand: Array<string> = pParameter.has('inspect') ? ['--inspect-brk'] : [];
+
         // Test failed flag to throw error only at the end.
         let lTestFailed: boolean = false;
 
         // Create test command parameter.
         const lTestCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
-            'deno', 'test', '-A', ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
+            'deno', 'test', '-A', ...lTestInspectCommand, ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
         ]);
 
         // Run "deno test" command in current console process.
