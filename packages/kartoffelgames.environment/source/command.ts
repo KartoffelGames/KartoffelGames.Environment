@@ -58,6 +58,9 @@ export class Command implements ICliPackageCommand<string> {
             throw `Target directory "${lTargetPath}" is not empty.`;
         }
 
+        // Ask the user about the project scope.
+        const lProjectScope: string = await lConsole.promt('Project Scope (@example): ', /^@[a-z]+/);
+
         // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
         const lProjectBlueprintZipUrlString: string = import.meta.url.replace('source/command.ts', 'blueprint/project-blueprint.zip');
         const lProjectBlueprintZipUrl: URL = new URL(lProjectBlueprintZipUrlString);
@@ -98,6 +101,9 @@ export class Command implements ICliPackageCommand<string> {
                 // Read zipped file.
                 const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());
                 FileSystem.writeBinary(lTargetFilePath, lZipFileData);
+
+                // Replace blueprint placeholder.
+                this.replacePlaceholder(lTargetPath, lProjectScope);
             }
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
@@ -110,5 +116,28 @@ export class Command implements ICliPackageCommand<string> {
         }
 
         return lTargetPath;
+    }
+
+    private async replacePlaceholder(pRootPath: string, pScope: string): Promise<void> {
+        // Read current cli version.
+        const lCliPackageJsonModule = await import('../deno.json', { with: { type: 'json' } });
+        const lCliPackageJson = lCliPackageJsonModule.default;
+        const lCurrentCliVersion: string = lCliPackageJson.version;
+
+        // Read all files.
+        const lPackageFileList: Array<string> = FileSystem.findFiles(pRootPath);
+
+        // Check all files.
+        for (const lFilePath of lPackageFileList) {
+            let lFileContent: string = FileSystem.read(lFilePath);
+
+            // Replace placeholder inside file content.
+            lFileContent = lFileContent
+            .replaceAll('{{CLI_VERSION}}', lCurrentCliVersion)
+            .replaceAll('{{PROJECT_SCOPE}}', pScope);
+
+            // Write changed content.
+            FileSystem.write(lFilePath, lFileContent);
+        }
     }
 }
