@@ -1,7 +1,7 @@
-import { Package } from '../project/package.ts';
-import { Project } from '../project/project.ts';
+import type { Package } from '../project/package.ts';
+import type { Project } from '../project/project.ts';
 import { CliParameter } from './cli-parameter.ts';
-import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
+import type { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
 /**
  * Command line interface command that can be executed.

@@ -1,4 +1,4 @@
-import { CliCommandDescription, Console, FileSystem, ICliPackageCommand, ProcessContext } from '@kartoffelgames/environment-core';
+import { type CliCommandDescription, Console, FileSystem, type ICliPackageCommand, ProcessContext } from '@kartoffelgames/environment-core';
 import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
 
 /**

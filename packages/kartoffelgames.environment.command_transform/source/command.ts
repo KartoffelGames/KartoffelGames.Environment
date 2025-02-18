@@ -1,5 +1,5 @@
 import { build } from '@deno/dnt';
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, ProcessContext, Project } from '@kartoffelgames/environment-core';
+import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, ProcessContext, type Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> {
     /**

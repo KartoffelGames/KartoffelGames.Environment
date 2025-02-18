@@ -2,7 +2,7 @@ import { CliCommand } from '../index.ts';
 import { Import } from '../project/import.ts';
 import { Project } from '../project/project.ts';
 import { FileSystem } from '../system/file-system.ts';
-import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
+import type { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
 /**
  * Cli packages. Resolves all available cli packages.
