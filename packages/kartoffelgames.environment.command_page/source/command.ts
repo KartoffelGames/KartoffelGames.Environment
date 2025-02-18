@@ -1,4 +1,4 @@
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Project } from '@kartoffelgames/environment-core';
+import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
 import { PageBundler } from './file_handler/page-bundler.ts';
 import { PageFileWatcher } from './file_handler/page-file-watcher.ts';
 import { PageHttpServer } from './file_handler/page-http-server.ts';

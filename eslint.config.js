@@ -79,6 +79,15 @@ export default typescriptlint.config(
             ],
             "@typescript-eslint/no-wrapper-object-types": "warn",
             "@typescript-eslint/no-unsafe-function-type": "warn",
+            "@typescript-eslint/consistent-type-imports": [
+                "error",
+                {
+                    "disallowTypeAnnotations": true,
+                    "fixStyle": 'inline-type-imports',
+                    "prefer": 'type-imports'
+                }
+            ],
+            "@typescript-eslint/no-import-type-side-effects": "error",
             "@typescript-eslint/member-ordering": [
                 "warn",
                 {

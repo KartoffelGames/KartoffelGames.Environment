@@ -1,6 +1,6 @@
-import { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import type { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
-import { CliParameter, Console, Package, Project } from '@kartoffelgames/environment-core';
+import { CliParameter, Console, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class ScratchpadBundler {
     private readonly mBundledFiles: ScratchpadBundlerFiles;

@@ -1,6 +1,6 @@
-import { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import type { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
-import { CliCommandDescription, CliParameter, Console, FileSystem, ICliPackageCommand, Package, Process, ProcessParameter, Project } from '@kartoffelgames/environment-core';
+import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, Process, ProcessParameter, type Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
     /**

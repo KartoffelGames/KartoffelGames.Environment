@@ -1,4 +1,4 @@
-import { ICliPackageCommand } from './i-cli-package-command.interface.ts';
+import type { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
 /**
  * The `CliParameter` class provides methods to manage command-line parameters.

@@ -1,5 +1,5 @@
-import { ICliPackageCommand } from '../cli/i-cli-package-command.interface.ts';
-import { Project } from '../index.ts';
+import type { ICliPackageCommand } from '../cli/i-cli-package-command.interface.ts';
+import type { Project } from '../index.ts';
 import { FileSystem } from '../system/file-system.ts';
 
 export class Package {

@@ -1,4 +1,4 @@
-import { ProcessParameter } from './process-parameter.ts';
+import type { ProcessParameter } from './process-parameter.ts';
 
 /**
  * Process execution.

@@ -1,4 +1,4 @@
-import { FileSystem, Package, PathInformation } from '@kartoffelgames/environment-core';
+import { FileSystem, type Package, type PathInformation } from '@kartoffelgames/environment-core';
 import { denoPlugins } from '@luca/esbuild-deno-loader';
 import * as esbuild from 'esbuild';
 

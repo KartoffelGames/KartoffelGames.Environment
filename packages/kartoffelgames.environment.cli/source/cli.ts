@@ -1,6 +1,6 @@
 #!/usr/bin/env deno
 
-import { CliCommand, CliParameter, Console, FileSystem, Import, Package, ProcessContext, Project } from '@kartoffelgames/environment-core';
+import { type CliCommand, CliParameter, Console, FileSystem, Import, type Package, ProcessContext, Project } from '@kartoffelgames/environment-core';
 
 (async () => {
     const lConsole: Console = new Console();

@@ -1,6 +1,6 @@
-import { Package } from '../project/package.ts';
-import { Project } from '../project/project.ts';
-import { CliParameter } from './cli-parameter.ts';
+import type { Package } from '../project/package.ts';
+import type { Project } from '../project/project.ts';
+import type { CliParameter } from './cli-parameter.ts';
 
 export interface ICliPackageCommand<TConfiguration = any> {
     /**
