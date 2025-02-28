@@ -17,6 +17,9 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
                         coverage: {
                             shortName: 'c'
                         },
+                        detailed: {
+                            shortName: 'd'
+                        },
                         inspect: {
                             shortName: 'i'
                         }
@@ -129,27 +132,25 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
         }
 
         // Eighter test the test directory or the bundle result directory when bundle is required.
-        const lTestFilesDirectoryList: Array<string> = [];
+        let lTestFilesDirectory: string;
         if (lPackageConfiguration.bundleRequired) {
-            lTestFilesDirectoryList.push(FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile));
+            lTestFilesDirectory = FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile);
         } else {
             // Find the package test and source directory.
             const lRelativeTestDirectory: string = FileSystem.pathToRelative(pPackage.directory, lTestInputDirectory).slice(2).replace(/\\/g, '/');
-            const lRelativeSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, lSourceInputDirectory).slice(2).replace(/\\/g, '/');
 
-            lTestFilesDirectoryList.push(`${lRelativeTestDirectory}/**/*.ts`);
-            lTestFilesDirectoryList.push(`${lRelativeSourceDirectory}/**/*.ts`);
+            lTestFilesDirectory = `${lRelativeTestDirectory}/**/*.ts`;
         }
 
         // Add inspect command when inspect is enabled.
-        const lTestInspectCommand: Array<string> = pParameter.has('inspect') ? ['--inspect-brk'] : [];
+        const lTestInspectCommand: Array<string> = pParameter.has('inspect') ? ['--inspect-wait=0.0.0.0:9229'] : [];
 
         // Test failed flag to throw error only at the end.
         let lTestFailed: boolean = false;
 
         // Create test command parameter.
         const lTestCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
-            'deno', 'test', '-A', ...lTestInspectCommand, ...lTestFilesDirectoryList, ...lTestWithCoverageCommand
+            'deno', 'test', '-A', ...lTestInspectCommand, lTestFilesDirectory, ...lTestWithCoverageCommand
         ]);
 
         // Run "deno test" command in current console process.
@@ -175,9 +176,12 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             const lAbsoluteSourceDirectory: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lPackageDirectoryBaseName, lPackageSourceDirectory);
             const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.directory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/');
 
+            // Set detailed coverage parameter when command parameter was set.
+            const lDetailedParameter: string = pParameter.has('detailed') ? '--detailed' : '';
+
             // Create coverage command parameter.
             const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
-                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=${lRelativeSouceDirectory}`
+                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=${lRelativeSouceDirectory}`, lDetailedParameter
             ]);
 
             // Run "deno coverage" command in current console process.
