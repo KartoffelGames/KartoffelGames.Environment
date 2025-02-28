@@ -177,11 +177,11 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.directory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/');
 
             // Set detailed coverage parameter when command parameter was set.
-            const lDetailedParameter: string = pParameter.has('detailed') ? '--detailed' : '';
+            const lDetailedParameter: Array<string> = pParameter.has('detailed') ? ['--detailed'] : new Array<string>();
 
             // Create coverage command parameter.
             const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
-                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=${lRelativeSouceDirectory}`, lDetailedParameter
+                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=${lRelativeSouceDirectory}`, ...lDetailedParameter
             ]);
 
             // Run "deno coverage" command in current console process.
