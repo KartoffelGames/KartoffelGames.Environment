@@ -113,7 +113,7 @@ export class EnvironmentBundle {
             bundle: true,
             platform: 'neutral',
             format: 'esm',
-            target: 'esnext',
+            target: "es2022",
 
             // Optimization.
             minify: true,
