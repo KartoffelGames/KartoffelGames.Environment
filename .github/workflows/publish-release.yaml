@@ -32,8 +32,6 @@ jobs:
       # Run local composite package release.
       - name: 'Publish JSR Packages'
         uses: ./.github/actions/release-jsr-packages
-        with:
-          registry-token: ${{ secrets.CI_JSR_TOKEN }}
 
   publish-npm-packages:
     needs: test
