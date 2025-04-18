@@ -18,6 +18,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
             configuration: {
                 name: 'scratchpad',
                 default: {
+                    bundleSettingsFile: '',
                     mainBundleRequired: false,
                     port: 8088
                 },
@@ -63,6 +64,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
             package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
+            bundledSettingFilePath: lPackageConfiguration.bundleSettingsFile,
         });
 
         // Build initial build files.
@@ -96,7 +98,6 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         await lHttpServer.start();
     }
 
-    
     /**
      * Initializes the scratchpad files for the given package.
      * 

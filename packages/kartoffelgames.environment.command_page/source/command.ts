@@ -27,6 +27,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
                 name: 'page',
                 default: {
                     enabled: false,
+                    bundleSettingsFile: '',
                     mainBundleRequired: false,
                     port: 8088
                 },
@@ -80,6 +81,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
             package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
+            bundledSettingFilePath: lPackageConfiguration.bundleSettingsFile,
         });
 
         // Build initial build files.

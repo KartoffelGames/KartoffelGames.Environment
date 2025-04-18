@@ -1,10 +1,11 @@
-import type { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundle, type EnvironmentBundleInputContent, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
-import { CliParameter, Console, type Project, type Package } from '@kartoffelgames/environment-core';
+import { CliParameter, Console, FileSystem, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class PageBundler {
     private readonly mBundledFiles: PageBundlerFiles;
     private readonly mCoreBundleRequired: boolean;
+    private readonly mBundledSettingFilePath: string;
     private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
     private readonly mWebsocketPort: number;
@@ -37,6 +38,7 @@ export class PageBundler {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
         };
+        this.mBundledSettingFilePath = pParameters.bundledSettingFilePath;
     }
 
     /**
@@ -89,12 +91,21 @@ export class PageBundler {
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
+                // Construct paths.
+                const lPackagePath = this.mPackage.directory;
+
+                // Create environment bundle object.
+                const lEnvironmentBundle = new EnvironmentBundle();
+
+                // Load local bundle settings.
+                const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(lPackagePath, this.mBundledSettingFilePath) : null;
+                const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
+
+                // Replace input file with fixed bundle input.
+                lBundleOptions.files = lBundleSettings;
+
                 // Run bundle.
-                const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(this.mPackage, (pOptions: EnvironmentBundleOptions) => {
-                    pOptions.entry = {
-                        content: lBundleSettings
-                    };
-                });
+                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundle(this.mPackage, lBundleOptions);
 
                 // Return bundle result. Its allways one file.
                 return {
@@ -138,4 +149,5 @@ export type PageBundlerConstructor = {
     package: Package;
     coreBundleRequired: boolean;
     websocketPort: number;
+    bundledSettingFilePath: string;
 };
