@@ -71,7 +71,7 @@ export class PageHttpServer {
 
             // Special case for bundle directory.
             if (lFilePathName.toLowerCase().startsWith('/bundle/')) {
-                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(7));
+                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(8));
             }
 
             // Send file when it is in fact a file path.
