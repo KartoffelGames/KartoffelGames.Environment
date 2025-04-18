@@ -1,4 +1,4 @@
-import { FileSystem, type Package, type PathInformation } from '@kartoffelgames/environment-core';
+import { FileSystem, Import, type Package, type PathInformation } from '@kartoffelgames/environment-core';
 import { denoPlugins } from '@luca/esbuild-deno-loader';
 import * as esbuild from 'esbuild';
 
@@ -20,6 +20,68 @@ export class EnvironmentBundle {
         }
 
         throw new Error('No entry point was specified.');
+    }
+
+    /**
+     * Bundle package with the bundle options specified in the package deno.json.
+     * 
+     * @param pPackage - Package bundle.
+     * @param pOverrideCallback  - Override functionality of bundle options.
+     * 
+     * @returns Bundle output.
+     */
+    public async loadBundleOptions(pBundleSettingFilePath: string | null): Promise<EnvironmentBundleOptions> {
+        // Load local bundle settings.
+        let lBundleOptions: Partial<EnvironmentBundleOptions> = await (async () => {
+            // Use default settings.
+            if (!pBundleSettingFilePath || pBundleSettingFilePath.trim() === '') {
+                return {};
+            }
+
+            const lBundleSettingsFilePath = FileSystem.pathToAbsolute(pBundleSettingFilePath);
+
+            // Check for file exists.
+            if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+            }
+
+            // Check for file exists.
+            if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+            }
+
+            // Import bundle as js file.
+            const lBundleSettingObject: { default: EnvironmentBundleOptions; } = await Import.import(`file://${lBundleSettingsFilePath}`);
+
+            return lBundleSettingObject.default;
+
+        })();
+
+        // Extend bundle files options when information was not set.
+        if (!lBundleOptions.entry) { // TODO: Single shit think. aahm yes. make aaaahm things pls.
+            lBundleOptions.entry = {
+                files: [
+                    {
+                        inputFilePath: './source/index.ts',
+                        outputBasename: '<packagename>',
+                        outputExtension: 'js'
+                    }
+                ]
+            };
+        }
+
+        // Extend bundle loader when information was not set.
+        if (!lBundleOptions.loader) {
+            lBundleOptions.loader = {}; // Default loader.
+        }
+
+        // Extend bundle plugins when information was not set.
+        if (!lBundleOptions.plugins) {
+            lBundleOptions.plugins = []; // Default plugins.
+        }
+
+        // Start bundling.
+        return lBundleOptions
     }
 
     /**

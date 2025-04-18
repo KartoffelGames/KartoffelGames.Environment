@@ -200,6 +200,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
 type PageConfiguration = {
     enabled: boolean;
+    bundleSettingsFile: string;
     mainBundleRequired: boolean;
     port: number;
 };

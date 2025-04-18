@@ -153,6 +153,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
 
 type ScratchpadConfiguration = {
+    bundleSettingsFile: string;
     mainBundleRequired: boolean;
     port: number;
 };
