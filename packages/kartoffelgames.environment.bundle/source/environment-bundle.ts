@@ -1,4 +1,4 @@
-import { FileSystem, type Package, type PathInformation } from '@kartoffelgames/environment-core';
+import { FileSystem, Import, type Package, type PathInformation } from '@kartoffelgames/environment-core';
 import { denoPlugins } from '@luca/esbuild-deno-loader';
 import * as esbuild from 'esbuild';
 
@@ -12,87 +12,103 @@ export class EnvironmentBundle {
      * @returns Build output of esbuild build. 
      */
     public async bundle(pPackage: Package, pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
+        // Normalize bundle options.
+        const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
+            ...pOptions,
+            plugins: [...pOptions.plugins]
+        };
+
+        // Normalize bundle plugins.
+        lEnvironmentBundleOptions.plugins.unshift(...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json') }));
+
+        // Normalize input files.
+        lEnvironmentBundleOptions.files = (() => {
+            // Based on entry type.
+            if (Array.isArray(pOptions.files)) {
+                return pOptions.files.map((pInputFile) => {
+                    return {
+                        ...pInputFile,
+                        // Replace <packagename> with package name.
+                        outputBasename: pInputFile.outputBasename.replace('<packagename>', pPackage.id),
+                        // Convert entry point path into absolute file path rooted in the package directory.
+                        inputFilePath: FileSystem.pathToAbsolute(pPackage.directory, pInputFile.inputFilePath),
+                        outputExtension: pInputFile.outputExtension
+                    };
+                });
+            } else {
+                return {
+                    ...pOptions.files,
+                    outputBasename: pOptions.files.outputBasename.replace('<packagename>', pPackage.id),
+                    // Convert the relative resolve path into a absolute path.
+                    inputResolveDirectory: FileSystem.pathToAbsolute(pPackage.directory, pOptions.files.inputResolveDirectory)
+                } satisfies EnvironmentBundleInputContent;
+            }
+        })();
+
         // Bundle based on entry type.
-        if (pOptions.entry.content) {
-            return this.bundlePackageContent(pPackage, pOptions.entry.content, pOptions.loader, pOptions.plugins);
-        } else if (pOptions.entry.files) {
-            return this.bundlePackageFiles(pPackage, pOptions.entry.files, pOptions.loader, pOptions.plugins);
+        return this.runBundleProcess(lEnvironmentBundleOptions);
+    }
+
+    /**
+     * Bundle package with the bundle options specified in the package deno.json.
+     * 
+     * @param pPackage - Package bundle.
+     * @param pOverrideCallback  - Override functionality of bundle options.
+     * 
+     * @returns Bundle output.
+     */
+    public async loadBundleOptions(pBundleSettingFilePath: string | null): Promise<EnvironmentBundleOptions> {
+        // Load local bundle settings.
+        let lBundleOptions: Partial<EnvironmentBundleOptions> = await (async () => {
+            // Use default settings.
+            if (!pBundleSettingFilePath || pBundleSettingFilePath.trim() === '') {
+                return {};
+            }
+
+            const lBundleSettingsFilePath = FileSystem.pathToAbsolute(pBundleSettingFilePath);
+
+            // Check for file exists.
+            if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+            }
+
+            // Check for file exists.
+            if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+            }
+
+            // Import bundle as js file.
+            const lBundleSettingObject: { default: () => EnvironmentBundleOptions; } = await Import.import(`file://${lBundleSettingsFilePath}`);
+            if (typeof lBundleSettingObject.default !== 'function') {
+                throw new Error(`Bundle settings file does not export a default function: ${lBundleSettingsFilePath}`);
+            }
+
+            return lBundleSettingObject.default();
+
+        })();
+
+        // Extend bundle files options when information was not set.
+        if (!lBundleOptions.files) {
+            lBundleOptions.files = []; // Default files.
         }
 
-        throw new Error('No entry point was specified.');
-    }
+        // Extend bundle loader when information was not set.
+        if (!lBundleOptions.loader) {
+            lBundleOptions.loader = {}; // Default loader.
+        }
 
-    /**
-     * Bundle a custom content in the context of a package with set settings and loader.
-     * 
-     * @param pPackage - Package to bundle.
-     * @param pInputContent - Input source content.
-     * @param pLoader - file extension loader.
-     *  
-     * @returns Build output of esbuild build. 
-     */
-    private async bundlePackageContent(pPackage: Package, pInputContent: EnvironmentBundleInputContent, pLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
-        // Convert the relative resolve path into a absolute path.
-        pInputContent.outputBasename = pInputContent.outputBasename.replace('<packagename>', pPackage.id);
-        pInputContent.inputResolveDirectory = FileSystem.pathToAbsolute(pPackage.directory, pInputContent.inputResolveDirectory);
+        // Extend bundle plugins when information was not set.
+        if (!lBundleOptions.plugins) {
+            lBundleOptions.plugins = []; // Default plugins.
+        }
 
-        // Build bundle options.
-        const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
-            loader: pLoader,
+        // Extend bundle mime types when information was not set.
+        if (!lBundleOptions.mimeTypes) {
+            lBundleOptions.mimeTypes = {}; // Default mime types.
+        }
 
-            // For some higher reason the deno plugins does not have the correct type definition.
-            plugins: [
-                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json') }),
-                ...pPlugins
-            ] as unknown as Array<esbuild.Plugin>,
-
-            entry: {
-                content: pInputContent
-            }
-        };
-
-        // Run bundle.
-        return this.runBundleProcess(lEnvironmentBundleOptions);
-    }
-
-    /**
-     * Bundle package files with set settings and loader.
-     * 
-     * @param pPackage - Package to bundle.
-     * @param pInputFiles - Input files.
-     * @param pLoader - file extension loader.
-     *  
-     * @returns Build output of esbuild build. 
-     */
-    private async bundlePackageFiles(pPackage: Package, pInputFiles: EnvironmentBundleInputFiles, pLoader: EnvironmentBundleExtentionLoader, pPlugins: Array<esbuild.Plugin>): Promise<EnvironmentBundleOutput> {
-        // Convert input files into a proper input file format the bundler command understands.
-        const lInputFile = pInputFiles.map((pInputFile) => {
-            return {
-                // Replace <packagename> with package name.
-                outputBasename: pInputFile.outputBasename.replace('<packagename>', pPackage.id),
-                // Convert entry point path into absolute file path rooted in the package directory.
-                inputFilePath: FileSystem.pathToAbsolute(pPackage.directory, pInputFile.inputFilePath),
-                outputExtension: pInputFile.outputExtension
-            };
-        });
-
-        // Build bundle options.
-        const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
-            loader: pLoader,
-
-            // For some higher reason the deno plugins does not have the correct type definition.
-            plugins: [
-                ...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json') }),
-                ...pPlugins
-            ] as unknown as Array<esbuild.Plugin>,
-
-            entry: {
-                files: lInputFile
-            }
-        };
-
-        // Run bundle.
-        return this.runBundleProcess(lEnvironmentBundleOptions);
+        // Start bundling.
+        return lBundleOptions as EnvironmentBundleOptions;
     }
 
     /**
@@ -129,10 +145,10 @@ export class EnvironmentBundle {
         const lInputFileNames: Array<{ outputBaseName: string; basename: string; extension: string; }> = new Array<{ outputBaseName: string; basename: string; extension: string; }>();
 
         // Eighter build files or a file content.
-        if (pOptions.entry.files) {
+        if (Array.isArray(pOptions.files)) {
             // Convert entry files into a filename to input file mapping.
             const lEntryPoints: { [key: string]: string; } = {};
-            for (const lInputFile of pOptions.entry.files) {
+            for (const lInputFile of pOptions.files) {
                 // Add input file path. Prepend file:// to make it a valid url.
                 lEntryPoints[lInputFile.outputBasename] = `file://${lInputFile.inputFilePath}`;
 
@@ -145,11 +161,11 @@ export class EnvironmentBundle {
             }
 
             lEsBuildConfiguration.entryPoints = lEntryPoints;
-        } else if (pOptions.entry.content) {
+        } else {
             // Configurate a stdin content.
             lEsBuildConfiguration.stdin = {
-                contents: pOptions.entry.content.inputFileContent,
-                resolveDir: pOptions.entry.content.inputResolveDirectory,
+                contents: pOptions.files.inputFileContent,
+                resolveDir: pOptions.files.inputResolveDirectory,
                 loader: 'ts',
                 sourcefile: `standard-input-file.js`
             };
@@ -157,11 +173,9 @@ export class EnvironmentBundle {
             // Add input file name. For some reason esbuild allways uses stdin.js as an output file name for stdin content.
             lInputFileNames.push({
                 outputBaseName: 'stdin',
-                basename: pOptions.entry.content.outputBasename,
-                extension: pOptions.entry.content.outputExtension
+                basename: pOptions.files.outputBasename,
+                extension: pOptions.files.outputExtension
             });
-        } else {
-            throw new Error('No file input was specified.');
         }
 
         // Start esbuild.
@@ -253,7 +267,7 @@ export class EnvironmentBundle {
 
 export type EnvironmentBundleExtentionLoader = { [extension: string]: 'base64' | 'dataurl' | 'empty' | 'js' | 'json' | 'text' | 'ts'; };
 
-export type EnvironmentBundleInputFiles = Array<{
+export type EnvironmentBundleInputFile = {
     /**
      * Relative path of input file.
      */
@@ -268,7 +282,7 @@ export type EnvironmentBundleInputFiles = Array<{
      * File extension without leading dot.
      */
     outputExtension: string;
-}>;
+};
 
 export type EnvironmentBundleInputContent = {
     /**
@@ -312,8 +326,9 @@ export type EnvironmentBundleOutput = Array<{
 export type EnvironmentBundleOptions = {
     plugins: Array<esbuild.Plugin>;
     loader: EnvironmentBundleExtentionLoader;
-    entry: {
-        files?: EnvironmentBundleInputFiles;
-        content?: EnvironmentBundleInputContent;
-    };
+    files: Array<EnvironmentBundleInputFile> | EnvironmentBundleInputContent;
+    /**
+     * Types of bundled files. Extensions are specified with leading dot.
+     */
+    mimeTypes: { [extension: string]: string; };
 };

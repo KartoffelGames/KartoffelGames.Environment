@@ -1,5 +1,5 @@
 import { EnvironmentBundle, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, Import, type Package, type Project } from '@kartoffelgames/environment-core';
+import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
     /**
@@ -26,80 +26,6 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
                 },
             }
         };
-    }
-
-    /**
-     * Bundle package with the bundle options specified in the package deno.json.
-     * 
-     * @param pPackage - Package bundle.
-     * @param pOverrideCallback  - Override functionality of bundle options.
-     * 
-     * @returns Bundle output.
-     */
-    public async bundle(pPackage: Package, pOverrideCallback?: (pOptions: EnvironmentBundleOptions) => (EnvironmentBundleOptions | void)): Promise<EnvironmentBundleOutput> {
-        // Read cli configuration from cli package.
-        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
-
-        // Construct paths.
-        const lPackagePath = pPackage.directory;
-
-        // Create environment bundle object.
-        const lEnvironmentBundle = new EnvironmentBundle();
-
-        // Load local bundle settings.
-        let lBundleOptions: Partial<EnvironmentBundleOptions> = await (async () => {
-            const lBundleSettingsFilePath = FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.bundleSettingsFile);
-            if (lPackageConfiguration.bundleSettingsFile.trim() !== '') {
-                // Check for file exists.
-                if (!FileSystem.exists(lBundleSettingsFilePath)) {
-                    throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
-                }
-
-                // Check for file exists.
-                if (!FileSystem.exists(lBundleSettingsFilePath)) {
-                    throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
-                }
-
-                // Import bundle as js file.
-                const lBundleSettingObject: { default: EnvironmentBundleOptions; } = await Import.import(`file://${lBundleSettingsFilePath}`);
-
-                return lBundleSettingObject.default;
-            }
-
-            // Use default settings.
-            return {};
-        })();
-
-        // Extend bundle files options when information was not set.
-        if (!lBundleOptions.entry) {
-            lBundleOptions.entry = {
-                files: [
-                    {
-                        inputFilePath: './source/index.ts',
-                        outputBasename: '<packagename>',
-                        outputExtension: 'js'
-                    }
-                ]
-            };
-        }
-
-        // Extend bundle loader when information was not set.
-        if (!lBundleOptions.loader) {
-            lBundleOptions.loader = {}; // Default loader.
-        }
-
-        // Extend bundle plugins when information was not set.
-        if (!lBundleOptions.plugins) {
-            lBundleOptions.plugins = []; // Default plugins.
-        }
-
-        // Allow override of bundle options.
-        if (pOverrideCallback) {
-            lBundleOptions = pOverrideCallback(lBundleOptions as EnvironmentBundleOptions) || lBundleOptions;
-        }
-
-        // Start bundling.
-        return lEnvironmentBundle.bundle(pPackage, lBundleOptions as EnvironmentBundleOptions);
     }
 
     /**
@@ -150,6 +76,53 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         }
 
         lConsole.writeLine('Bundle successful');
+    }
+
+    /**
+     * Bundle package with the bundle options specified in the package deno.json.
+     * 
+     * @param pPackage - Package bundle.
+     * @param pOverrideCallback  - Override functionality of bundle options.
+     * 
+     * @returns Bundle output.
+     */
+    private async bundle(pPackage: Package): Promise<EnvironmentBundleOutput> {
+        // Read cli configuration from cli package.
+        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
+
+        // Construct paths.
+        const lPackagePath = pPackage.directory;
+
+        // Create environment bundle object.
+        const lEnvironmentBundle = new EnvironmentBundle();
+
+        // Load local bundle settings.
+        const lBundleSettingsFilePath: string | null = lPackageConfiguration.bundleSettingsFile.trim() !== '' ? FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.bundleSettingsFile) : null;
+        const lBundleOptions: Partial<EnvironmentBundleOptions> = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
+
+        // Extend bundle files options when information was not set.
+        if (Array.isArray(lBundleOptions.files) && lBundleOptions.files.length === 0) {
+            lBundleOptions.files = [
+                {
+                    inputFilePath: './source/index.ts',
+                    outputBasename: '<packagename>',
+                    outputExtension: 'js'
+                }
+            ];
+        }
+
+        // Extend bundle loader when information was not set.
+        if (!lBundleOptions.loader) {
+            lBundleOptions.loader = {}; // Default loader.
+        }
+
+        // Extend bundle plugins when information was not set.
+        if (!lBundleOptions.plugins) {
+            lBundleOptions.plugins = []; // Default plugins.
+        }
+
+        // Start bundling.
+        return lEnvironmentBundle.bundle(pPackage, lBundleOptions as EnvironmentBundleOptions);
     }
 }
 

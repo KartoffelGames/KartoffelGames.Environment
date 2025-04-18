@@ -27,6 +27,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
                 name: 'page',
                 default: {
                     enabled: false,
+                    bundleSettingsFile: '',
                     mainBundleRequired: false,
                     port: 8088
                 },
@@ -73,13 +74,14 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
 
         // Build page http-server, watcher and bundler.
-        const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory);
+        const lHttpServer: PageHttpServer = new PageHttpServer(pPackage, lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.bundleSettingsFile);
         const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         const lPageBundler: PageBundler = new PageBundler({
             projectHandler: pProject,
             package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
+            bundledSettingFilePath: lPackageConfiguration.bundleSettingsFile,
         });
 
         // Build initial build files.
@@ -200,6 +202,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
 type PageConfiguration = {
     enabled: boolean;
+    bundleSettingsFile: string;
     mainBundleRequired: boolean;
     port: number;
 };

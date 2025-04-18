@@ -24,7 +24,8 @@
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "package-blueprint": "",
             "bundle": {
@@ -33,7 +34,8 @@
             },
             "scratchpad": {
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "test": {
                 "bundleRequired": false,

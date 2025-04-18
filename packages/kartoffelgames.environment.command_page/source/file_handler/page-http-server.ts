@@ -1,7 +1,11 @@
-import { Console, FileSystem } from '@kartoffelgames/environment-core';
+import { EnvironmentBundle, type EnvironmentBundleOptions } from '@kartoffelgames/environment-bundle';
+import { Console, FileSystem, Package } from '@kartoffelgames/environment-core';
+
 
 export class PageHttpServer {
+    private readonly mBundledSettingFilePath: string;
     private readonly mOpenWebsockets: Set<WebSocket>;
+    private readonly mPackage: Package;
     private readonly mPort: number;
     private readonly mRootPath: string;
     private mServer: Deno.HttpServer<Deno.NetAddr> | null;
@@ -12,11 +16,13 @@ export class PageHttpServer {
      * @param pPort - Listening port.
      * @param pRootPath - Root path for webserver files.
      */
-    public constructor(pPort: number, pRootPath: string) {
+    public constructor(pPackage: Package, pPort: number, pRootPath: string, pBundledSettingFilePath: string) {
+        this.mPackage = pPackage;
         this.mPort = pPort;
         this.mRootPath = pRootPath;
         this.mOpenWebsockets = new Set<WebSocket>();
         this.mServer = null;
+        this.mBundledSettingFilePath = pBundledSettingFilePath;
     }
 
     /**
@@ -58,6 +64,18 @@ export class PageHttpServer {
         lMimeTypeMapping.set('.gif', 'image/gif');
         lMimeTypeMapping.set('.svg', 'image/svg+xml');
         lMimeTypeMapping.set('.ico', 'image/x-icon');
+
+        // Create environment bundle object.
+        const lEnvironmentBundle = new EnvironmentBundle();
+
+        // Load local bundle settings.
+        const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
+        const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
+
+        // Load additional mime types from bundle settings file.
+        for(const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
+            lMimeTypeMapping.set(lExtension, lMimeType);
+        }
 
         // Start webserver on defined port.
         this.mServer = Deno.serve({ port: this.mPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {

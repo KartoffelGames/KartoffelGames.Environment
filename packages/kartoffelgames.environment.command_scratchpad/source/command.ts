@@ -18,6 +18,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
             configuration: {
                 name: 'scratchpad',
                 default: {
+                    bundleSettingsFile: '',
                     mainBundleRequired: false,
                     port: 8088
                 },
@@ -56,13 +57,14 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         const lConsole = new Console();
 
         // Build scratchpad http-server, watcher and bundler.
-        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory);
+        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(pPackage, lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.bundleSettingsFile);
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
             projectHandler: pProjectHandler,
             package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,
+            bundledSettingFilePath: lPackageConfiguration.bundleSettingsFile,
         });
 
         // Build initial build files.
@@ -96,7 +98,6 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         await lHttpServer.start();
     }
 
-    
     /**
      * Initializes the scratchpad files for the given package.
      * 
@@ -153,6 +154,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
 
 type ScratchpadConfiguration = {
+    bundleSettingsFile: string;
     mainBundleRequired: boolean;
     port: number;
 };

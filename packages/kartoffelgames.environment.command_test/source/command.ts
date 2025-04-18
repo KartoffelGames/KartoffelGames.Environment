@@ -1,5 +1,3 @@
-import type { EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
 import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, Process, ProcessParameter, type Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
@@ -29,8 +27,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             configuration: {
                 name: 'test',
                 default: {
-                    directory: './test',
-                    bundleRequired: false
+                    directory: './test'
                 },
             }
         };
@@ -59,11 +56,7 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
         // Create all paths.
         const lTestInputDirectory = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
-        const lSourceInputDirectory = pPackage.sourceDirectory;
         const lTestOutputDirectory = FileSystem.pathToAbsolute(pPackage.directory, '.kg-test');
-        const lBundleResultDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'bundle');
-        const lBundleResultJavascriptFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js');
-        const lBundleResultSourceMapFile: string = FileSystem.pathToAbsolute(lBundleResultDirectory, 'bundle.test.js.map');
         const lCoverageFileDirectory = FileSystem.pathToAbsolute(lTestOutputDirectory, 'coverage');
         const lConsole: Console = new Console();
 
@@ -78,47 +71,6 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             FileSystem.createDirectory(lTestOutputDirectory);
         }
 
-        // Bundle result directory.    
-        if (!FileSystem.exists(lBundleResultDirectory)) {
-            FileSystem.createDirectory(lBundleResultDirectory);
-        }
-
-        // Bundle test files when bundle is required.
-        if (lPackageConfiguration.bundleRequired) {
-            // Read all .test.ts files from the test directory.
-            const lTestFileList: Array<string> = FileSystem.findFiles(lTestInputDirectory, { include: { extensions: ['ts'] } });
-            const lSourceFileList: Array<string> = FileSystem.findFiles(lSourceInputDirectory, { include: { extensions: ['ts'] } });
-
-            // Create bundle input content with all imports.
-            let lTestBundleContent: string = '';
-            for (const lTestFile of [...lTestFileList, ...lSourceFileList]) {
-                const lRelativePath: string = FileSystem.pathToRelative(lTestInputDirectory, lTestFile).replace(/\\/g, '/');
-
-                // Add import to bundle content.
-                lTestBundleContent += `import "${lRelativePath}";\n`;
-            }
-
-            // Create bundle command.
-            const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
-
-            // Run bundle.
-            const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(pPackage, (pOptions: EnvironmentBundleOptions) => {
-                // Override entry file with the test bundle.ts
-                pOptions.entry = {
-                    content: {
-                        inputResolveDirectory: lTestInputDirectory,
-                        inputFileContent: lTestBundleContent,
-                        outputBasename: 'bundle.test',
-                        outputExtension: 'js'
-                    }
-                };
-            });
-
-            // Write source files.
-            FileSystem.writeBinary(lBundleResultJavascriptFile, lBundleResult[0].content);
-            FileSystem.writeBinary(lBundleResultSourceMapFile, lBundleResult[0].sourceMap);
-        }
-
         // Create coverage directory.
         if (!FileSystem.exists(lCoverageFileDirectory)) {
             FileSystem.createDirectory(lCoverageFileDirectory);
@@ -131,16 +83,9 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             lTestWithCoverageCommand.push(`--coverage=${lRelativeCoverageFileDirectory}`);
         }
 
-        // Eighter test the test directory or the bundle result directory when bundle is required.
-        let lTestFilesDirectory: string;
-        if (lPackageConfiguration.bundleRequired) {
-            lTestFilesDirectory = FileSystem.pathToRelative(pPackage.directory, lBundleResultJavascriptFile);
-        } else {
-            // Find the package test and source directory.
-            const lRelativeTestDirectory: string = FileSystem.pathToRelative(pPackage.directory, lTestInputDirectory).slice(2).replace(/\\/g, '/');
-
-            lTestFilesDirectory = `${lRelativeTestDirectory}/**/*.ts`;
-        }
+        // Find the package test and source directory.
+        const lRelativeTestDirectory: string = FileSystem.pathToRelative(pPackage.directory, lTestInputDirectory).slice(2).replace(/\\/g, '/');
+        const lTestFilesDirectory: string = `${lRelativeTestDirectory}/**/*.ts`;
 
         // Add inspect command when inspect is enabled.
         const lTestInspectCommand: Array<string> = pParameter.has('inspect') ? ['--inspect-wait=0.0.0.0:9229'] : [];
@@ -159,13 +104,8 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             lTestFailed = true;
         });
 
-        // Somehow tell that coverage does not work for bundled tests... for now. 
-        if (lCoverageEnabled && lPackageConfiguration.bundleRequired) {
-            lConsole.writeLine('Coverage is not supported for bundled tests.', 'yellow');
-        }
-
         // When coverage is on, run 'deno coverage' command.
-        if (lCoverageEnabled && !lPackageConfiguration.bundleRequired) {
+        if (lCoverageEnabled) {
             const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
 
             // Get package directory base name.
@@ -217,5 +157,4 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
 type TestConfiguration = {
     directory: string;
-    bundleRequired: boolean;
 };
