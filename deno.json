@@ -1,5 +1,5 @@
 {
-    "version": "3.2.2",
+    "version": "3.2.3",
     "workspace": [
         "./packages/kartoffelgames.environment",
         "./packages/kartoffelgames.environment.blueprint",
