@@ -91,14 +91,11 @@ export class ScratchpadBundler {
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
-                // Construct paths.
-                const lPackagePath = this.mPackage.directory;
-
                 // Create environment bundle object.
                 const lEnvironmentBundle = new EnvironmentBundle();
 
                 // Load local bundle settings.
-                const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(lPackagePath, this.mBundledSettingFilePath) : null;
+                const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
                 const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
 
                 // Replace input file with fixed bundle input.

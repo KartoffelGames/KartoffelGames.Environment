@@ -57,7 +57,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         const lConsole = new Console();
 
         // Build scratchpad http-server, watcher and bundler.
-        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory);
+        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(pPackage, lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.bundleSettingsFile);
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
             projectHandler: pProjectHandler,

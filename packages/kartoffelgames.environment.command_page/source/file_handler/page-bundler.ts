@@ -4,8 +4,8 @@ import { CliParameter, Console, FileSystem, type Package, type Project } from '@
 
 export class PageBundler {
     private readonly mBundledFiles: PageBundlerFiles;
-    private readonly mCoreBundleRequired: boolean;
     private readonly mBundledSettingFilePath: string;
+    private readonly mCoreBundleRequired: boolean;
     private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
     private readonly mWebsocketPort: number;
@@ -91,14 +91,11 @@ export class PageBundler {
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
-                // Construct paths.
-                const lPackagePath = this.mPackage.directory;
-
                 // Create environment bundle object.
                 const lEnvironmentBundle = new EnvironmentBundle();
 
                 // Load local bundle settings.
-                const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(lPackagePath, this.mBundledSettingFilePath) : null;
+                const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
                 const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
 
                 // Replace input file with fixed bundle input.

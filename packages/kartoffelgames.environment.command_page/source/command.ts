@@ -74,7 +74,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
 
         // Build page http-server, watcher and bundler.
-        const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory);
+        const lHttpServer: PageHttpServer = new PageHttpServer(pPackage, lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.bundleSettingsFile);
         const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         const lPageBundler: PageBundler = new PageBundler({
             projectHandler: pProject,

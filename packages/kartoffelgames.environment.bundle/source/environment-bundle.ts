@@ -102,6 +102,11 @@ export class EnvironmentBundle {
             lBundleOptions.plugins = []; // Default plugins.
         }
 
+        // Extend bundle mime types when information was not set.
+        if (!lBundleOptions.mimeTypes) {
+            lBundleOptions.mimeTypes = {}; // Default mime types.
+        }
+
         // Start bundling.
         return lBundleOptions as EnvironmentBundleOptions;
     }
@@ -322,4 +327,8 @@ export type EnvironmentBundleOptions = {
     plugins: Array<esbuild.Plugin>;
     loader: EnvironmentBundleExtentionLoader;
     files: Array<EnvironmentBundleInputFile> | EnvironmentBundleInputContent;
+    /**
+     * Types of bundled files. Extensions are specified with leading dot.
+     */
+    mimeTypes: { [extension: string]: string; };
 };
