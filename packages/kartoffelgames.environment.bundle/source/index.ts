@@ -1,7 +1,7 @@
 export {
     EnvironmentBundle,
     type EnvironmentBundleOutput,
-    type EnvironmentBundleInputFiles,
+    type EnvironmentBundleInputFile,
     type EnvironmentBundleInputContent,
     type EnvironmentBundleOptions,
     type EnvironmentBundleExtentionLoader
