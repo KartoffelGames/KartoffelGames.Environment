@@ -83,7 +83,7 @@ export class ScratchpadBundler {
                 `        }\n` +
                 `    });\n` +
                 `})();\n` +
-                `import './index.ts';\n`
+                `(async ()=>{ import('./index.ts'); })();\n`
         };
 
         // Start bundling.
@@ -91,9 +91,7 @@ export class ScratchpadBundler {
             try {
                 // Run bundle.
                 const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(this.mPackage, (pOptions: EnvironmentBundleOptions) => {
-                    pOptions.entry = {
-                        content: lBundleSettings
-                    };
+                    pOptions.files = lBundleSettings;
                 });
 
                 // Return bundle result. Its allways one file.

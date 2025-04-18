@@ -69,11 +69,6 @@ export class PageHttpServer {
             const lFilePathName: string = new URL(pReqest.url).pathname;
             let lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
-            // Special case for bundle directory.
-            if (lFilePathName.toLowerCase().startsWith('/bundle/')) {
-                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(7));
-            }
-
             // Send file when it is in fact a file path.
             if (FileSystem.exists(lFilePath)) {
                 let lExistigFilePath: string = lFilePath;

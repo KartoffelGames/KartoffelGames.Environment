@@ -1,6 +1,6 @@
 import type { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
-import { CliParameter, Console, type Project, type Package } from '@kartoffelgames/environment-core';
+import { CliParameter, Console, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class PageBundler {
     private readonly mBundledFiles: PageBundlerFiles;
@@ -83,7 +83,7 @@ export class PageBundler {
                 `        }\n` +
                 `    });\n` +
                 `})();\n` +
-                `import './index.ts';\n`
+                `(async ()=>{ import('/index.ts'); })();\n`
         };
 
         // Start bundling.
@@ -91,9 +91,7 @@ export class PageBundler {
             try {
                 // Run bundle.
                 const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(this.mPackage, (pOptions: EnvironmentBundleOptions) => {
-                    pOptions.entry = {
-                        content: lBundleSettings
-                    };
+                    pOptions.files = lBundleSettings;
                 });
 
                 // Return bundle result. Its allways one file.

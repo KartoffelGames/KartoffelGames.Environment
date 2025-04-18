@@ -71,16 +71,14 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         })();
 
         // Extend bundle files options when information was not set.
-        if (!lBundleOptions.entry) {
-            lBundleOptions.entry = {
-                files: [
-                    {
-                        inputFilePath: './source/index.ts',
-                        outputBasename: '<packagename>',
-                        outputExtension: 'js'
-                    }
-                ]
-            };
+        if (!lBundleOptions.files) {
+            lBundleOptions.files = [
+                {
+                    inputFilePath: './source/index.ts',
+                    outputBasename: '<packagename>',
+                    outputExtension: 'js'
+                }
+            ];
         }
 
         // Extend bundle loader when information was not set.
