@@ -83,7 +83,7 @@ export class ScratchpadBundler {
                 `        }\n` +
                 `    });\n` +
                 `})();\n` +
-                `import './index.ts';\n`
+                `import('./index.ts');\n`
         };
 
         // Start bundling.
