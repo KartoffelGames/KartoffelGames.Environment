@@ -32,12 +32,14 @@
             },
             "scratchpad": {
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "test": {
                 "directory": "./test",

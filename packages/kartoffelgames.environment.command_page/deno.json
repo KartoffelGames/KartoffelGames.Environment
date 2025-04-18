@@ -27,11 +27,13 @@
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "scratchpad": {
                 "mainBundleRequired": false,
-                "port": 8888
+                "port": 8888,
+                "bundleSettingsFile": ""
             },
             "package-blueprint": "",
             "test": {
