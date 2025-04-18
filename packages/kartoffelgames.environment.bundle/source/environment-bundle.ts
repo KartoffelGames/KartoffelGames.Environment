@@ -238,17 +238,16 @@ export class EnvironmentBundle {
                 throw new Error(`Output file map not emited for input file: ${lInputFile.basename}`);
             }
 
-            // Replace sourcemap url in output file when the output file name is different from the input file name.
-            if (lInputFile.outputBaseName !== lInputFile.basename) {
-                // Convert Uint8Array into text. Replace sourcemapping url.
-                const lSourceText: string = new TextDecoder().decode(lFileOutputEntry.content).replace(
-                    `//# sourceMappingURL=${lInputFile.outputBaseName}.js.map`,
-                    `//# sourceMappingURL=${lInputFile.basename}.${lInputFile.extension}.map`
-                );
+            // Replace sourcemap url in output file with the right extension. 
+            // Convert Uint8Array into text. Replace sourcemapping url.
+            const lSourceText: string = new TextDecoder().decode(lFileOutputEntry.content).replace(
+                `//# sourceMappingURL=${lInputFile.outputBaseName}.js.map`,
+                `//# sourceMappingURL=${lInputFile.basename}.${lInputFile.extension}.map`
+            );
 
-                // Encode text again into Uint8Array
-                lFileOutputEntry.content = new TextEncoder().encode(lSourceText);
-            }
+            // Encode text again into Uint8Array
+            lFileOutputEntry.content = new TextEncoder().encode(lSourceText);
+
 
             // Add file to output.
             lBuildOutput.push({
