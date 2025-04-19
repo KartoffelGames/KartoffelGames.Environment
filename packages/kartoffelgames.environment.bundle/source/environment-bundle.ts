@@ -1,5 +1,5 @@
 import { FileSystem, Import, type Package, type PathInformation } from '@kartoffelgames/environment-core';
-import { denoPlugins } from '@luca/esbuild-deno-loader';
+import { denoPlugins } from '@oazmi/esbuild-plugin-deno';
 import * as esbuild from 'esbuild';
 
 export class EnvironmentBundle {
@@ -13,13 +13,35 @@ export class EnvironmentBundle {
      */
     public async bundle(pPackage: Package, pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
         // Normalize bundle options.
+        // Normalize bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
             ...pOptions,
             plugins: [...pOptions.plugins]
         };
 
+        // Create global import map of all packages in the workspace.
+        const lGlobalImportMap: { [key: string]: string; } = {};
+        for (const lPackage of pPackage.project.readAllPackages()) {
+            lGlobalImportMap[lPackage.configuration.name] = Import.resolveToUrl(lPackage.configuration.name).href;
+
+            // Use all imports from the package.
+            for (const [lImportKey, lImportPath] of Object.entries(lPackage.configuration['imports'])) {
+                lGlobalImportMap[lImportKey] = lImportPath as string;
+            }
+        }
+
+        // Add imports from project root.
+        for (const [lImportKey, lImportPath] of Object.entries(pPackage.project.configuration['imports'])) {
+            lGlobalImportMap[lImportKey] = lImportPath as string;
+        }
+
         // Normalize bundle plugins.
-        lEnvironmentBundleOptions.plugins.unshift(...denoPlugins({ configPath: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json') }));
+        lEnvironmentBundleOptions.plugins.unshift(...denoPlugins({
+            initialPluginData: {
+                runtimePackage: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json'),
+            },
+            globalImportMap: lGlobalImportMap
+        }));
 
         // Normalize input files.
         lEnvironmentBundleOptions.files = (() => {
@@ -167,7 +189,7 @@ export class EnvironmentBundle {
                 contents: pOptions.files.inputFileContent,
                 resolveDir: pOptions.files.inputResolveDirectory,
                 loader: 'ts',
-                sourcefile: `standard-input-file.js`
+                sourcefile: `standard-input-file.ts`
             };
 
             // Add input file name. For some reason esbuild allways uses stdin.js as an output file name for stdin content.
