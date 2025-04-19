@@ -1,7 +1,10 @@
-import { Console, FileSystem } from '@kartoffelgames/environment-core';
+import { EnvironmentBundle, type EnvironmentBundleOptions } from '@kartoffelgames/environment-bundle';
+import { Console, FileSystem, Package } from '@kartoffelgames/environment-core';
 
 export class ScratchpadHttpServer {
+    private readonly mBundledSettingFilePath: string;
     private readonly mOpenWebsockets: Set<WebSocket>;
+    private readonly mPackage: Package;
     private readonly mPort: number;
     private readonly mRootPath: string;
     private readonly mScratchpadFiles: ScratchpadHttpServerScratchpadFiles;    
@@ -13,7 +16,8 @@ export class ScratchpadHttpServer {
      * @param pPort - Listening port.
      * @param pRootPath - Root path for webserver files.
      */
-    public constructor(pPort: number, pRootPath: string) {
+    public constructor(pPackage: Package, pPort: number, pRootPath: string, pBundledSettingFilePath: string) {
+        this.mPackage = pPackage;
         this.mPort = pPort;
         this.mRootPath = pRootPath;
         this.mOpenWebsockets = new Set<WebSocket>();
@@ -22,6 +26,7 @@ export class ScratchpadHttpServer {
             source: new Uint8Array(0),
             map: new Uint8Array(0),
         };
+        this.mBundledSettingFilePath = pBundledSettingFilePath;
     }
 
     /**
@@ -75,6 +80,18 @@ export class ScratchpadHttpServer {
         lMimeTypeMapping.set('.svg', 'image/svg+xml');
         lMimeTypeMapping.set('.ico', 'image/x-icon');
 
+        // Create environment bundle object.
+        const lEnvironmentBundle = new EnvironmentBundle();
+
+        // Load local bundle settings.
+        const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
+        const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
+
+        // Load additional mime types from bundle settings file.
+        for(const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
+            lMimeTypeMapping.set(lExtension, lMimeType);
+        }
+
         // Start webserver on defined port.
         this.mServer = Deno.serve({ port: this.mPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
             // Upgrade to websocket.
@@ -84,6 +101,11 @@ export class ScratchpadHttpServer {
 
             const lFilePathName: string = new URL(pReqest.url).pathname;
             let lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
+
+            // Special case for bundle directory.
+            if (lFilePathName.toLowerCase().startsWith('/bundle/')) {
+                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(8));
+            }
 
             // Send file when it is in fact a file path.
             if (FileSystem.exists(lFilePath)) {

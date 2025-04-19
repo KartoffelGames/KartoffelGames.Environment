@@ -1,9 +1,10 @@
-import type { EnvironmentBundleInputContent, EnvironmentBundleOptions, EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundle, type EnvironmentBundleInputContent, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
-import { CliParameter, Console, type Package, type Project } from '@kartoffelgames/environment-core';
+import { CliParameter, Console, FileSystem, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class ScratchpadBundler {
     private readonly mBundledFiles: ScratchpadBundlerFiles;
+    private readonly mBundledSettingFilePath: string;
     private readonly mCoreBundleRequired: boolean;
     private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
@@ -37,6 +38,7 @@ export class ScratchpadBundler {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
         };
+        this.mBundledSettingFilePath = pParameters.bundledSettingFilePath;
     }
 
     /**
@@ -83,16 +85,24 @@ export class ScratchpadBundler {
                 `        }\n` +
                 `    });\n` +
                 `})();\n` +
-                `(async ()=>{ import('./index.ts'); })();\n`
+                `import('./index.ts');\n`
         };
 
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
             try {
+                // Create environment bundle object.
+                const lEnvironmentBundle = new EnvironmentBundle();
+
+                // Load local bundle settings.
+                const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
+                const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
+
+                // Replace input file with fixed bundle input.
+                lBundleOptions.files = lBundleSettings;
+
                 // Run bundle.
-                const lBundleResult: EnvironmentBundleOutput = await lMainBundleCommand.bundle(this.mPackage, (pOptions: EnvironmentBundleOptions) => {
-                    pOptions.files = lBundleSettings;
-                });
+                const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundle(this.mPackage, lBundleOptions);
 
                 // Return bundle result. Its allways one file.
                 return {
@@ -136,4 +146,5 @@ export type ScratchpadBundlerConstructor = {
     package: Package;
     coreBundleRequired: boolean;
     websocketPort: number;
+    bundledSettingFilePath: string;
 };

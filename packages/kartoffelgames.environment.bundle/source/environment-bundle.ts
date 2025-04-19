@@ -13,6 +13,7 @@ export class EnvironmentBundle {
      */
     public async bundle(pPackage: Package, pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
         // Normalize bundle options.
+        // Normalize bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
             ...pOptions,
             plugins: [...pOptions.plugins]
@@ -68,6 +69,68 @@ export class EnvironmentBundle {
 
         // Bundle based on entry type.
         return this.runBundleProcess(lEnvironmentBundleOptions);
+    }
+
+    /**
+     * Bundle package with the bundle options specified in the package deno.json.
+     * 
+     * @param pPackage - Package bundle.
+     * @param pOverrideCallback  - Override functionality of bundle options.
+     * 
+     * @returns Bundle output.
+     */
+    public async loadBundleOptions(pBundleSettingFilePath: string | null): Promise<EnvironmentBundleOptions> {
+        // Load local bundle settings.
+        let lBundleOptions: Partial<EnvironmentBundleOptions> = await (async () => {
+            // Use default settings.
+            if (!pBundleSettingFilePath || pBundleSettingFilePath.trim() === '') {
+                return {};
+            }
+
+            const lBundleSettingsFilePath = FileSystem.pathToAbsolute(pBundleSettingFilePath);
+
+            // Check for file exists.
+            if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+            }
+
+            // Check for file exists.
+            if (!FileSystem.exists(lBundleSettingsFilePath)) {
+                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
+            }
+
+            // Import bundle as js file.
+            const lBundleSettingObject: { default: () => EnvironmentBundleOptions; } = await Import.import(`file://${lBundleSettingsFilePath}`);
+            if (typeof lBundleSettingObject.default !== 'function') {
+                throw new Error(`Bundle settings file does not export a default function: ${lBundleSettingsFilePath}`);
+            }
+
+            return lBundleSettingObject.default();
+
+        })();
+
+        // Extend bundle files options when information was not set.
+        if (!lBundleOptions.files) {
+            lBundleOptions.files = []; // Default files.
+        }
+
+        // Extend bundle loader when information was not set.
+        if (!lBundleOptions.loader) {
+            lBundleOptions.loader = {}; // Default loader.
+        }
+
+        // Extend bundle plugins when information was not set.
+        if (!lBundleOptions.plugins) {
+            lBundleOptions.plugins = []; // Default plugins.
+        }
+
+        // Extend bundle mime types when information was not set.
+        if (!lBundleOptions.mimeTypes) {
+            lBundleOptions.mimeTypes = {}; // Default mime types.
+        }
+
+        // Start bundling.
+        return lBundleOptions as EnvironmentBundleOptions;
     }
 
     /**
@@ -199,17 +262,16 @@ export class EnvironmentBundle {
                 throw new Error(`Output file map not emited for input file: ${lInputFile.basename}`);
             }
 
-            // Replace sourcemap url in output file when the output file name is different from the input file name.
-            if (lInputFile.outputBaseName !== lInputFile.basename) {
-                // Convert Uint8Array into text. Replace sourcemapping url.
-                const lSourceText: string = new TextDecoder().decode(lFileOutputEntry.content).replace(
-                    `//# sourceMappingURL=${lInputFile.outputBaseName}.js.map`,
-                    `//# sourceMappingURL=${lInputFile.basename}.${lInputFile.extension}.map`
-                );
+            // Replace sourcemap url in output file with the right extension. 
+            // Convert Uint8Array into text. Replace sourcemapping url.
+            const lSourceText: string = new TextDecoder().decode(lFileOutputEntry.content).replace(
+                `//# sourceMappingURL=${lInputFile.outputBaseName}.js.map`,
+                `//# sourceMappingURL=${lInputFile.basename}.${lInputFile.extension}.map`
+            );
 
-                // Encode text again into Uint8Array
-                lFileOutputEntry.content = new TextEncoder().encode(lSourceText);
-            }
+            // Encode text again into Uint8Array
+            lFileOutputEntry.content = new TextEncoder().encode(lSourceText);
+
 
             // Add file to output.
             lBuildOutput.push({
@@ -288,4 +350,8 @@ export type EnvironmentBundleOptions = {
     plugins: Array<esbuild.Plugin>;
     loader: EnvironmentBundleExtentionLoader;
     files: Array<EnvironmentBundleInputFile> | EnvironmentBundleInputContent;
+    /**
+     * Types of bundled files. Extensions are specified with leading dot.
+     */
+    mimeTypes: { [extension: string]: string; };
 };

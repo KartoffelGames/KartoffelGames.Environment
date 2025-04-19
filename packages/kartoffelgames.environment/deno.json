@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment",
-    "version": "3.2.2",
+    "version": "4.0.1",
     "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
@@ -25,7 +25,8 @@
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "package-blueprint": "",
             "bundle": {
@@ -34,7 +35,8 @@
             },
             "scratchpad": {
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "test": {
                 "bundleRequired": false,

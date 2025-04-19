@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment-command-test",
-    "version": "3.2.2",
+    "version": "4.0.1",
     "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
@@ -30,11 +30,13 @@
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
-                "port": 8088
+                "port": 8088,
+                "bundleSettingsFile": ""
             },
             "scratchpad": {
                 "mainBundleRequired": false,
-                "port": 8888
+                "port": 8888,
+                "bundleSettingsFile": ""
             },
             "test": {
                 "bundleRequired": false,
