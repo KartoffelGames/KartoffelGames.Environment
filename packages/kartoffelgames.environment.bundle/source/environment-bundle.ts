@@ -200,8 +200,6 @@ export class EnvironmentBundle {
             });
         }
 
-        console.log(lEsBuildConfiguration);
-
         // Start esbuild.
         const lBuildResult = await esbuild.build(lEsBuildConfiguration);
 
