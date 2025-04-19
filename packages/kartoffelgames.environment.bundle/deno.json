@@ -5,7 +5,7 @@
     "tasks": {},
     "imports": {
         "esbuild": "npm:esbuild@^0.25.2",
-        "@oazmi/esbuild-plugin-deno": "jsr:@oazmi/esbuild-plugin-deno@^0.4.0"
+        "@oazmi/esbuild-plugin-deno": "jsr:@oazmi/esbuild-plugin-deno@^0.4.1"
     },
     "exports": "./source/index.ts",
     "publish": {

@@ -83,7 +83,7 @@ export class PageBundler {
                 `        }\n` +
                 `    });\n` +
                 `})();\n` +
-                `(async ()=>{ import('/index.ts'); })();\n`
+                `(async ()=>{ import('./index.ts'); })();\n`
         };
 
         // Start bundling.

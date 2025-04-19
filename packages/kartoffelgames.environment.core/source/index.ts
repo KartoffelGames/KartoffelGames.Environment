@@ -10,4 +10,3 @@ export { Package } from './project/package.ts';
 export { Project } from './project/project.ts';
 export { Console } from './system/console.ts';
 export { FileSystem, type FileSearchOptions, type PathInformation } from './system/file-system.ts';
-
