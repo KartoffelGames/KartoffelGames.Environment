@@ -1,6 +1,6 @@
 {
     "name": "@kartoffelgames/environment-command-transform",
-    "version": "4.0.1",
+    "version": "4.1.0",
     "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
