@@ -13,9 +13,8 @@
         "./packages/kartoffelgames.environment.command_sync",
         "./packages/kartoffelgames.environment.command_test",
         "./packages/kartoffelgames.environment.core",
-        "././packages/kartoffelgames.environment.command_bump",
-        "././packages/kartoffelgames.environment.command_transform",
-        "././packages/kartoffelgames.environment.test_package"
+        "./packages/kartoffelgames.environment.command_bump",
+        "./packages/kartoffelgames.environment.command_transform"
     ],
     "tasks": {
         "lint": "deno run -A npm:eslint --config eslint.config.js",

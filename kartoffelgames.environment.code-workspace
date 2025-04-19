@@ -57,10 +57,6 @@
             "path": "packages\\kartoffelgames.environment.core"
         },
         {
-            "name": "Kartoffelgames.Environment.Test_Package",
-            "path": "./packages\\kartoffelgames.environment.test_package"
-        },
-        {
             "name": "_ROOT",
             "path": "."
         }
