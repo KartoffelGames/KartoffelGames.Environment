@@ -73,9 +73,15 @@ export class PageHttpServer {
         const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
 
         // Load additional mime types from bundle settings file.
-        for(const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
+        for (const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
             lMimeTypeMapping.set(lExtension, lMimeType);
         }
+
+        // Define default header.
+        const lDefaultHeaders = {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'credentialless'
+        };
 
         // Start webserver on defined port.
         this.mServer = Deno.serve({ port: this.mPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
@@ -109,15 +115,27 @@ export class PageHttpServer {
                     try {
                         // Open file and return response.
                         const lFile = await Deno.open(lExistigFilePath, { read: true });
-                        return new Response(lFile.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
+                        return new Response(lFile.readable, {
+                            status: 200,
+                            headers: {
+                                ...lDefaultHeaders,
+                                'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain'
+                            }
+                        });
                     } catch (pError) {
                         // Somthing went wrong idk what.
-                        return new Response('File could not be read.' + pError, { status: 500 });
+                        return new Response('File could not be read.' + pError, {
+                            status: 500,
+                            headers: { ...lDefaultHeaders }
+                        });
                     }
                 }
             }
 
-            return new Response('404 Not Found', { status: 404 });
+            return new Response('404 Not Found', {
+                status: 404,
+                headers: { ...lDefaultHeaders }
+            });
         });
 
         // Return promise that resolves once the server is closed.
