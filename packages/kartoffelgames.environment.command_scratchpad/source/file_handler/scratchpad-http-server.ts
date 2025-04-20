@@ -7,7 +7,7 @@ export class ScratchpadHttpServer {
     private readonly mPackage: Package;
     private readonly mPort: number;
     private readonly mRootPath: string;
-    private readonly mScratchpadFiles: ScratchpadHttpServerScratchpadFiles;    
+    private readonly mScratchpadFiles: ScratchpadHttpServerScratchpadFiles;
     private mServer: Deno.HttpServer<Deno.NetAddr> | null;
 
     /**
@@ -88,9 +88,15 @@ export class ScratchpadHttpServer {
         const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
 
         // Load additional mime types from bundle settings file.
-        for(const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
+        for (const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
             lMimeTypeMapping.set(lExtension, lMimeType);
         }
+
+        // Define default header.
+        const lDefaultHeaders = {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'credentialless'
+        };
 
         // Start webserver on defined port.
         this.mServer = Deno.serve({ port: this.mPort, hostname: '127.0.0.1' }, async (pReqest: Request): Promise<Response> => {
@@ -124,25 +130,49 @@ export class ScratchpadHttpServer {
                     try {
                         // Open file and return response.
                         const lFile = await Deno.open(lExistigFilePath, { read: true });
-                        return new Response(lFile.readable, { headers: { 'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain' } });
+                        return new Response(lFile.readable, {
+                            status: 200,
+                            headers: {
+                                ...lDefaultHeaders,
+                                'Content-Type': lMimeTypeMapping.get(lFileInformation.extension) ?? 'text/plain'
+                            }
+                        });
                     } catch (_pError) {
                         // Somthing went wrong idk what.
-                        return new Response('File could not be read. ' + _pError, { status: 500 });
+                        return new Response('File could not be read. ' + _pError, {
+                            status: 500,
+                            headers: { ...lDefaultHeaders }
+                        });
                     }
                 }
             }
 
             // Send cached buidl scratchpad.js for a special path.
             if (lFilePathName.toLowerCase() === '/scratchpad.js') {
-                return new Response(this.mScratchpadFiles.source, { headers: { 'Content-Type': 'application/javascript' } });
+                return new Response(this.mScratchpadFiles.source, {
+                    status: 200,
+                    headers: {
+                        ...lDefaultHeaders,
+                        'Content-Type': 'application/javascript'
+                    }
+                });
             }
 
             // Send cached buidl scratchpad.js for a special path.
             if (lFilePathName.toLowerCase() === '/scratchpad.js.map') {
-                return new Response(this.mScratchpadFiles.map, { headers: { 'Content-Type': 'application/json' } });
+                return new Response(this.mScratchpadFiles.map, {
+                    status: 200,
+                    headers: {
+                        ...lDefaultHeaders,
+                        'Content-Type': 'application/json'
+                    }
+                });
             }
 
-            return new Response('404 Not Found', { status: 404 });
+            return new Response('404 Not Found', {
+                status: 404,
+                headers: { ...lDefaultHeaders }
+            });
         });
 
         // Return promise that resolves once the server is closed.
