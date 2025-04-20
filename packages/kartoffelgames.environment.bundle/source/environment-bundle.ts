@@ -22,7 +22,7 @@ export class EnvironmentBundle {
         // Create global import map of all packages in the workspace.
         const lGlobalImportMap: { [key: string]: string; } = {};
         for (const lPackage of pPackage.project.readAllPackages()) {
-            lGlobalImportMap[lPackage.configuration.name] = Import.resolveToUrl(lPackage.configuration.name).href;
+            lGlobalImportMap[lPackage.configuration.name] = (await Import.resolveToUrlInContext(lPackage.directory, lPackage.configuration.name)).href;
 
             // Use all imports from the package.
             for (const [lImportKey, lImportPath] of Object.entries(lPackage.configuration['imports'])) {
