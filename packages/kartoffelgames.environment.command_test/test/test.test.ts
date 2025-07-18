@@ -1,14 +1,14 @@
-import { describe, it } from '@std/testing/bdd';
 import { expect } from '@std/expect';
+import { add, sub } from "../source/testing-functions.ts";
 
-describe('Test tests', () => {
-    it('Add', () => {
-        const lResult = 2 + 3;
+Deno.test('Test', async (pContext) => {
+    await pContext.step('Add', () => {
+        const lResult = add(2, 3);
         expect(lResult).toBe(5);
     });
 
-    it('Dif', () => {
-        const lResult = 0 - 5;
-        expect(lResult).toBe(-5);
+    await pContext.step('Sub', () => {
+        const lResult = sub(5, 3);
+        expect(lResult).toBe(2);
     });
 });
