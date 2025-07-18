@@ -76,15 +76,18 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
             FileSystem.createDirectory(lCoverageFileDirectory);
         }
 
+        // Get relative coverage file directory.
+        const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
+
         // Create test with coverage command extension.
         const lTestWithCoverageCommand: Array<string> = [];
         if (lCoverageEnabled) {
-            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
             lTestWithCoverageCommand.push(`--coverage=${lRelativeCoverageFileDirectory}`);
+            lTestWithCoverageCommand.push('--coverage-raw-data-only');
         }
 
         // Find the package test and source directory.
-        const lRelativeTestDirectory: string = FileSystem.pathToRelative(pPackage.directory, lTestInputDirectory).slice(2).replace(/\\/g, '/');
+        const lRelativeTestDirectory: string = FileSystem.pathToRelative(pPackage.directory, lTestInputDirectory).slice(2).replace(/\\/g, '/').replace(/\s/g, '\\s');
         const lTestFilesDirectory: string = `${lRelativeTestDirectory}/**/*.ts`;
 
         // Add inspect command when inspect is enabled.
@@ -106,22 +109,20 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
         // When coverage is on, run 'deno coverage' command.
         if (lCoverageEnabled) {
-            const lRelativeCoverageFileDirectory: string = FileSystem.pathToRelative(pPackage.directory, lCoverageFileDirectory);
-
             // Get package directory base name.
             const lPackageDirectoryBaseName: string = FileSystem.pathInformation(pPackage.directory).basename;
             const lPackageSourceDirectory: string = FileSystem.pathToRelative(pPackage.directory, pPackage.sourceDirectory);
 
             // Get the relative source direcory from project root of the package with correct format
             const lAbsoluteSourceDirectory: string = FileSystem.pathToAbsolute(pProject.packagesDirectory, lPackageDirectoryBaseName, lPackageSourceDirectory);
-            const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.directory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/');
+            const lRelativeSouceDirectory: string = FileSystem.pathToRelative(pProject.directory, lAbsoluteSourceDirectory).slice(2).replace(/\\/g, '/').replace(/\s/g, '\\s');
 
             // Set detailed coverage parameter when command parameter was set.
             const lDetailedParameter: Array<string> = pParameter.has('detailed') ? ['--detailed'] : new Array<string>();
 
             // Create coverage command parameter.
             const lCoverageCommandParameter: ProcessParameter = new ProcessParameter(pPackage.directory, [
-                'deno', 'coverage', lRelativeCoverageFileDirectory, `--include=${lRelativeSouceDirectory}`, ...lDetailedParameter
+                'deno', 'coverage', `--include=${lRelativeSouceDirectory}`, ...lDetailedParameter, lRelativeCoverageFileDirectory
             ]);
 
             // Run "deno coverage" command in current console process.
