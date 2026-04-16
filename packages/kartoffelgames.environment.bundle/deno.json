@@ -23,17 +23,17 @@
                 "enabled": false,
                 "mainBundleRequired": false,
                 "port": 8088,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "bundle": {
                 "enabled": false,
-                "bundleSettingsFile": ""
+                "files": {}
             },
             "package-blueprint": "",
             "scratchpad": {
                 "mainBundleRequired": false,
                 "port": 8088,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "test": {
                 "bundleRequired": false,
