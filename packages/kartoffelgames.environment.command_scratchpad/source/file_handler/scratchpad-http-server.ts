@@ -2,9 +2,8 @@ import { EnvironmentBundle, type EnvironmentBundleOptions } from '@kartoffelgame
 import { Console, FileSystem, Package } from '@kartoffelgames/environment-core';
 
 export class ScratchpadHttpServer {
-    private readonly mBundledSettingFilePath: string;
+    private readonly mMimeTypesMapping: Record<string, string>;
     private readonly mOpenWebsockets: Set<WebSocket>;
-    private readonly mPackage: Package;
     private readonly mPort: number;
     private readonly mRootPath: string;
     private readonly mScratchpadFiles: ScratchpadHttpServerScratchpadFiles;
@@ -15,9 +14,9 @@ export class ScratchpadHttpServer {
      * 
      * @param pPort - Listening port.
      * @param pRootPath - Root path for webserver files.
+     * @param pMimeTypeMapping - Mapping of file extensions to MIME types.
      */
-    public constructor(pPackage: Package, pPort: number, pRootPath: string, pBundledSettingFilePath: string) {
-        this.mPackage = pPackage;
+    public constructor(pPort: number, pRootPath: string, pMimeTypeMapping: Record<string, string>) {
         this.mPort = pPort;
         this.mRootPath = pRootPath;
         this.mOpenWebsockets = new Set<WebSocket>();
@@ -26,7 +25,7 @@ export class ScratchpadHttpServer {
             source: new Uint8Array(0),
             map: new Uint8Array(0),
         };
-        this.mBundledSettingFilePath = pBundledSettingFilePath;
+        this.mMimeTypesMapping = pMimeTypeMapping;
     }
 
     /**
@@ -47,7 +46,7 @@ export class ScratchpadHttpServer {
      * @param pSourceFile - Javascript source file.
      * @param pSourceMapFile - Source map file.
      */
-    public setScratchpadBundle(pSourceFile: Uint8Array, pSourceMapFile: Uint8Array): void {
+    public setScratchpadBundle(pSourceFile: Uint8Array<ArrayBuffer>, pSourceMapFile: Uint8Array<ArrayBuffer>): void {
         this.mScratchpadFiles.source = pSourceFile;
         this.mScratchpadFiles.map = pSourceMapFile;
     }
@@ -80,15 +79,8 @@ export class ScratchpadHttpServer {
         lMimeTypeMapping.set('.svg', 'image/svg+xml');
         lMimeTypeMapping.set('.ico', 'image/x-icon');
 
-        // Create environment bundle object.
-        const lEnvironmentBundle = new EnvironmentBundle();
-
-        // Load local bundle settings.
-        const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
-        const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
-
         // Load additional mime types from bundle settings file.
-        for (const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
+        for (const [lExtension, lMimeType] of Object.entries(this.mMimeTypesMapping)) {
             lMimeTypeMapping.set(lExtension, lMimeType);
         }
 
@@ -219,6 +211,6 @@ export class ScratchpadHttpServer {
 }
 
 type ScratchpadHttpServerScratchpadFiles = {
-    source: Uint8Array;
-    map: Uint8Array;
+    source: Uint8Array<ArrayBuffer>;
+    map: Uint8Array<ArrayBuffer>;
 };

@@ -29,7 +29,8 @@
         "lib": [
             "ES2021",
             "DOM",
-            "deno.ns"
+            "deno.ns",
+            "deno.unstable"
         ],
         "types": [
             "./bundle-environment/bundle-module-declaration.d.ts"

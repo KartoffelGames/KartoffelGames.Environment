@@ -1,4 +1,4 @@
-import { EnvironmentBundle, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundle, EnvironmentBundleInputFile, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
@@ -21,8 +21,7 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
             configuration: {
                 name: 'bundle',
                 default: {
-                    enabled: false,
-                    bundleSettingsFile: ''
+                    files: {}
                 },
             }
         };
@@ -44,12 +43,12 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         const lForceBundle: boolean = <boolean>pParameter.has('force');
 
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
+        const lPackageConfiguration: BundleConfiguration = await pPackage.cliConfigurationOf(this);
 
         const lConsole = new Console();
 
         // Skip anything when bundling is disabled.
-        if (!lPackageConfiguration.enabled && !lForceBundle) {
+        if (Object.keys(lPackageConfiguration.files).length === 0 && !lForceBundle) {
             lConsole.writeLine(`Bundling disabled, Skip bundling.`);
             return;
         } else if (lForceBundle) {
@@ -58,7 +57,7 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         }
 
         // Start bundling.
-        const lBundleResult: EnvironmentBundleOutput = await this.bundle(pPackage);
+        const lBundleResult: EnvironmentBundleOutput = await this.bundle(pPackage, lPackageConfiguration);
 
         // Create output file directory.
         const lBuildOutput: string = FileSystem.pathToAbsolute(pPackage.directory, 'library');
@@ -86,39 +85,37 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
      * 
      * @returns Bundle output.
      */
-    private async bundle(pPackage: Package): Promise<EnvironmentBundleOutput> {
-        // Read cli configuration from cli package.
-        const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
-
-        // Construct paths.
-        const lPackagePath = pPackage.directory;
-
+    private async bundle(pPackage: Package, pConfiguration: BundleConfiguration): Promise<EnvironmentBundleOutput> {
         // Create environment bundle object.
         const lEnvironmentBundle = new EnvironmentBundle();
 
-        // Load local bundle settings.
-        const lBundleSettingsFilePath: string | null = lPackageConfiguration.bundleSettingsFile.trim() !== '' ? FileSystem.pathToAbsolute(lPackagePath, lPackageConfiguration.bundleSettingsFile) : null;
-        const lBundleOptions: Partial<EnvironmentBundleOptions> = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
-
         // Extend bundle files options when information was not set.
-        if (Array.isArray(lBundleOptions.files) && lBundleOptions.files.length === 0) {
-            lBundleOptions.files = [
-                {
-                    inputFilePath: './source/index.ts',
-                    outputBasename: '<packagename>',
-                    outputExtension: 'js'
-                }
-            ];
+        if (Object.keys(pConfiguration.files).length === 0) {
+            pConfiguration.files = {
+                '<packagename>.js': './source/index.ts'
+            };
         }
 
-        // Extend bundle loader when information was not set.
-        if (!lBundleOptions.loader) {
-            lBundleOptions.loader = {}; // Default loader.
-        }
+        // Load local bundle settings.
+        const lBundleOptions: Partial<EnvironmentBundleOptions> = {
+            files: new Array<EnvironmentBundleInputFile>()
+        };
 
-        // Extend bundle plugins when information was not set.
-        if (!lBundleOptions.plugins) {
-            lBundleOptions.plugins = []; // Default plugins.
+        // Map configuration files to bundle options.
+        for (const [lOutputBasename, lInputFilePath] of Object.entries(pConfiguration.files)) {
+            // Convert the input file path from local to absolute path.
+            const lAbsoluteInputFilePath = FileSystem.pathToAbsolute(pPackage.directory, lInputFilePath);
+
+            // Check if the input file exists.
+            if (!FileSystem.exists(lAbsoluteInputFilePath)) {
+                throw new Error(`Input file "${lAbsoluteInputFilePath}" does not exist.`);
+            }
+
+            lBundleOptions.files?.push({
+                outputBasename: lOutputBasename,
+                inputFilePaths: [lAbsoluteInputFilePath],
+                outputExtension: 'js'
+            });
         }
 
         // Start bundling.
@@ -127,6 +124,5 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
 }
 
 type BundleConfiguration = {
-    enabled: boolean;
-    bundleSettingsFile: string;
+    files: Record<string, string>;
 };

@@ -3,9 +3,8 @@ import { Console, FileSystem, Package } from '@kartoffelgames/environment-core';
 
 
 export class PageHttpServer {
-    private readonly mBundledSettingFilePath: string;
+    private readonly mMimeTypesMapping: Record<string, string>;
     private readonly mOpenWebsockets: Set<WebSocket>;
-    private readonly mPackage: Package;
     private readonly mPort: number;
     private readonly mRootPath: string;
     private mServer: Deno.HttpServer<Deno.NetAddr> | null;
@@ -15,14 +14,14 @@ export class PageHttpServer {
      * 
      * @param pPort - Listening port.
      * @param pRootPath - Root path for webserver files.
+     * @param pMimeTypesMapping - Mime types mapping.
      */
-    public constructor(pPackage: Package, pPort: number, pRootPath: string, pBundledSettingFilePath: string) {
-        this.mPackage = pPackage;
+    public constructor(pPort: number, pRootPath: string, pMimeTypeMapping: Record<string, string>) {
         this.mPort = pPort;
         this.mRootPath = pRootPath;
         this.mOpenWebsockets = new Set<WebSocket>();
         this.mServer = null;
-        this.mBundledSettingFilePath = pBundledSettingFilePath;
+        this.mMimeTypesMapping = pMimeTypeMapping;
     }
 
     /**
@@ -65,15 +64,8 @@ export class PageHttpServer {
         lMimeTypeMapping.set('.svg', 'image/svg+xml');
         lMimeTypeMapping.set('.ico', 'image/x-icon');
 
-        // Create environment bundle object.
-        const lEnvironmentBundle = new EnvironmentBundle();
-
-        // Load local bundle settings.
-        const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
-        const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
-
         // Load additional mime types from bundle settings file.
-        for (const [lExtension, lMimeType] of Object.entries(lBundleOptions.mimeTypes)) {
+        for (const [lExtension, lMimeType] of Object.entries(this.mMimeTypesMapping)) {
             lMimeTypeMapping.set(lExtension, lMimeType);
         }
 
