@@ -1,3 +1,5 @@
+import { FileSystem } from "@kartoffelgames/environment-core";
+
 export class PageFileWatcher {
     private readonly mListener: Array<PageFileWatcherListener>;
     private readonly mWatchedPaths: Array<string>;
@@ -38,27 +40,36 @@ export class PageFileWatcher {
         // Init watcher.
         this.mWatcher = Deno.watchFs(this.mWatchedPaths, { recursive: true });
 
-        // Init debounce timer.
-        let lDebounceTimer: number = 0;
-
         const lWatchedEvents: Array<string> = ['create', 'modify', 'rename', 'remove'];
+
+        // Skip flag to debounce multiple events for a single change.
+        let lDebouncing: boolean = false;
 
         // Start watcher loop asyncron.
         for await (const lEvent of this.mWatcher) {
-            // Skip events that doesn't change any files.
-            if (!lWatchedEvents.includes(lEvent.kind)) {
-                return;
+            if (lDebouncing) {
+                continue;
             }
 
-            // Reset debounce timer.
-            clearTimeout(lDebounceTimer);
+            // Skip events that doesn't change any files.
+            if (!lWatchedEvents.includes(lEvent.kind)) {
+                continue;
+            }
 
-            // Set new debounce timer.
-            lDebounceTimer = setTimeout(() => {
-                // Call all listener
-                for (const lListener of this.mListener) {
-                    lListener();
-                }
+            // Skip any changes that doesn't have a file extension, as they are likely to be directory changes.
+            if(!lEvent.paths.some((p) => FileSystem.pathInformation(p).isFile)) {
+                continue;
+            }
+
+            // Call all listener
+            for (const lListener of this.mListener) {
+                lListener();
+            }
+
+            // Debounce.
+            lDebouncing = true;
+            setTimeout(() => {
+                lDebouncing = false;
             }, 100);
         }
     }

@@ -73,9 +73,13 @@ export class ScratchpadBundler {
         const lScratchpadRefresherInputFileText: string = (await lScratchpadRefresherInputFileRequest.text())
             .replace('[[WEBSOCKET_PORT]]', this.mWebsocketPort.toString());
 
-        // Create temporary file for bundling.
-        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.ts' });
+        // Create an absolute path for the scratchpad index.ts file.
+        const lScratchpadIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source/index.ts');
+
+        // Create a temporary file as sibbling file of the index file for bundling and write the RefresherInputFileText first and then the index.ts content to it.
+        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source') });
         await Deno.writeFile(lTempFilePath, new TextEncoder().encode(lScratchpadRefresherInputFileText));
+        await Deno.writeFile(lTempFilePath, await Deno.readFile(lScratchpadIndexFilePath), { append: true });
 
         // Start bundling.
         const lBundleResult: { content: Uint8Array<ArrayBuffer>, sourcemap: Uint8Array<ArrayBuffer>; } = await (async () => {
@@ -83,13 +87,10 @@ export class ScratchpadBundler {
                 // Create environment bundle object.
                 const lEnvironmentBundle = new EnvironmentBundle();
 
-                // Create an absolute path for the scratchpad index.ts file.
-                const lScratchpadIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source/index.ts');
-
-                // Create the single inpput file configuration.
+                // Create the single input file configuration.
                 const lInputFile: EnvironmentBundleInputFile = {
-                    inputFilePaths: [lTempFilePath, lScratchpadIndexFilePath],
-                    outputBasename: 'scratchpad',
+                    inputFilePath: lTempFilePath,
+                    outputBasename: 'page',
                     outputExtension: 'js'
                 };
 
@@ -115,6 +116,9 @@ export class ScratchpadBundler {
                     content: new Uint8Array(0),
                     sourcemap: new Uint8Array(0)
                 };
+            } finally {
+                // Remove temporary file.
+                await Deno.remove(lTempFilePath);
             }
         })();
 

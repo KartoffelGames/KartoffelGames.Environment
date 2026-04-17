@@ -75,7 +75,6 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
         // Build page http-server, watcher and bundler.
         const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
-        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         const lPageBundler: PageBundler = new PageBundler({
             projectHandler: pProject,
             package: pPackage,
@@ -89,6 +88,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
 
         // Rebundle page files and refresh connected browsers when files have changed.
+        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         lWatcher.addListener(async () => {
             // Bundle files and update server served page files once they have changed.
             if (await lPageBundler.bundle()) {

@@ -92,7 +92,7 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
         // Extend bundle files options when information was not set.
         if (Object.keys(pConfiguration.files).length === 0) {
             pConfiguration.files = {
-                '<packagename>.js': './source/index.ts'
+                '<packagename>': './source/index.ts'
             };
         }
 
@@ -113,7 +113,7 @@ export class KgCliCommand implements ICliPackageCommand<BundleConfiguration> {
 
             lBundleOptions.files?.push({
                 outputBasename: lOutputBasename,
-                inputFilePaths: [lAbsoluteInputFilePath],
+                inputFilePath: lAbsoluteInputFilePath,
                 outputExtension: 'js'
             });
         }

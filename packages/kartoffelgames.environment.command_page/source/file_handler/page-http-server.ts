@@ -1,6 +1,4 @@
-import { EnvironmentBundle, type EnvironmentBundleOptions } from '@kartoffelgames/environment-bundle';
-import { Console, FileSystem, Package } from '@kartoffelgames/environment-core';
-
+import { Console, FileSystem } from '@kartoffelgames/environment-core';
 
 export class PageHttpServer {
     private readonly mMimeTypesMapping: Record<string, string>;

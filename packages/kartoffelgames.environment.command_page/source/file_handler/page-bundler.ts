@@ -73,9 +73,13 @@ export class PageBundler {
         const lPageRefresherInputFileText: string = (await lPageRefresherInputFileRequest.text())
             .replace('[[WEBSOCKET_PORT]]', this.mWebsocketPort.toString());
 
-        // Create temporary file for bundling.
-        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.ts' });
+        // Create an absolute path for the page index.ts file.
+        const lPageIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './page/source/index.ts');
+
+        // Create a temporary file as sibbling file of the index file for bundling and write the RefresherInputFileText first and then the index.ts content to it.
+        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './page/source') });
         await Deno.writeFile(lTempFilePath, new TextEncoder().encode(lPageRefresherInputFileText));
+        await Deno.writeFile(lTempFilePath, await Deno.readFile(lPageIndexFilePath), { append: true });
 
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
@@ -83,12 +87,9 @@ export class PageBundler {
                 // Create environment bundle object.
                 const lEnvironmentBundle = new EnvironmentBundle();
 
-                // Create an absolute path for the scratchpad index.ts file.
-                const lPageIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './page/source/index.ts');
-
-                // Create the single inpput file configuration.
+                // Create the single input file configuration.
                 const lInputFile: EnvironmentBundleInputFile = {
-                    inputFilePaths: [lTempFilePath, lPageIndexFilePath],
+                    inputFilePath: lTempFilePath,
                     outputBasename: 'page',
                     outputExtension: 'js'
                 };
@@ -109,13 +110,16 @@ export class PageBundler {
             } catch (e) {
                 // Pass through error message.
                 lConsole.writeLine((<Error>e).message, 'red');
-            }
 
-            // Return empty bundle result on error.
-            return {
-                content: new Uint8Array(0),
-                sourcemap: new Uint8Array(0)
-            };
+                // Return empty bundle result on error.
+                return {
+                    content: new Uint8Array(0),
+                    sourcemap: new Uint8Array(0)
+                };
+            } finally {
+                // Remove temporary file.
+                await Deno.remove(lTempFilePath);
+            }
         })();
 
         // Cache bundled files.

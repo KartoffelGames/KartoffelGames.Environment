@@ -20,6 +20,9 @@
         "lint": "deno run -A npm:eslint --config eslint.config.js",
         "kg": "deno run -A packages/kartoffelgames.environment.cli/source/cli.ts"
     },
+    "unstable": [
+        "bundle", "raw-imports"
+    ],
     "license": "LGPL-3.0-only",
     "imports": {},
     "lock": false,
@@ -31,9 +34,6 @@
             "DOM",
             "deno.ns",
             "deno.unstable"
-        ],
-        "types": [
-            "./bundle-environment/bundle-module-declaration.d.ts"
         ],
         "noImplicitAny": true,
         "noImplicitOverride": true,
