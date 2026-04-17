@@ -1,10 +1,9 @@
-import { EnvironmentBundle, type EnvironmentBundleInputContent, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
+import { EnvironmentBundle, EnvironmentBundleInputFile, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
 import { CliParameter, Console, FileSystem, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class ScratchpadBundler {
     private readonly mBundledFiles: ScratchpadBundlerFiles;
-    private readonly mBundledSettingFilePath: string;
     private readonly mCoreBundleRequired: boolean;
     private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
@@ -13,14 +12,14 @@ export class ScratchpadBundler {
     /**
      * Get source file.
      */
-    public get sourceFile(): Uint8Array {
+    public get sourceFile(): Uint8Array<ArrayBuffer> {
         return this.mBundledFiles.javascriptFileContent;
     }
 
     /**
      * Get source map file.
      */
-    public get sourceMapFile(): Uint8Array {
+    public get sourceMapFile(): Uint8Array<ArrayBuffer> {
         return this.mBundledFiles.mapFileContent;
     }
 
@@ -38,7 +37,6 @@ export class ScratchpadBundler {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
         };
-        this.mBundledSettingFilePath = pParameters.bundledSettingFilePath;
     }
 
     /**
@@ -67,39 +65,39 @@ export class ScratchpadBundler {
             }
         }
 
-        // Create default scratchpad input.
-        const lBundleSettings: EnvironmentBundleInputContent = {
-            inputResolveDirectory: './scratchpad/source/',
-            outputBasename: 'scratchpad',
-            outputExtension: 'js',
-            inputFileContent:
-                `(() => {\n` +
-                `    const socket = new WebSocket('ws://127.0.0.1:${this.mWebsocketPort}');\n` +
-                `    socket.addEventListener('open', () => {\n` +
-                `        console.log('Refresh connection established');\n` +
-                `    });\n` +
-                `    socket.addEventListener('message', (event) => {\n` +
-                `        console.log('Bundle finished. Start refresh');\n` +
-                `        if (event.data === 'REFRESH') {\n` +
-                `            window.location.reload();\n` +
-                `        }\n` +
-                `    });\n` +
-                `})();\n` +
-                `import('./index.ts');\n`
-        };
+        // Read the scratchpad-refresher-input.ts file content and create a temporary file for bundling.
+        const lScratchpadRefresherInputFilePath: URL = new URL('./scratchpad-refresher-input.ts', import.meta.url);
+        const lScratchpadRefresherInputFileRequest: Response = await fetch(lScratchpadRefresherInputFilePath);
+
+        // Load as text to replace the [[WEBSOCKET_PORT]] placeholder.
+        const lScratchpadRefresherInputFileText: string = (await lScratchpadRefresherInputFileRequest.text())
+            .replace('[[WEBSOCKET_PORT]]', this.mWebsocketPort.toString());
+
+        // Create an absolute path for the scratchpad index.ts file.
+        const lScratchpadIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source/index.ts');
+
+        // Create a temporary file as sibbling file of the index file for bundling and write the RefresherInputFileText first and then the index.ts content to it.
+        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source') });
+        await Deno.writeFile(lTempFilePath, new TextEncoder().encode(lScratchpadRefresherInputFileText));
+        await Deno.writeFile(lTempFilePath, await Deno.readFile(lScratchpadIndexFilePath), { append: true });
 
         // Start bundling.
-        const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
+        const lBundleResult: { content: Uint8Array<ArrayBuffer>, sourcemap: Uint8Array<ArrayBuffer>; } = await (async () => {
             try {
                 // Create environment bundle object.
                 const lEnvironmentBundle = new EnvironmentBundle();
 
-                // Load local bundle settings.
-                const lBundleSettingsFilePath: string | null = this.mBundledSettingFilePath.trim() !== '' ? FileSystem.pathToAbsolute(this.mPackage.directory, this.mBundledSettingFilePath) : null;
-                const lBundleOptions: EnvironmentBundleOptions = await lEnvironmentBundle.loadBundleOptions(lBundleSettingsFilePath);
+                // Create the single input file configuration.
+                const lInputFile: EnvironmentBundleInputFile = {
+                    inputFilePath: lTempFilePath,
+                    outputBasename: 'page',
+                    outputExtension: 'js'
+                };
 
                 // Replace input file with fixed bundle input.
-                lBundleOptions.files = lBundleSettings;
+                const lBundleOptions: EnvironmentBundleOptions = {
+                    files: [lInputFile]
+                };
 
                 // Run bundle.
                 const lBundleResult: EnvironmentBundleOutput = await lEnvironmentBundle.bundle(this.mPackage, lBundleOptions);
@@ -118,6 +116,9 @@ export class ScratchpadBundler {
                     content: new Uint8Array(0),
                     sourcemap: new Uint8Array(0)
                 };
+            } finally {
+                // Remove temporary file.
+                await Deno.remove(lTempFilePath);
             }
         })();
 
@@ -137,8 +138,8 @@ export class ScratchpadBundler {
 }
 
 type ScratchpadBundlerFiles = {
-    javascriptFileContent: Uint8Array;
-    mapFileContent: Uint8Array;
+    javascriptFileContent: Uint8Array<ArrayBuffer>;
+    mapFileContent: Uint8Array<ArrayBuffer>;
 };
 
 export type ScratchpadBundlerConstructor = {
@@ -146,5 +147,4 @@ export type ScratchpadBundlerConstructor = {
     package: Package;
     coreBundleRequired: boolean;
     websocketPort: number;
-    bundledSettingFilePath: string;
 };

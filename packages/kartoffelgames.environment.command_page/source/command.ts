@@ -27,7 +27,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
                 name: 'page',
                 default: {
                     enabled: false,
-                    bundleSettingsFile: '',
+                    mimeTypeMapping: {},
                     mainBundleRequired: false,
                     port: 8088
                 },
@@ -74,14 +74,12 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
 
         // Build page http-server, watcher and bundler.
-        const lHttpServer: PageHttpServer = new PageHttpServer(pPackage, lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.bundleSettingsFile);
-        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
+        const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
         const lPageBundler: PageBundler = new PageBundler({
             projectHandler: pProject,
             package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
-            websocketPort: lPackageConfiguration.port,
-            bundledSettingFilePath: lPackageConfiguration.bundleSettingsFile,
+            websocketPort: lPackageConfiguration.port
         });
 
         // Build initial build files.
@@ -90,6 +88,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
 
         // Rebundle page files and refresh connected browsers when files have changed.
+        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         lWatcher.addListener(async () => {
             // Bundle files and update server served page files once they have changed.
             if (await lPageBundler.bundle()) {
@@ -202,7 +201,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
 type PageConfiguration = {
     enabled: boolean;
-    bundleSettingsFile: string;
+    mimeTypeMapping: Record<string, string>;
     mainBundleRequired: boolean;
     port: number;
 };

@@ -22,18 +22,18 @@
             "package-blueprint": "kg-main",
             "bundle": {
                 "enabled": false,
-                "bundleSettingsFile": ""
+                "files": {}
             },
             "scratchpad": {
                 "mainBundleRequired": false,
                 "port": 8088,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
                 "port": 8088,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "test": {
                 "directory": "./test",

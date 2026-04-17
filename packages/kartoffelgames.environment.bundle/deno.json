@@ -3,10 +3,7 @@
     "version": "4.1.2",
     "license": "LGPL-3.0-only",
     "tasks": {},
-    "imports": {
-        "esbuild": "npm:esbuild@^0.25.2",
-        "@oazmi/esbuild-plugin-deno": "jsr:@oazmi/esbuild-plugin-deno@^0.4.1"
-    },
+    "imports": {},
     "exports": "./source/index.ts",
     "publish": {
         "include": [
@@ -26,17 +23,17 @@
                 "enabled": false,
                 "mainBundleRequired": false,
                 "port": 8088,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "bundle": {
                 "enabled": false,
-                "bundleSettingsFile": ""
+                "files": {}
             },
             "package-blueprint": "",
             "scratchpad": {
                 "mainBundleRequired": false,
                 "port": 8088,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "test": {
                 "bundleRequired": false,

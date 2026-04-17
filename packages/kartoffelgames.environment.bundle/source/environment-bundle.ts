@@ -1,320 +1,175 @@
-import { FileSystem, Import, type Package, type PathInformation } from '@kartoffelgames/environment-core';
-import { denoPlugins } from '@oazmi/esbuild-plugin-deno';
-import * as esbuild from 'esbuild';
+import { FileSystem, type Package, type PathInformation } from '@kartoffelgames/environment-core';
 
 export class EnvironmentBundle {
     /**
      * Bundle a package with set settings and loader.
-     * 
+     *
      * @param pPackage - Package to bundle.
      * @param pOptions - Bundle options.
-     * 
-     * @returns Build output of esbuild build. 
+     *
+     * @returns Build output of Deno bundle.
      */
     public async bundle(pPackage: Package, pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
         // Normalize bundle options.
-        // Normalize bundle options.
         const lEnvironmentBundleOptions: EnvironmentBundleOptions = {
             ...pOptions,
-            plugins: [...pOptions.plugins]
         };
 
-        // Create global import map of all packages in the workspace.
-        const lGlobalImportMap: { [key: string]: string; } = {};
-        for (const lPackage of pPackage.project.readAllPackages()) {
-            lGlobalImportMap[lPackage.configuration.name] = (await Import.resolveToUrlInContext(lPackage.directory, lPackage.configuration.name)).href;
-
-            // Use all imports from the package.
-            for (const [lImportKey, lImportPath] of Object.entries(lPackage.configuration['imports'])) {
-                lGlobalImportMap[lImportKey] = lImportPath as string;
-            }
-        }
-
-        // Add imports from project root.
-        for (const [lImportKey, lImportPath] of Object.entries(pPackage.project.configuration['imports'])) {
-            lGlobalImportMap[lImportKey] = lImportPath as string;
-        }
-
-        // Normalize bundle plugins.
-        lEnvironmentBundleOptions.plugins.unshift(...denoPlugins({
-            initialPluginData: {
-                runtimePackage: FileSystem.pathToAbsolute(pPackage.directory, 'deno.json'),
-            },
-            globalImportMap: lGlobalImportMap
-        }));
-
         // Normalize input files.
-        lEnvironmentBundleOptions.files = (() => {
-            // Based on entry type.
-            if (Array.isArray(pOptions.files)) {
-                return pOptions.files.map((pInputFile) => {
-                    return {
-                        ...pInputFile,
-                        // Replace <packagename> with package name.
-                        outputBasename: pInputFile.outputBasename.replace('<packagename>', pPackage.id),
-                        // Convert entry point path into absolute file path rooted in the package directory.
-                        inputFilePath: FileSystem.pathToAbsolute(pPackage.directory, pInputFile.inputFilePath),
-                        outputExtension: pInputFile.outputExtension
-                    };
-                });
-            } else {
-                return {
-                    ...pOptions.files,
-                    outputBasename: pOptions.files.outputBasename.replace('<packagename>', pPackage.id),
-                    // Convert the relative resolve path into a absolute path.
-                    inputResolveDirectory: FileSystem.pathToAbsolute(pPackage.directory, pOptions.files.inputResolveDirectory)
-                } satisfies EnvironmentBundleInputContent;
-            }
-        })();
+        lEnvironmentBundleOptions.files = pOptions.files.map((pInputFile) => {
+            return {
+                ...pInputFile,
+                // Replace <packagename> with package name.
+                outputBasename: pInputFile.outputBasename.replace('<packagename>', pPackage.id),
+                // Convert entry point paths into absolute file paths rooted in the package directory.
+                inputFilePath: pInputFile.inputFilePath
+            };
+        });
 
         // Bundle based on entry type.
         return this.runBundleProcess(lEnvironmentBundleOptions);
     }
 
     /**
-     * Bundle package with the bundle options specified in the package deno.json.
-     * 
-     * @param pPackage - Package bundle.
-     * @param pOverrideCallback  - Override functionality of bundle options.
-     * 
-     * @returns Bundle output.
-     */
-    public async loadBundleOptions(pBundleSettingFilePath: string | null): Promise<EnvironmentBundleOptions> {
-        // Load local bundle settings.
-        let lBundleOptions: Partial<EnvironmentBundleOptions> = await (async () => {
-            // Use default settings.
-            if (!pBundleSettingFilePath || pBundleSettingFilePath.trim() === '') {
-                return {};
-            }
-
-            const lBundleSettingsFilePath = FileSystem.pathToAbsolute(pBundleSettingFilePath);
-
-            // Check for file exists.
-            if (!FileSystem.exists(lBundleSettingsFilePath)) {
-                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
-            }
-
-            // Check for file exists.
-            if (!FileSystem.exists(lBundleSettingsFilePath)) {
-                throw new Error(`Bundle settings file not found: ${lBundleSettingsFilePath}`);
-            }
-
-            // Import bundle as js file.
-            const lBundleSettingObject: { default: () => EnvironmentBundleOptions; } = await Import.import(`file://${lBundleSettingsFilePath}`);
-            if (typeof lBundleSettingObject.default !== 'function') {
-                throw new Error(`Bundle settings file does not export a default function: ${lBundleSettingsFilePath}`);
-            }
-
-            return lBundleSettingObject.default();
-
-        })();
-
-        // Extend bundle files options when information was not set.
-        if (!lBundleOptions.files) {
-            lBundleOptions.files = []; // Default files.
-        }
-
-        // Extend bundle loader when information was not set.
-        if (!lBundleOptions.loader) {
-            lBundleOptions.loader = {}; // Default loader.
-        }
-
-        // Extend bundle plugins when information was not set.
-        if (!lBundleOptions.plugins) {
-            lBundleOptions.plugins = []; // Default plugins.
-        }
-
-        // Extend bundle mime types when information was not set.
-        if (!lBundleOptions.mimeTypes) {
-            lBundleOptions.mimeTypes = {}; // Default mime types.
-        }
-
-        // Start bundling.
-        return lBundleOptions as EnvironmentBundleOptions;
-    }
-
-    /**
      * Run a generic bundle process.
-     * 
+     *
      * @param pOptions - Bundle options.
-     * 
-     * @returns bundle output files. 
+     *
+     * @returns bundle output files.
      */
     private async runBundleProcess(pOptions: EnvironmentBundleOptions): Promise<EnvironmentBundleOutput> {
-        // Create esbuild configuration object.
-        const lEsBuildConfiguration: esbuild.BuildOptions = {
-            // User setupable.
-            plugins: pOptions.plugins,
-            loader: pOptions.loader,
-
-            // Default settings.
-            bundle: true,
-            platform: 'neutral',
-            format: 'esm',
-            target: "es2022",
+        // Create base bundle configuration.
+        const lBaseBundleConfiguration = {
+            platform: 'browser',
+            format: 'iife',
 
             // Optimization.
             minify: true,
-            sourcemap: true,
-            treeShaking: true,
+            sourcemap: 'linked',
+
+            // Override default settings.
+            keepNames: false,
+            packages: 'bundle',
 
             // Write to memory.
             write: false,
-            outdir: 'out'
-        };
+            outputDir: "./"
+        } as const;
 
-        // List of input names and their expected output names.
-        const lInputFileNames: Array<{ outputBaseName: string; basename: string; extension: string; }> = new Array<{ outputBaseName: string; basename: string; extension: string; }>();
+        // Collect all entrypoints from all input file configurations.
+        const lAllEntrypoints: Array<string> = pOptions.files.map((pFile) => pFile.inputFilePath);
 
-        // Eighter build files or a file content.
-        if (Array.isArray(pOptions.files)) {
-            // Convert entry files into a filename to input file mapping.
-            const lEntryPoints: { [key: string]: string; } = {};
-            for (const lInputFile of pOptions.files) {
-                // Add input file path. Prepend file:// to make it a valid url.
-                lEntryPoints[lInputFile.outputBasename] = `file://${lInputFile.inputFilePath}`;
+        // Bundle all files in a single Deno.bundle call.
+        const lBundleResult: Deno.bundle.Result = await Deno.bundle({
+            ...lBaseBundleConfiguration,
+            entrypoints: lAllEntrypoints,
+        });
 
-                // Add input file name.
-                lInputFileNames.push({
-                    outputBaseName: lInputFile.outputBasename,
-                    basename: lInputFile.outputBasename,
-                    extension: lInputFile.outputExtension
-                });
-            }
-
-            lEsBuildConfiguration.entryPoints = lEntryPoints;
-        } else {
-            // Configurate a stdin content.
-            lEsBuildConfiguration.stdin = {
-                contents: pOptions.files.inputFileContent,
-                resolveDir: pOptions.files.inputResolveDirectory,
-                loader: 'ts',
-                sourcefile: `standard-input-file.ts`
-            };
-
-            // Add input file name. For some reason esbuild allways uses stdin.js as an output file name for stdin content.
-            lInputFileNames.push({
-                outputBaseName: 'stdin',
-                basename: pOptions.files.outputBasename,
-                extension: pOptions.files.outputExtension
-            });
+        // On any error, throw with all error messages.
+        if (!lBundleResult.success || !lBundleResult.outputFiles) {
+            throw new Error(lBundleResult.errors.map((pError) => pError.text).join('\n'));
         }
 
-        // Start esbuild.
-        const lBuildResult = await esbuild.build(lEsBuildConfiguration);
+        // Group output files by their path stem (content + source map).
+        // Output paths end with .js or .js.map. Two files share a stem when
+        // one is {stem}.js and the other is {stem}.js.map.
+        const lGroupedByPathStem: Map<string, { content?: Uint8Array<ArrayBuffer>; sourceMap?: Uint8Array<ArrayBuffer>; }> = new Map();
 
-        // On any error, return an empty result.
-        if (!lBuildResult.outputFiles) {
-            return [];
-        }
+        for (const lOutFile of lBundleResult.outputFiles) {
+            // Normalize path separators for consistent matching.
+            const lNormalizedPath: string = lOutFile.path.replaceAll('\\', '/');
+            let lStem: string;
+            let lIsSourceMap: boolean;
 
-        // Grouped file output with its source map.
-        const lFileOutput: { [fileName: string]: Partial<EnvironmentBundleOutput[number]>; } = {};
-
-        // Read and map all output files that belong to each other.
-        for (const lOutFile of lBuildResult.outputFiles) {
-            const lOutFileInformation: PathInformation = FileSystem.pathInformation(lOutFile.path);
-
-            // Get file name without extension. When it ends with .js it is a map file.
-            let lOutFileName: string = lOutFileInformation.filename;
-            if (lOutFileName.endsWith('.js')) {
-                // Remove .js from file name.
-                lOutFileName = lOutFileName.substring(0, lOutFileName.length - 3);
+            if (lNormalizedPath.endsWith('.js.map')) {
+                lStem = lNormalizedPath.substring(0, lNormalizedPath.length - '.js.map'.length);
+                lIsSourceMap = true;
+            } else if (lNormalizedPath.endsWith('.js')) {
+                lStem = lNormalizedPath.substring(0, lNormalizedPath.length - '.js'.length);
+                lIsSourceMap = false;
+            } else {
+                continue; // Skip unknown extensions.
             }
 
-            // Get or create file output entry mapping.
-            let lFileOutputEntry: Partial<EnvironmentBundleOutput[number]> | undefined = lFileOutput[lOutFileName];
-            if (!lFileOutputEntry) {
-                // Create and register empty file output entry.
-                lFileOutputEntry = { fileName: lOutFileName };
-                lFileOutput[lOutFileName] = lFileOutputEntry;
+            // Get or create group entry for this stem.
+            let lGroup = lGroupedByPathStem.get(lStem);
+            if (!lGroup) {
+                lGroup = {};
+                lGroupedByPathStem.set(lStem, lGroup);
             }
 
-            // Add eighter content or source map, based on file extension, to the file output entry.
-            if (lOutFileInformation.extension === '.js') {
-                lFileOutputEntry.content = lOutFile.contents;
-            } else if (lOutFileInformation.extension === '.map') {
-                lFileOutputEntry.sourceMap = lOutFile.contents;
+            // Assign content or source map.
+            if (lOutFile.contents) {
+                if (lIsSourceMap) {
+                    lGroup.sourceMap = lOutFile.contents;
+                } else {
+                    lGroup.content = lOutFile.contents;
+                }
             }
         }
 
-        // Read all output files and convert into EnvironmentBuildedFiles.
+        // Map output groups back to input files by matching filename stems.
+        // Deno outputs files as {outputDir}/{inputStem}.js, so we match by filename without extension.
         const lBuildOutput: EnvironmentBundleOutput = [];
 
-        // Map output files with the coresponding input files.
-        for (const lInputFile of lInputFileNames) {
-            const lFileOutputEntry: Partial<EnvironmentBundleOutput[number]> | undefined = lFileOutput[lInputFile.outputBaseName];
+        for (const lFile of pOptions.files) {
+            // Get the input file's filename without extension (stem).
+            const lInputInfo: PathInformation = FileSystem.pathInformation(lFile.inputFilePath);
+            const lInputStem: string = lInputInfo.filename; // filename without extension.
+
+            // Find the matching output group by comparing the last path segment (filename stem).
+            let lMatchedGroup: { content?: Uint8Array<ArrayBuffer>; sourceMap?: Uint8Array<ArrayBuffer>; } | undefined;
+            for (const [lStem, lGroup] of lGroupedByPathStem) {
+                // Extract the filename stem from the output path stem.
+                const lOutputStem: string = lStem.substring(lStem.lastIndexOf('/') + 1);
+                if (lOutputStem === lInputStem) {
+                    lMatchedGroup = lGroup;
+                    break;
+                }
+            }
 
             // Missing everything.
-            if (!lFileOutputEntry) {
-                throw new Error(`Output file not emited for input file: ${lInputFile.basename}`);
+            if (!lMatchedGroup) {
+                throw new Error(`Output file not emitted for input file: ${lFile.inputFilePath}`);
             }
 
             // Missing content.
-            if (!lFileOutputEntry.content) {
-                throw new Error(`Output file content not emited for input file: ${lInputFile.basename}`);
+            if (!lMatchedGroup.content) {
+                throw new Error(`Output file content not emitted for input file: ${lFile.inputFilePath}`);
             }
 
             // Missing source map.
-            if (!lFileOutputEntry.sourceMap) {
-                throw new Error(`Output file map not emited for input file: ${lInputFile.basename}`);
+            if (!lMatchedGroup.sourceMap) {
+                throw new Error(`Output file map not emitted for input file: ${lFile.inputFilePath}`);
             }
 
-            // Replace sourcemap url in output file with the right extension. 
-            // Convert Uint8Array into text. Replace sourcemapping url.
-            const lSourceText: string = new TextDecoder().decode(lFileOutputEntry.content).replace(
-                `//# sourceMappingURL=${lInputFile.outputBaseName}.js.map`,
-                `//# sourceMappingURL=${lInputFile.basename}.${lInputFile.extension}.map`
+            // Replace sourcemap URL with the desired output basename and extension.
+            // The sourcemap URL in the output references the input file stem (e.g. "index.js.map").
+            const lSourceText: string = new TextDecoder().decode(lMatchedGroup.content).replace(
+                `//# sourceMappingURL=${lInputStem}.js.map`,
+                `//# sourceMappingURL=${lFile.outputBasename}.${lFile.outputExtension}.map`
             );
 
-            // Encode text again into Uint8Array
-            lFileOutputEntry.content = new TextEncoder().encode(lSourceText);
-
+            // Encode text again into Uint8Array.
+            const lContent: Uint8Array<ArrayBuffer> = new TextEncoder().encode(lSourceText);
 
             // Add file to output.
             lBuildOutput.push({
-                content: lFileOutputEntry.content,
-                fileName: `${lInputFile.basename}.${lInputFile.extension}`,
-                sourceMap: lFileOutputEntry.sourceMap
+                content: lContent,
+                fileName: `${lFile.outputBasename}.${lFile.outputExtension}`,
+                sourceMap: lMatchedGroup.sourceMap
             });
         }
-
-        // Wait for the esbuild process to stop before returning the output.
-        await esbuild.stop();
 
         return lBuildOutput;
     }
 }
 
-export type EnvironmentBundleExtentionLoader = { [extension: string]: 'base64' | 'dataurl' | 'empty' | 'js' | 'json' | 'text' | 'ts'; };
-
 export type EnvironmentBundleInputFile = {
     /**
-     * Relative path of input file.
+     * Absolute path of input file.
      */
     inputFilePath: string;
-
-    /**
-     * Base name of file use <packagename> to replace with package name.
-     */
-    outputBasename: string;
-
-    /**
-     * File extension without leading dot.
-     */
-    outputExtension: string;
-};
-
-export type EnvironmentBundleInputContent = {
-    /**
-     * Relative path all relative paths respond to.
-     */
-    inputResolveDirectory: string;
-
-    /**
-     * Source content of input file.
-     */
-    inputFileContent: string;
 
     /**
      * Base name of file use <packagename> to replace with package name.
@@ -331,7 +186,7 @@ export type EnvironmentBundleOutput = Array<{
     /**
      * File content.
      */
-    content: Uint8Array;
+    content: Uint8Array<ArrayBuffer>;
 
     /**
      * Filename without extension.
@@ -341,15 +196,9 @@ export type EnvironmentBundleOutput = Array<{
     /**
      * Files source map.
      */
-    sourceMap: Uint8Array;
+    sourceMap: Uint8Array<ArrayBuffer>;
 }>;
 
 export type EnvironmentBundleOptions = {
-    plugins: Array<esbuild.Plugin>;
-    loader: EnvironmentBundleExtentionLoader;
-    files: Array<EnvironmentBundleInputFile> | EnvironmentBundleInputContent;
-    /**
-     * Types of bundled files. Extensions are specified with leading dot.
-     */
-    mimeTypes: { [extension: string]: string; };
+    files: Array<EnvironmentBundleInputFile>;
 };

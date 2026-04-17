@@ -25,18 +25,18 @@
             "blueprint": "kg-main",
             "bundle": {
                 "enabled": false,
-                "bundleSettingsFile": ""
+                "files": {}
             },
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
                 "port": 8088,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "scratchpad": {
                 "mainBundleRequired": false,
                 "port": 8888,
-                "bundleSettingsFile": ""
+                "mimeTypeMapping": {}
             },
             "test": {
                 "bundleRequired": false,
