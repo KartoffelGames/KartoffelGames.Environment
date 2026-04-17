@@ -6,6 +6,26 @@ A command module for the [KartoffelGames CLI](https://jsr.io/@kartoffelgames/env
 
 The `test` command runs Deno tests for a package. It discovers all `.ts` test files in the configured test directory (default: `./test`) and executes them using `deno test`. It optionally generates coverage reports and supports attaching a debugger via the inspector protocol.
 
+## Configuration
+
+The test feature is configured in the package's `deno.json` under `kg.config.test`:
+
+```jsonc
+{
+    "kg": {
+        "config": {
+            "test": {
+                "directory": "./test"
+            }
+        }
+    }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `directory` | `string` | `"./test"` | Relative path to the directory containing test files. |
+
 ## Installation
 
 Register this command in the root `deno.json` of your monorepo:

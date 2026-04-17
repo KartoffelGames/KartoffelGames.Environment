@@ -8,6 +8,28 @@ The `transform` command transforms Deno packages into other runtime formats. Cur
 
 The `--clean` flag removes previously generated output directories and cleans up related workspace entries.
 
+## Configuration
+
+The transform feature is configured in the package's `deno.json` under `kg.config.transform`:
+
+```jsonc
+{
+    "kg": {
+        "config": {
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
+        }
+    }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enableNode` | `boolean` | `false` | Whether Node.js transformation is enabled for this package. |
+| `nodeDirectory` | `string` | `"./node"` | Relative path to the output directory for the transformed Node.js files. |
+
 ## Installation
 
 Register this command in the root `deno.json` of your monorepo:

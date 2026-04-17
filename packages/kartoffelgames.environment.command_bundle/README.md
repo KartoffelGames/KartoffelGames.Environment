@@ -8,6 +8,51 @@ The `bundle` command bundles package source files into JavaScript output. It rea
 
 If no file mappings are configured, bundling is skipped unless the `--force` flag is set, in which case the default mapping (`<packagename>` -> `./source/index.ts`) is used.
 
+## Configuration
+
+Bundle file mappings are configured in the target package's `deno.json` under `kg.config.bundle`:
+
+```jsonc
+{
+    "kg": {
+        "config": {
+            "bundle": {
+                "files": {
+                    "bundle-name": "./source/index.ts"
+                }
+            }
+        }
+    }
+}
+```
+
+Each entry in `files` maps an **output name** to an **input file path**. The output name becomes the resulting `<name>.js` file in the `library/` directory.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `files` | `Record<string, string>` | `{}` | Maps output bundle names to input file paths. |
+
+### The `<packagename>` Placeholder
+
+You can use the `<packagename>` placeholder in the output name, which gets replaced with the actual package name at build time. This can also be combined with other text:
+
+```jsonc
+{
+    "kg": {
+        "config": {
+            "bundle": {
+                "files": {
+                    "<packagename>": "./source/index.ts",
+                    "<packagename>-worker": "./source/worker.ts"
+                }
+            }
+        }
+    }
+}
+```
+
+For a package named `@kartoffelgames/core`, this would produce `kartoffelgames.core.js` and `kartoffelgames.core-worker.js` in the `library/` directory.
+
 ## Installation
 
 Register this command in the root `deno.json` of your monorepo:

@@ -28,7 +28,7 @@ Register this command in the root `deno.json` of your monorepo:
 ## Usage
 
 ```
-deno task kg help [--command <name>]
+deno task kg help
 ```
 
 ### Examples

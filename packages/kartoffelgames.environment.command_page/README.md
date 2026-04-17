@@ -10,6 +10,32 @@ Unlike the `scratchpad` command, `page` outputs bundled files to disk, making th
 
 On first run, the command initializes a `page/` directory with starter `index.html`, `index.css`, and `source/index.ts` files if they do not already exist.
 
+## Configuration
+
+The page feature is configured in the package's `deno.json` under `kg.config.page`:
+
+```jsonc
+{
+    "kg": {
+        "config": {
+            "page": {
+                "enabled": false,
+                "mimeTypeMapping": {},
+                "mainBundleRequired": false,
+                "port": 8088
+            }
+        }
+    }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Whether page building and serving is enabled for this package. |
+| `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server. |
+| `mainBundleRequired` | `boolean` | `false` | Whether the main package bundle is required for the page bundle. |
+| `port` | `number` | `8088` | The port the local HTTP server listens on. |
+
 ## Installation
 
 Register this command in the root `deno.json` of your monorepo:

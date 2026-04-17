@@ -10,6 +10,30 @@ Unlike the `page` command, `scratchpad` keeps all bundled files in memory and do
 
 On first run, the command initializes a `scratchpad/` directory with starter `index.html`, `index.css`, and `source/index.ts` files if they do not already exist.
 
+## Configuration
+
+The scratchpad feature is configured in the package's `deno.json` under `kg.config.scratchpad`:
+
+```jsonc
+{
+    "kg": {
+        "config": {
+            "scratchpad": {
+                "mimeTypeMapping": {},
+                "mainBundleRequired": false,
+                "port": 8088
+            }
+        }
+    }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server. |
+| `mainBundleRequired` | `boolean` | `false` | Whether the main package bundle is required for the scratchpad bundle. |
+| `port` | `number` | `8088` | The port the local HTTP server listens on. |
+
 ## Installation
 
 Register this command in the root `deno.json` of your monorepo:
