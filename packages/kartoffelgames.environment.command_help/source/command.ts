@@ -10,11 +10,7 @@ export class KgCliCommand implements ICliPackageCommand {
                 description: 'Show command list',
                 parameters: {
                     root: 'help',
-                    optional: {
-                        command: {
-                            shortName: 'c'
-                        }
-                    }
+                    optional: {}
                 }
             },
             configuration: null
