@@ -30,9 +30,23 @@ The scratchpad feature is configured in the package's `deno.json` under `kg.conf
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server. |
+| `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server (see below). |
 | `mainBundleRequired` | `boolean` | `false` | Whether the main package bundle is required for the scratchpad bundle. |
 | `port` | `number` | `8088` | The port the local HTTP server listens on. |
+
+### MIME Type Mapping
+
+The `mimeTypeMapping` field maps file extensions (including the dot) to MIME type strings. Common MIME types are already defined by default, but can be overridden through this configuration:
+
+```jsonc
+{
+    "mimeTypeMapping": {
+        ".html": "text/html",
+        ".css": "text/css",
+        ".wasm": "application/wasm"
+    }
+}
+```
 
 ## Installation
 
