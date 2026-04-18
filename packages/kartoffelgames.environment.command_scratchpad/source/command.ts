@@ -70,9 +70,18 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         lConsole.writeLine('Starting initial bundle...');
         await lScratchpadBundler.bundle();
         lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
+        
+        // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
+        let lBuilding: boolean = false;
 
         // Rebundle scratchpad files and refresh connected browsers when files have changed.
         lWatcher.addListener(async () => {
+            // Skip when a build is already running, to prevent multiple builds at the same time.
+            if (lBuilding) {
+                return;
+            }
+            lBuilding = true;
+
             // Bundle files and update server served scratchpad files once they have changed.
             if (await lScratchpadBundler.bundle()) {
                 lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
@@ -83,6 +92,8 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
                 // Signal bundle was not changed.
                 lConsole.writeLine('No changes detected in bundled files.', 'yellow');
             }
+
+            lBuilding = false;
 
             // Refresh connected browsers
             lHttpServer.refreshConnectedBrowser();

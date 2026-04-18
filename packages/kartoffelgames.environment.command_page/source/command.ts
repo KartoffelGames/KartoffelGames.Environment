@@ -87,9 +87,18 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         await lPageBundler.bundle();
         this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
 
+        // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
+        let lBuilding: boolean = false;
+
         // Rebundle page files and refresh connected browsers when files have changed.
         const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         lWatcher.addListener(async () => {
+            // Skip when a build is already running, to prevent multiple builds at the same time.
+            if (lBuilding) {
+                return;
+            }
+            lBuilding = true;
+
             // Bundle files and update server served page files once they have changed.
             if (await lPageBundler.bundle()) {
                 // Write bundle files.
@@ -101,6 +110,8 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
                 // Signal bundle was not changed.
                 lConsole.writeLine('No changes detected in bundled files.', 'yellow');
             }
+
+            lBuilding = false;
 
             // Refresh connected browsers
             lHttpServer.refreshConnectedBrowser();

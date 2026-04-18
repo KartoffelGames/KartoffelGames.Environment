@@ -77,7 +77,7 @@ export class PageBundler {
         const lPageIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './page/source/index.ts');
 
         // Create a temporary file as sibbling file of the index file for bundling and write the RefresherInputFileText first and then the index.ts content to it.
-        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './page/source') });
+        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.bundle-entry.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './page/source') });
         await Deno.writeFile(lTempFilePath, new TextEncoder().encode(lPageRefresherInputFileText));
         await Deno.writeFile(lTempFilePath, await Deno.readFile(lPageIndexFilePath), { append: true });
 
