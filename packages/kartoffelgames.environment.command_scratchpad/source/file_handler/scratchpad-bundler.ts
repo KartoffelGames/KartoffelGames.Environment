@@ -77,7 +77,7 @@ export class ScratchpadBundler {
         const lScratchpadIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source/index.ts');
 
         // Create a temporary file as sibbling file of the index file for bundling and write the RefresherInputFileText first and then the index.ts content to it.
-        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source') });
+        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.bundle-entry.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source') });
         await Deno.writeFile(lTempFilePath, new TextEncoder().encode(lScratchpadRefresherInputFileText));
         await Deno.writeFile(lTempFilePath, await Deno.readFile(lScratchpadIndexFilePath), { append: true });
 

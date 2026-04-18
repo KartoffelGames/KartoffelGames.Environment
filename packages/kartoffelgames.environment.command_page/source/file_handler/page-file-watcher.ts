@@ -61,6 +61,11 @@ export class PageFileWatcher {
                 continue;
             }
 
+            // When a file path ends with .bundle-entry.ts ignore it, as it's a generated file that is not relevant for the watcher.
+            if (lEvent.paths.some((p) => p.endsWith('.bundle-entry.ts'))) {
+                continue;
+            }
+
             // Call all listener
             for (const lListener of this.mListener) {
                 lListener();
