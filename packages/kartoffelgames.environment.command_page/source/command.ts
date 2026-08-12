@@ -40,7 +40,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
      * @param pParameter - Command parameter.
      * @param pProject - Project.
      */
-    public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
+    public async run(_pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         // Needs a package to run page.
         if (pPackage === null) {
             throw new Error('Package to run page not specified.');
@@ -77,7 +77,6 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         // Build page http-server, watcher and bundler.
         const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
         const lPageBundler: PageBundler = new PageBundler({
-            projectHandler: pProject,
             package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port

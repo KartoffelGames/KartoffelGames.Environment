@@ -7,6 +7,7 @@
     "exports": {
         ".": "./source/index.ts"
     },
+    "publish": false,
     "kg": {
         "name": "Kartoffelgames.Environment.Test_Tools",
         "source": "./source",

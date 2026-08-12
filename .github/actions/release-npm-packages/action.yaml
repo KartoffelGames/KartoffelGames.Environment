@@ -29,11 +29,6 @@ runs:
       with:
         deno-version: v2.x 
 
-    # Bundle packages.
-    - name: Build
-      run: deno task kg bundle --all
-      shell: bash
-
     # Start node transformation
     - name: Node Transformation
       run: deno task kg transform --node --all

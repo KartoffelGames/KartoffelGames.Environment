@@ -44,7 +44,7 @@ When you run `deno task kg <command> [flags]`:
 A command runs in one of two scopes, decided by the global flags:
 
 - **Project scope** (no `-a`/`-p`): the command runs once with no package context. Used by `help`, `bump`, `create`.
-- **Package scope** (`-p=@scope/name` for one, `-a` for all): the command runs once per selected package, receiving that `Package` handle. Used by `sync`, `bundle`, `test`, `page`, `scratchpad`, `transform`.
+- **Package scope** (`-p=@scope/name` for one, `-a` for all): the command runs once per selected package, receiving that `Package` handle. Used by `sync`, `test`, `page`, `scratchpad`, `transform`.
 
 ### Global flags
 
@@ -96,7 +96,7 @@ Each package has its own `deno.json`. In addition to the standard Deno fields, t
         "source": "./source",
         "config": {
             "test": { "directory": "./test" },
-            "bundle": { "files": {} }
+            "page": { "enabled": false }
         }
     }
 }
@@ -106,7 +106,7 @@ Each package has its own `deno.json`. In addition to the standard Deno fields, t
 |-------|------|-------------|
 | `kg.name` | `string` | The package **id** — a normalized name derived from `name` (e.g. `@example/my-package` → `Example.My_Package`). Used to target the package with `-p`. It is always recomputed from `name`. |
 | `kg.source` | `string` | Relative path to the package source directory. Defaults to `./source`. |
-| `kg.config` | `object` | Per-command configuration. Each command owns one key here (e.g. `test`, `bundle`, `page`). Missing values are filled from the command's defaults. |
+| `kg.config` | `object` | Per-command configuration. Each command owns one key here (e.g. `test`, `page`, `transform`). Missing values are filled from the command's defaults. |
 
 Each command defines its own configuration shape and defaults; see the per-command README. The `sync` command re-applies every command's default configuration into each package's `kg.config`, keeping the whole workspace aligned after a version bump or a schema change.
 
@@ -214,14 +214,13 @@ All packages live under [`packages/`](./packages). The CLI host and core are the
 | [environment-command-help](./packages/kartoffelgames.environment.command_help/README.md) | `help` — list all registered commands with their parameters. |
 | [environment-command-create](./packages/kartoffelgames.environment.command_create/README.md) | `create` — scaffold a new package from a blueprint (includes the custom-blueprint guide). |
 | [environment-command-sync](./packages/kartoffelgames.environment.command_sync/README.md) | `sync` — align package versions and re-apply command config defaults. |
-| [environment-command-bundle](./packages/kartoffelgames.environment.command_bundle/README.md) | `bundle` — bundle package sources into JavaScript + source maps. |
 | [environment-command-test](./packages/kartoffelgames.environment.command_test/README.md) | `test` — run package tests with optional coverage and inspector. |
 | [environment-command-page](./packages/kartoffelgames.environment.command_page/README.md) | `page` — build and serve a live-reloading HTML page to disk. |
 | [environment-command-scratchpad](./packages/kartoffelgames.environment.command_scratchpad/README.md) | `scratchpad` — serve an in-memory live-reloading scratch page. |
 | [environment-command-bump](./packages/kartoffelgames.environment.command_bump/README.md) | `bump` — bump the root project version. |
 | [environment-command-transform](./packages/kartoffelgames.environment.command_transform/README.md) | `transform` — transform a package to another runtime (Node.js via dnt). |
 
-> Note: `@kartoffelgames/environment-core`, `@kartoffelgames/environment-bundle`, `@kartoffelgames/environment-blueprint` and the `@kartoffelgames/environment` init package do not ship their own README. Core is summarized in [The core package](#the-core-package), the blueprint provider in [The blueprint mechanic](#the-blueprint-mechanic), and bundling in the [bundle command README](./packages/kartoffelgames.environment.command_bundle/README.md).
+> Note: `@kartoffelgames/environment-core`, `@kartoffelgames/environment-bundle`, `@kartoffelgames/environment-blueprint` and the `@kartoffelgames/environment` init package do not ship their own README. Core is summarized in [The core package](#the-core-package) and the blueprint provider in [The blueprint mechanic](#the-blueprint-mechanic). `@kartoffelgames/environment-bundle` is the bundling engine used internally by the `page` and `scratchpad` commands.
 
 ## License
 

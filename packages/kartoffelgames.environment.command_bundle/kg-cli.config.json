@@ -1,5 +1,0 @@
-{
-    "type": "command",
-    "name": "bundle",
-    "commandEntryClass": "KgCliCommand"
-}

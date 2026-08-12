@@ -329,6 +329,17 @@ export class FileSystem {
     }
 
     /**
+     * Convert a file path into a file URL.
+     *
+     * @param pPath - Absolute file path.
+     *
+     * @returns File URL of the path.
+     */
+    public static pathToFileUrl(pPath: string): URL {
+        return path.toFileUrl(pPath);
+    }
+
+    /**
      * Convert an absolute path to a relative path.
      *
      * @param pBasePath - Base path of the relative path.

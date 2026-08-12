@@ -32,7 +32,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
      * @param pParameter - Command parameter.
      * @param pProjectHandler - Project.
      */
-    public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
+    public async run(_pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
         // Needs a package to run test.
         if (pPackage === null) {
             throw new Error('Package to run scratchpad not specified.');
@@ -60,7 +60,6 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
-            projectHandler: pProjectHandler,
             package: pPackage,
             coreBundleRequired: lPackageConfiguration.mainBundleRequired,
             websocketPort: lPackageConfiguration.port,

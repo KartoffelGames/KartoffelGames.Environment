@@ -1,12 +1,10 @@
 import { EnvironmentBundle, EnvironmentBundleInputFile, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { KgCliCommand as MainBundleCommand } from '@kartoffelgames/environment-command-bundle';
-import { CliParameter, Console, FileSystem, type Package, type Project } from '@kartoffelgames/environment-core';
+import { Console, FileSystem, type Package } from '@kartoffelgames/environment-core';
 
 export class PageBundler {
     private readonly mBundledFiles: PageBundlerFiles;
     private readonly mCoreBundleRequired: boolean;
     private readonly mPackage: Package;
-    private readonly mProjectHandler: Project;
     private readonly mWebsocketPort: number;
 
     /**
@@ -25,11 +23,10 @@ export class PageBundler {
 
     /**
      * Constructor.
-     * 
+     *
      * @param pParameters - Constructor parameters.
      */
     public constructor(pParameters: PageBundlerConstructor) {
-        this.mProjectHandler = pParameters.projectHandler;
         this.mPackage = pParameters.package;
         this.mCoreBundleRequired = pParameters.coreBundleRequired;
         this.mWebsocketPort = pParameters.websocketPort;
@@ -41,31 +38,22 @@ export class PageBundler {
 
     /**
      * Rebundle page files.
-     * When main source bundle is required, main source is bundled first with the native kg bundle command.
+     * When main source bundle is required, the package library is bundled first into the package library directory.
      */
     public async bundle(): Promise<boolean> {
         const lConsole = new Console();
 
-        // Create bundle command.
-        const lMainBundleCommand: MainBundleCommand = new MainBundleCommand();
-
-        // Bundle native when native is required.
+        // Bundle the package library first when required. It is written into the package library directory.
         if (this.mCoreBundleRequired) {
-            // Create main bundle parameter with force flag.
-            const lMainBundleParameter: CliParameter = new CliParameter('root');
-            lMainBundleParameter.set('force', null);
-
-            // Try to bundle main source.
             try {
-                // The original bundle command puts the files in the right directories.
-                await lMainBundleCommand.run(this.mProjectHandler, this.mPackage, lMainBundleParameter);
+                await new EnvironmentBundle().bundleLibrary(this.mPackage);
             } catch (e) {
                 lConsole.writeLine('Failed to bundle core source.', 'red');
                 lConsole.writeLine((<Error>e).message, 'red');
             }
         }
 
-        // Read the page-refresher-input.ts file content and create a temporary file for bundling.
+        // Read the page-refresher-input.ts file content.
         const lPageRefresherInputFilePath: URL = new URL('./page-refresher-input.ts', import.meta.url);
         const lPageRefresherInputFileRequest: Response = await fetch(lPageRefresherInputFilePath);
 
@@ -73,13 +61,15 @@ export class PageBundler {
         const lPageRefresherInputFileText: string = (await lPageRefresherInputFileRequest.text())
             .replace('[[WEBSOCKET_PORT]]', this.mWebsocketPort.toString());
 
-        // Create an absolute path for the page index.ts file.
+        // Build the bundle entry outside of the package directory so it never appears in the users project.
+        // The entry imports the real index file by absolute url and prepends the refresher script.
         const lPageIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './page/source/index.ts');
+        const lPageIndexFileUrl: string = FileSystem.pathToFileUrl(lPageIndexFilePath).href;
+        const lEntryFileContent: string = `${lPageRefresherInputFileText}\nimport ${JSON.stringify(lPageIndexFileUrl)};\n`;
 
-        // Create a temporary file as sibbling file of the index file for bundling and write the RefresherInputFileText first and then the index.ts content to it.
-        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.bundle-entry.ts', dir: FileSystem.pathToAbsolute(this.mPackage.directory, './page/source') });
-        await Deno.writeFile(lTempFilePath, new TextEncoder().encode(lPageRefresherInputFileText));
-        await Deno.writeFile(lTempFilePath, await Deno.readFile(lPageIndexFilePath), { append: true });
+        // Write the entry file into the os temporary directory.
+        const lTempFilePath: string = await Deno.makeTempFile({ suffix: '.bundle-entry.ts' });
+        await Deno.writeTextFile(lTempFilePath, lEntryFileContent);
 
         // Start bundling.
         const lBundleResult: { content: Uint8Array, sourcemap: Uint8Array; } = await (async () => {
@@ -143,7 +133,6 @@ type PageBundlerFiles = {
 };
 
 export type PageBundlerConstructor = {
-    projectHandler: Project;
     package: Package;
     coreBundleRequired: boolean;
     websocketPort: number;
