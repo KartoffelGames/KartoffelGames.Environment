@@ -1,1 +1,1 @@
-export { CommandTestHelper, type CommandTestHelperResult } from './command-test-helper.ts';
+export { CommandTestHelper, type CommandTestHelperPackageConfiguration, type CommandTestHelperProjectConfiguration, type CommandTestHelperResult, type CommandTestHelperRunOptions } from './command-test-helper.ts';

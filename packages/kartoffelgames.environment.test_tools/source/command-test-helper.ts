@@ -181,10 +181,12 @@ export class CommandTestHelper {
      *
      * @param pCommand - Command line, e.g. `kg bump` or `bump`.
      * @param pParameters - Named parameters keyed by flag name.
+     * @param pOptions - Additional run options. Set `timeout` to kill commands that never exit on
+     *                   their own (e.g. `page`/`scratchpad`, which start a blocking http server).
      *
      * @returns Captured process result.
      */
-    public async run(pCommand: string, pParameters: Record<string, string> = {}): Promise<CommandTestHelperResult> {
+    public async run(pCommand: string, pParameters: Record<string, string> = {}, pOptions: CommandTestHelperRunOptions = {}): Promise<CommandTestHelperResult> {
         // Split the command line into tokens and drop the optional leading "kg".
         const lTokenList: Array<string> = pCommand.trim().split(/\s+/).filter((pToken: string) => pToken !== '');
         if (lTokenList[0] === 'kg') {
@@ -206,7 +208,7 @@ export class CommandTestHelper {
             ...lParameterArgumentList
         ];
 
-        // Spawn the real CLI inside the fixture and capture its output.
+        // Spawn the real CLI inside the fixture.
         const lProcess: Deno.Command = new Deno.Command('deno', {
             args: lProcessArgumentList,
             cwd: this.mRootDirectory,
@@ -214,7 +216,27 @@ export class CommandTestHelper {
             stdout: 'piped',
             stderr: 'piped'
         });
-        const lProcessOutput: Deno.CommandOutput = await lProcess.output();
+        const lChildProcess: Deno.ChildProcess = lProcess.spawn();
+
+        // Kill the process after the timeout for commands that never exit on their own.
+        let lTimedOut: boolean = false;
+        let lTimeoutId: number | undefined = undefined;
+        if (pOptions.timeout !== undefined) {
+            lTimeoutId = setTimeout(() => {
+                lTimedOut = true;
+                try {
+                    lChildProcess.kill();
+                } catch {
+                    // Process already exited.
+                }
+            }, pOptions.timeout);
+        }
+
+        // Wait for the process to finish or be killed and capture its output.
+        const lProcessOutput: Deno.CommandOutput = await lChildProcess.output();
+        if (lTimeoutId !== undefined) {
+            clearTimeout(lTimeoutId);
+        }
 
         // Decode the captured output streams.
         const lTextDecoder: TextDecoder = new TextDecoder();
@@ -222,7 +244,8 @@ export class CommandTestHelper {
             success: lProcessOutput.success,
             exitCode: lProcessOutput.code,
             output: lTextDecoder.decode(lProcessOutput.stdout),
-            errorOutput: lTextDecoder.decode(lProcessOutput.stderr)
+            errorOutput: lTextDecoder.decode(lProcessOutput.stderr),
+            timedOut: lTimedOut
         };
     }
 
@@ -241,6 +264,17 @@ export class CommandTestHelper {
 
         // Write the file content.
         Deno.writeTextFileSync(lAbsolutePath, pContent);
+    }
+
+    /**
+     * Write a text file into a package previously added to the fixture.
+     *
+     * @param pName - JSR package name used when the package was added.
+     * @param pRelativePath - Path relative to the package root.
+     * @param pContent - File content.
+     */
+    public writePackageFile(pName: string, pRelativePath: string, pContent: string): void {
+        this.writeFile(`packages/${this.packageDirectoryName(pName)}/${pRelativePath}`, pContent);
     }
 
     /**
@@ -282,6 +316,17 @@ export type CommandTestHelperPackageConfiguration = {
 };
 
 /**
+ * Additional options for a single {@link CommandTestHelper.run} invocation.
+ */
+export type CommandTestHelperRunOptions = {
+    /**
+     * Milliseconds after which the command process is killed. Use for commands that never exit on
+     * their own, like the blocking `page`/`scratchpad` http servers.
+     */
+    timeout?: number;
+};
+
+/**
  * Result of a single {@link CommandTestHelper.run} invocation.
  */
 export type CommandTestHelperResult = {
@@ -304,4 +349,9 @@ export type CommandTestHelperResult = {
      * `true` when the command exited with code 0.
      */
     success: boolean;
+
+    /**
+     * `true` when the command was killed because it exceeded the configured timeout.
+     */
+    timedOut: boolean;
 };
