@@ -29,6 +29,11 @@ runs:
       with:
         deno-version: v2.x 
 
+    # Build packages.
+    - name: Build
+      run: deno task kg build --all
+      shell: bash
+
     # Start node transformation
     - name: Node Transformation
       run: deno task kg transform --node --all

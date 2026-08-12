@@ -21,19 +21,16 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Scratchpad",
         "config": {
-            "bundle": {
-                "files": {}
-            },
             "page": {
                 "enabled": false,
-                "mainBundleRequired": false,
                 "port": 8088,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "scratchpad": {
-                "mainBundleRequired": false,
                 "port": 8888,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "package-blueprint": "",
             "test": {
@@ -42,7 +39,8 @@
             "transform": {
                 "enableNode": false,
                 "nodeDirectory": "./node"
-            }
+            },
+            "build": {}
         },
         "source": "./source"
     }

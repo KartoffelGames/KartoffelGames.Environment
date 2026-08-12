@@ -19,7 +19,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
                 name: 'scratchpad',
                 default: {
                     mimeTypeMapping: {},
-                    mainBundleRequired: false,
+                    build: false,
                     port: 8088
                 },
             }
@@ -32,7 +32,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
      * @param pParameter - Command parameter.
      * @param pProjectHandler - Project.
      */
-    public async run(_pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
+    public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
         // Needs a package to run test.
         if (pPackage === null) {
             throw new Error('Package to run scratchpad not specified.');
@@ -60,8 +60,9 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
+            projectHandler: pProjectHandler,
             package: pPackage,
-            coreBundleRequired: lPackageConfiguration.mainBundleRequired,
+            build: lPackageConfiguration.build,
             websocketPort: lPackageConfiguration.port,
         });
 
@@ -164,6 +165,6 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
 type ScratchpadConfiguration = {
     mimeTypeMapping: Record<string, string>;
-    mainBundleRequired: boolean;
+    build: boolean;
     port: number;
 };

@@ -22,18 +22,15 @@
         "config": {
             "page": {
                 "enabled": false,
-                "mainBundleRequired": false,
                 "port": 8088,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "package-blueprint": "",
-            "bundle": {
-                "files": {}
-            },
             "scratchpad": {
-                "mainBundleRequired": false,
                 "port": 8088,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "test": {
                 "directory": "./test"
@@ -41,7 +38,8 @@
             "transform": {
                 "enableNode": false,
                 "nodeDirectory": "./node"
-            }
+            },
+            "build": {}
         },
         "source": "./source"
     }

@@ -20,6 +20,11 @@ runs:
       run: deno install
       shell: bash
 
+    # Build packages.
+    - name: Build
+      run: deno task kg build --all
+      shell: bash
+
     # Release Public Packages
     - name: Release
       if: ${{ inputs.dry-run == 'false' }}

@@ -22,19 +22,16 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Test",
         "config": {
-            "bundle": {
-                "files": {}
-            },
             "page": {
                 "enabled": false,
-                "mainBundleRequired": false,
                 "port": 8088,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "scratchpad": {
-                "mainBundleRequired": false,
                 "port": 8888,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "test": {
                 "directory": "./test"
@@ -43,7 +40,8 @@
             "transform": {
                 "enableNode": false,
                 "nodeDirectory": "./node"
-            }
+            },
+            "build": {}
         },
         "source": "./source"
     }

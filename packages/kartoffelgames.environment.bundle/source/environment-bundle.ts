@@ -31,58 +31,6 @@ export class EnvironmentBundle {
     }
 
     /**
-     * Bundle a package's configured library files and write them into the package's `library`
-     * directory. The file mapping is read from the package's `kg.config.bundle.files` configuration.
-     * When no files are configured, the package's `./source/index.ts` is bundled under the package name.
-     *
-     * @param pPackage - Package to bundle the library files of.
-     *
-     * @returns Bundle output that was written to the library directory.
-     *
-     * @throws {@link Error}
-     * When a configured input file does not exist.
-     */
-    public async bundleLibrary(pPackage: Package): Promise<EnvironmentBundleOutput> {
-        // Read the configured bundle files. Default to the package index when none are configured.
-        const lConfiguredBundle: any = pPackage.configuration.kg.config['bundle'];
-        let lConfiguredFiles: Record<string, string> = (lConfiguredBundle?.files ?? {}) as Record<string, string>;
-        if (Object.keys(lConfiguredFiles).length === 0) {
-            lConfiguredFiles = { '<packagename>': './source/index.ts' };
-        }
-
-        // Map the configured files to bundle input files.
-        const lInputFiles: Array<EnvironmentBundleInputFile> = new Array<EnvironmentBundleInputFile>();
-        for (const [lOutputBasename, lInputFilePath] of Object.entries(lConfiguredFiles)) {
-            // Convert the input file path from local to absolute path.
-            const lAbsoluteInputFilePath: string = FileSystem.pathToAbsolute(pPackage.directory, lInputFilePath);
-
-            // Check if the input file exists.
-            if (!FileSystem.exists(lAbsoluteInputFilePath)) {
-                throw new Error(`Input file "${lAbsoluteInputFilePath}" does not exist.`);
-            }
-
-            lInputFiles.push({
-                outputBasename: lOutputBasename,
-                inputFilePath: lAbsoluteInputFilePath,
-                outputExtension: 'js'
-            });
-        }
-
-        // Bundle the input files.
-        const lBundleOutput: EnvironmentBundleOutput = await this.bundle(pPackage, { files: lInputFiles });
-
-        // Write the bundle output into the package's library directory.
-        const lLibraryDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'library');
-        FileSystem.createDirectory(lLibraryDirectory);
-        for (const lOutput of lBundleOutput) {
-            FileSystem.writeBinary(FileSystem.pathToAbsolute(lLibraryDirectory, lOutput.fileName), lOutput.content);
-            FileSystem.writeBinary(FileSystem.pathToAbsolute(lLibraryDirectory, `${lOutput.fileName}.map`), lOutput.sourceMap);
-        }
-
-        return lBundleOutput;
-    }
-
-    /**
      * Run a generic bundle process.
      *
      * @param pOptions - Bundle options.

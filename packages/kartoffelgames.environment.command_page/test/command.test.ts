@@ -19,8 +19,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
-    await pContext.step('Page - Main bundle required also builds the package library', async (): Promise<void> => {
-        // Setup. Enable the page and require the core library bundle.
+    await pContext.step('Page - Build flag runs the build command before bundling', async (): Promise<void> => {
+        // Setup. Enable the page, turn on the build step, and configure a bundle build entry.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
@@ -30,7 +30,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    page: { enabled: true, mainBundleRequired: true, port: 8088, mimeTypeMapping: {} }
+                    page: { enabled: true, build: true, port: 8088, mimeTypeMapping: {} },
+                    build: { './source/index.ts': { type: 'bundle', name: 'PageLib' } }
                 }
             }
         }, null, 4));
@@ -40,7 +41,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
 
             // Evaluation.
             expect(lResult.success).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/library/Test.Package.js')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/library/bundle/PageLib.js')).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/page/build/page.js')).toBeTruthy();
         } finally {
             await lHelper.dispose();

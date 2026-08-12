@@ -27,23 +27,21 @@
                 "enableNode": false,
                 "nodeDirectory": "./node"
             },
-            "bundle": {
-                "files": {}
-            },
             "scratchpad": {
-                "mainBundleRequired": false,
                 "port": 8088,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "page": {
                 "enabled": false,
-                "mainBundleRequired": false,
                 "port": 8088,
-                "mimeTypeMapping": {}
+                "mimeTypeMapping": {},
+                "build": false
             },
             "test": {
                 "directory": "./test"
-            }
+            },
+            "build": {}
         },
         "source": "./source"
     }

@@ -1,10 +1,12 @@
 import { EnvironmentBundle, EnvironmentBundleInputFile, type EnvironmentBundleOptions, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { Console, FileSystem, type Package } from '@kartoffelgames/environment-core';
+import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment-command-build';
+import { CliParameter, Console, FileSystem, type Package, type Project } from '@kartoffelgames/environment-core';
 
 export class PageBundler {
+    private readonly mBuild: boolean;
     private readonly mBundledFiles: PageBundlerFiles;
-    private readonly mCoreBundleRequired: boolean;
     private readonly mPackage: Package;
+    private readonly mProjectHandler: Project;
     private readonly mWebsocketPort: number;
 
     /**
@@ -27,8 +29,9 @@ export class PageBundler {
      * @param pParameters - Constructor parameters.
      */
     public constructor(pParameters: PageBundlerConstructor) {
+        this.mProjectHandler = pParameters.projectHandler;
         this.mPackage = pParameters.package;
-        this.mCoreBundleRequired = pParameters.coreBundleRequired;
+        this.mBuild = pParameters.build;
         this.mWebsocketPort = pParameters.websocketPort;
         this.mBundledFiles = {
             javascriptFileContent: new Uint8Array(0),
@@ -43,12 +46,13 @@ export class PageBundler {
     public async bundle(): Promise<boolean> {
         const lConsole = new Console();
 
-        // Bundle the package library first when required. It is written into the package library directory.
-        if (this.mCoreBundleRequired) {
+        // Build the package artifacts first when required, by running the build command.
+        if (this.mBuild) {
             try {
-                await new EnvironmentBundle().bundleLibrary(this.mPackage);
+                const lBuildCommand: BuildCommand = new BuildCommand();
+                await lBuildCommand.run(this.mProjectHandler, this.mPackage, new CliParameter('build'));
             } catch (e) {
-                lConsole.writeLine('Failed to bundle core source.', 'red');
+                lConsole.writeLine('Failed to build package.', 'red');
                 lConsole.writeLine((<Error>e).message, 'red');
             }
         }
@@ -133,7 +137,8 @@ type PageBundlerFiles = {
 };
 
 export type PageBundlerConstructor = {
+    projectHandler: Project;
     package: Package;
-    coreBundleRequired: boolean;
+    build: boolean;
     websocketPort: number;
 };

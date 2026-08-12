@@ -44,7 +44,7 @@ When you run `deno task kg <command> [flags]`:
 A command runs in one of two scopes, decided by the global flags:
 
 - **Project scope** (no `-a`/`-p`): the command runs once with no package context. Used by `help`, `bump`, `create`.
-- **Package scope** (`-p=@scope/name` for one, `-a` for all): the command runs once per selected package, receiving that `Package` handle. Used by `sync`, `test`, `page`, `scratchpad`, `transform`.
+- **Package scope** (`-p=@scope/name` for one, `-a` for all): the command runs once per selected package, receiving that `Package` handle. Used by `sync`, `build`, `test`, `page`, `scratchpad`, `transform`.
 
 ### Global flags
 
@@ -214,6 +214,7 @@ All packages live under [`packages/`](./packages). The CLI host and core are the
 | [environment-command-help](./packages/kartoffelgames.environment.command_help/README.md) | `help` — list all registered commands with their parameters. |
 | [environment-command-create](./packages/kartoffelgames.environment.command_create/README.md) | `create` — scaffold a new package from a blueprint (includes the custom-blueprint guide). |
 | [environment-command-sync](./packages/kartoffelgames.environment.command_sync/README.md) | `sync` — align package versions and re-apply command config defaults. |
+| [environment-command-build](./packages/kartoffelgames.environment.command_build/README.md) | `build` — build package files into distributable artifacts by type (e.g. `bundle`). |
 | [environment-command-test](./packages/kartoffelgames.environment.command_test/README.md) | `test` — run package tests with optional coverage and inspector. |
 | [environment-command-page](./packages/kartoffelgames.environment.command_page/README.md) | `page` — build and serve a live-reloading HTML page to disk. |
 | [environment-command-scratchpad](./packages/kartoffelgames.environment.command_scratchpad/README.md) | `scratchpad` — serve an in-memory live-reloading scratch page. |

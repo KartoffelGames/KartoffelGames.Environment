@@ -21,7 +21,7 @@ The page feature is configured in the package's `deno.json` under `kg.config.pag
             "page": {
                 "enabled": false,
                 "mimeTypeMapping": {},
-                "mainBundleRequired": false,
+                "build": false,
                 "port": 8088
             }
         }
@@ -33,7 +33,7 @@ The page feature is configured in the package's `deno.json` under `kg.config.pag
 |-------|------|---------|-------------|
 | `enabled` | `boolean` | `false` | Whether page building and serving is enabled for this package. |
 | `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server (see below). |
-| `mainBundleRequired` | `boolean` | `false` | Whether the main package bundle is required for the page bundle. |
+| `build` | `boolean` | `false` | When `true`, run the `build` command for the package before bundling the page (produces `library/<type>/…`). |
 | `port` | `number` | `8088` | The port the local HTTP server listens on. |
 
 ### MIME Type Mapping
