@@ -90,7 +90,7 @@ export class ScratchpadBundler {
                 // Create the single input file configuration.
                 const lInputFile: EnvironmentBundleInputFile = {
                     inputFilePath: lTempFilePath,
-                    outputBasename: 'page',
+                    outputBasename: 'scratchpad',
                     outputExtension: 'js'
                 };
 

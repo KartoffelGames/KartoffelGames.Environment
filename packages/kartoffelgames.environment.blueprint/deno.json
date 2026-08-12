@@ -20,8 +20,6 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Blueprint",
         "config": {
-            "blueprint": "kg-main",
-            "pack": false,
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
@@ -35,11 +33,9 @@
                 "mimeTypeMapping": {}
             },
             "bundle": {
-                "enabled": false,
                 "files": {}
             },
             "test": {
-                "bundleRequired": false,
                 "directory": "./test"
             },
             "transform": {

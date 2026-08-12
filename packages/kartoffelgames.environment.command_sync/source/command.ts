@@ -51,6 +51,9 @@ export class KgCliCommand implements ICliPackageCommand {
      * @param pProject - Project handler.
      */
     private async updatePackageConfiguration(pProject: Project, pPackage: Package): Promise<void> {
+        // Collect every configuration key that belongs to an available command.
+        const lKnownConfigurationKeys: Set<string> = new Set<string>();
+
         // Set all available cli configurations for each cli package.
         for (const lCliCommand of await pProject.cliPackages.readAll('command')) {
             const lCliPackage: CliCommand = await pProject.cliPackages.createCommand(lCliCommand.configuration.name);
@@ -60,11 +63,21 @@ export class KgCliCommand implements ICliPackageCommand {
                 continue;
             }
 
+            // Remember the configuration key as a known key.
+            lKnownConfigurationKeys.add(lCliPackage.cliPackageCommand.information.configuration.name);
+
             // Read configuration of command. Unset fields are filled with default values.
             const lCommandConfiguration: any = pPackage.cliConfigurationOf(lCliPackage.cliPackageCommand);
 
             // And set it again.
             pPackage.setCliConfigurationOf(lCliPackage.cliPackageCommand, lCommandConfiguration);
+        }
+
+        // Prune stale configuration keys that no longer belong to any available command.
+        for (const lConfigurationKey of Object.keys(pPackage.configuration.kg.config)) {
+            if (!lKnownConfigurationKeys.has(lConfigurationKey)) {
+                delete pPackage.configuration.kg.config[lConfigurationKey];
+            }
         }
     }
 }

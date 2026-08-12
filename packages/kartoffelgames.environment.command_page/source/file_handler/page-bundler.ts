@@ -65,7 +65,7 @@ export class PageBundler {
             }
         }
 
-        // Read the scratchpad-refresher-input.ts file content and create a temporary file for bundling.
+        // Read the page-refresher-input.ts file content and create a temporary file for bundling.
         const lPageRefresherInputFilePath: URL = new URL('./page-refresher-input.ts', import.meta.url);
         const lPageRefresherInputFileRequest: Response = await fetch(lPageRefresherInputFilePath);
 

@@ -48,6 +48,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
         // Cli parameter.
         const lForceBuild: boolean = pParameter.has('force');
+        const lBuildOnly: boolean = pParameter.has('build-only');
 
         // Read cli configuration from cli package.
         const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
@@ -86,6 +87,12 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         lConsole.writeLine('Starting initial bundle...');
         await lPageBundler.bundle();
         this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
+
+        // Exit after the initial build when only building was requested. Do not start the watcher or http server.
+        if (lBuildOnly) {
+            lConsole.writeLine('Build finished', 'green');
+            return;
+        }
 
         // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
         let lBuilding: boolean = false;

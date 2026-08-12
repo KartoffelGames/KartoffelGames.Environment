@@ -4,11 +4,11 @@ import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
 /**
  * Command to initialize new monorepo project.
  */
-export class Command implements ICliPackageCommand<string> {
+export class Command implements ICliPackageCommand {
     /**
      * Command description.
      */
-    public get information(): CliCommandDescription<string> {
+    public get information(): CliCommandDescription {
         return {
             command: {
                 description: 'Initialize new monorepo project.',
@@ -16,10 +16,7 @@ export class Command implements ICliPackageCommand<string> {
                     root: 'init'
                 }
             },
-            configuration: {
-                name: 'project-blueprint',
-                default: ''
-            }
+            configuration: null
         };
     }
 
@@ -101,10 +98,10 @@ export class Command implements ICliPackageCommand<string> {
                 // Read zipped file.
                 const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());
                 FileSystem.writeBinary(lTargetFilePath, lZipFileData);
-
-                // Replace blueprint placeholder.
-                this.replacePlaceholder(lTargetPath, lProjectScope);
             }
+
+            // Replace blueprint placeholder in all copied files once copying is finished.
+            await this.replacePlaceholder(lTargetPath, lProjectScope);
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
 

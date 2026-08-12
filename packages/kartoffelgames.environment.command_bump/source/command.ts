@@ -7,7 +7,7 @@ export class KgCliCommand implements ICliPackageCommand {
     public get information(): CliCommandDescription {
         return {
             command: {
-                description: 'Bump root project version [<newversion> | major | minor | patch]',
+                description: 'Bump root project version. Use --type with major, minor, patch or an explicit <major.minor.patch> version.',
                 parameters: {
                     root: 'bump',
                     optional: {

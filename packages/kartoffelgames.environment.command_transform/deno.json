@@ -27,7 +27,6 @@
                 "nodeDirectory": "./node"
             },
             "bundle": {
-                "enabled": false,
                 "files": {}
             },
             "scratchpad": {
@@ -42,8 +41,7 @@
                 "mimeTypeMapping": {}
             },
             "test": {
-                "directory": "./test",
-                "bundleRequired": false
+                "directory": "./test"
             }
         },
         "source": "./source"

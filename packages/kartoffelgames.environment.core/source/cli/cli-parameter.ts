@@ -17,6 +17,9 @@ export class CliParameter {
         lGlobalParameters.set('--package', { fullname: 'package', shortName: 'p', default: null });
         lGlobalParameters.set('-p', { fullname: 'package', shortName: 'p', default: null });
 
+        // Add the --debug parameter.
+        lGlobalParameters.set('--debug', { fullname: 'debug', shortName: null, default: null });
+
         return lGlobalParameters;
     })();
 
@@ -123,7 +126,7 @@ export class CliParameter {
 
             // Format parameter value when it is set as string.
             if (lClearedParameterValue && lClearedParameterValue.startsWith('"')) {
-                lClearedParameterValue = lParameter.substring(1, lParameter.length - 1);
+                lClearedParameterValue = lClearedParameterValue.substring(1, lClearedParameterValue.length - 1);
             }
             // Set optional named parameter.
             lCliParameter.set(lOptionalParameter.fullname, lClearedParameterValue);
@@ -192,7 +195,7 @@ export class CliParameter {
 
             // Format parameter value when it is set as string.
             if (lClearedParameterValue && lClearedParameterValue.startsWith('"')) {
-                lClearedParameterValue = lParameter.substring(1, lParameter.length - 1);
+                lClearedParameterValue = lClearedParameterValue.substring(1, lClearedParameterValue.length - 1);
             }
             // Set optional named parameter.
             lCliParameter.set(lOptionalParameter.fullname, lClearedParameterValue);

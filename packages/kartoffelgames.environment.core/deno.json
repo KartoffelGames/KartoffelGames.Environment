@@ -19,10 +19,6 @@
         "name": "Kartoffelgames.Environment.Core",
         "root": false,
         "config": {
-            "package_blueprint": "kg-main",
-            "tests": [
-                "unit"
-            ],
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
@@ -31,7 +27,6 @@
             },
             "package-blueprint": "",
             "bundle": {
-                "enabled": false,
                 "files": {}
             },
             "scratchpad": {
@@ -40,7 +35,6 @@
                 "mimeTypeMapping": {}
             },
             "test": {
-                "bundleRequired": false,
                 "directory": "./test"
             },
             "transform": {

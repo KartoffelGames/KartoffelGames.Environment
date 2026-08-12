@@ -19,9 +19,7 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Page",
         "config": {
-            "blueprint": "kg-main",
             "bundle": {
-                "enabled": false,
                 "files": {}
             },
             "page": {
@@ -37,7 +35,6 @@
             },
             "package-blueprint": "",
             "test": {
-                "bundleRequired": false,
                 "directory": "./test"
             },
             "transform": {

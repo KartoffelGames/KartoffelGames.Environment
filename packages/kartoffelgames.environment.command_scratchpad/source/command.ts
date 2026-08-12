@@ -39,7 +39,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         }
 
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pPackage?.cliConfigurationOf(this);
+        const lPackageConfiguration = pPackage.cliConfigurationOf(this);
 
         // Create watch paths for package source and scratchpad directory.
         const lWatchPaths: Array<string> = [

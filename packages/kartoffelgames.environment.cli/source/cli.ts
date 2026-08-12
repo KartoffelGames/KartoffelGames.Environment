@@ -91,7 +91,7 @@ import { type CliCommand, CliParameter, Console, FileSystem, Import, type Packag
     } catch (e) {
         lConsole.writeLine((<any>e).toString(), 'red');
 
-        // Include error stack when command has --stack parameter. 
+        // Include error stack when command has --debug parameter.
         if (lDebugEnabled) {
             lConsole.writeLine((<Error>e)?.stack ?? '', 'red');
         }

@@ -19,8 +19,6 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Bundle",
         "config": {
-            "blueprint": "kg-main",
-            "pack": false,
             "page": {
                 "enabled": false,
                 "mainBundleRequired": false,
@@ -29,7 +27,6 @@
             },
             "package-blueprint": "",
             "bundle": {
-                "enabled": false,
                 "files": {}
             },
             "scratchpad": {
@@ -38,7 +35,6 @@
                 "mimeTypeMapping": {}
             },
             "test": {
-                "bundleRequired": false,
                 "directory": "./test"
             },
             "transform": {

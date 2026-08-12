@@ -36,12 +36,8 @@ export class PageHttpServer {
 
     /**
      * Start webserver.
-     * Listens on localhost and serves files from root path.
-     * Serves bundled files from library directory when any /bundle/ path is requested.
-     * Serves page.js and page.js.map from cache only on root path.
-     * 
-     * @param pPort - Listening port.
-     * @param pRootPath - Root path for webserver files.
+     * Listens on localhost and serves files from the configured root path.
+     * Serves bundled files from the library directory when any /bundle/ path is requested.
      */
     public async start(): Promise<void> {
         // Prevent server from starting multiple times.
