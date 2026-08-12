@@ -22,7 +22,26 @@
         "name": "Kartoffelgames.Environment.Command_Build",
         "source": "./source",
         "config": {
-            "build": {}
+            "build": {},
+            "package-blueprint": "",
+            "scratchpad": {
+                "mimeTypeMapping": {},
+                "build": false,
+                "port": 8088
+            },
+            "page": {
+                "enabled": false,
+                "mimeTypeMapping": {},
+                "build": false,
+                "port": 8088
+            },
+            "test": {
+                "directory": "./test"
+            },
+            "transform": {
+                "enableNode": false,
+                "nodeDirectory": "./node"
+            }
         }
     }
 }
