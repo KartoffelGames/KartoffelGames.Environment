@@ -1,5 +1,5 @@
 {
-    "name": "@kartoffelgames/environment-cli",
+    "name": "@kartoffelgames/environment-test-tools",
     "version": "5.0.1",
     "license": "LGPL-3.0-only",
     "tasks": {},
@@ -7,30 +7,24 @@
     "exports": {
         ".": "./source/index.ts"
     },
-    "publish": {
-        "include": [
-            "source/",
-            "deno.json",
-            "LICENSE"
-        ]
-    },
     "kg": {
-        "name": "Kartoffelgames.Environment.Cli",
+        "name": "Kartoffelgames.Environment.Test_Tools",
+        "source": "./source",
         "config": {
-            "page": {
-                "enabled": false,
-                "mainBundleRequired": false,
-                "port": 8088,
-                "mimeTypeMapping": {}
-            },
             "package-blueprint": "",
             "bundle": {
                 "files": {}
             },
             "scratchpad": {
+                "mimeTypeMapping": {},
                 "mainBundleRequired": false,
-                "port": 8088,
-                "mimeTypeMapping": {}
+                "port": 8088
+            },
+            "page": {
+                "enabled": false,
+                "mimeTypeMapping": {},
+                "mainBundleRequired": false,
+                "port": 8088
             },
             "test": {
                 "directory": "./test"
@@ -39,7 +33,6 @@
                 "enableNode": false,
                 "nodeDirectory": "./node"
             }
-        },
-        "source": "./source"
+        }
     }
 }
