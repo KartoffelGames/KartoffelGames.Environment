@@ -82,6 +82,9 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
             }
             lBuilding = true;
 
+            // Signal that a rebuild has started, as bundling can take a while and would otherwise look unresponsive.
+            lConsole.writeLine('File change detected. Bundling...', 'yellow');
+
             // Bundle files and update server served scratchpad files once they have changed.
             if (await lScratchpadBundler.bundle()) {
                 lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);

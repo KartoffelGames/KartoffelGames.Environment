@@ -97,14 +97,21 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
         let lBuilding: boolean = false;
 
+        // The build output directory is ignored so the bundler writing its own output does not trigger another build.
+        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths, [
+            FileSystem.pathToAbsolute(lSourceDirectory, 'build')
+        ]);
+
         // Rebundle page files and refresh connected browsers when files have changed.
-        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
         lWatcher.addListener(async () => {
             // Skip when a build is already running, to prevent multiple builds at the same time.
             if (lBuilding) {
                 return;
             }
             lBuilding = true;
+
+            // Signal that a rebuild has started, as bundling can take a while and would otherwise look unresponsive.
+            lConsole.writeLine('File change detected. Bundling...', 'yellow');
 
             // Bundle files and update server served page files once they have changed.
             if (await lPageBundler.bundle()) {

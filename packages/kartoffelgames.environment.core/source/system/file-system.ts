@@ -290,6 +290,20 @@ export class FileSystem {
     }
 
     /**
+     * Normalize a path for comparison by unifying separators and casing.
+     *
+     * @param pPath - Path to normalize.
+     *
+     * @returns Normalized path.
+     */
+    public static normalizePath(pPath: string): string {
+        const lForwardSlashPath: string = pPath.replaceAll('\\', '/');
+
+        // Fuck it, all systems are case-insensitive, so compare lower cased to avoid casing mismatches.
+        return lForwardSlashPath.toLowerCase();
+    }
+
+    /**
      * Get path information.
      * 
      * @param pPath - Path to file.
