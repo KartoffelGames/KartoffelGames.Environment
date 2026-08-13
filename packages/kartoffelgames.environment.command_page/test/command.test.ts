@@ -6,6 +6,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         // Setup. Configure a page build entry and an extra bundle entry to verify only the page type is built.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'page/source/index.ts', 'console.log(\'page\');\n');
         lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
             name: '@test/package',
             version: '0.0.0',

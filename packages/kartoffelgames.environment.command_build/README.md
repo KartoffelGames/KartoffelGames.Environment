@@ -10,8 +10,8 @@ Build types are extensible. Currently implemented:
 
 | Type | Output location | Description |
 |------|-----------------|-------------|
-| `bundle` | `library/bundle/<name>.js` (+ `.map`) | Browser IIFE bundle via `@kartoffelgames/environment-bundle`. |
-| `page` | `page/build/<name>.js` (+ `.map`) | Browser IIFE bundle of a page entry file, written into the `page/build` directory served by the `page` command. |
+| `bundle` | `library/bundle/<name>.js` (+ `.map`) | Browser IIFE bundle intended for consumption by **other packages** (imported or re-bundled at build time). |
+| `page` | `page/build/<name>.js` (+ `.map`) | Browser IIFE bundle intended to be **fetched by the browser** at runtime. Written inside the portable `page/` directory served by the `page` command, so any resource the page loads (app entry, shared libraries, workers) should use this type. |
 
 Both types share the same bundling pipeline and differ only in their output location. The `--injectreload` flag applies to every type: it injects a live-reload client into the produced bundle that refreshes the browser when the `page` command's server pushes an update.
 

@@ -42,18 +42,19 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         // Create console.
         const lConsole = new Console();
 
-        // Create watch paths for package source and page directory.
-        const lWatchPaths: Array<string> = [
-            pPackage.sourceDirectory,
-            FileSystem.pathToAbsolute(pPackage.directory, 'page')
-        ];
-
-        // Init page files.
-        this.initPageFiles(pPackage);
-
         // Source directory of www files and the generated build output directory inside it.
         const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
         const lPageBuildDirectory: string = FileSystem.pathToAbsolute(lSourceDirectory, 'build');
+
+        // Ensure the page directory exists so the file watcher and http server have a valid root. The page content
+        // itself is owned by the package and is not scaffolded by this command.
+        FileSystem.createDirectory(lSourceDirectory);
+
+        // Create watch paths for package source and page directory.
+        const lWatchPaths: Array<string> = [
+            pPackage.sourceDirectory,
+            lSourceDirectory
+        ];
 
         // Build page http-server.
         const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
@@ -115,64 +116,6 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         lBuildParameter.set('injectreload', null);
 
         await new BuildCommand().run(pProject, pPackage, lBuildParameter);
-    }
-
-    /**
-     * Initializes the initial page files for the given package.
-     *
-     * This method creates the necessary directory structure and initializes
-     * the HTML, CSS, and TypeScript files if they do not already exist.
-     *
-     * @param pPackage - The package for which the page files are to be initialized.
-     *
-     * @remarks
-     * - Creates a 'page' directory inside the package directory.
-     * - Creates a 'source' directory inside the 'page' directory.
-     * - Initializes an 'index.html' file with basic HTML content.
-     * - Initializes an 'index.css' file with basic CSS content.
-     * - Initializes an 'index.ts' file inside the 'source' directory with basic TypeScript content.
-     */
-    private initPageFiles(pPackage: Package): void {
-        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
-
-        // Create page directorys.
-        FileSystem.createDirectory(lPageDirectory);
-        FileSystem.createDirectory(FileSystem.pathToAbsolute(lPageDirectory, 'source'));
-
-        // Init html file.
-        const lHtmlFile: string = FileSystem.pathToAbsolute(lPageDirectory, 'index.html');
-        if (!FileSystem.exists(lHtmlFile)) {
-            FileSystem.write(lHtmlFile,
-                '<html>\n' +
-                '<head>\n' +
-                '    <title>page</title>\n' +
-                '    <link rel="stylesheet" href="./index.css">\n' +
-                '    <script src="/build/page.js" defer></script>\n' +
-                '</head>\n' +
-                '<body>\n' +
-                '    <p>Hello World!!!</p>\n' +
-                '</body>\n' +
-                '</html>'
-            );
-        }
-
-        // Init css file.
-        const lCssFile: string = FileSystem.pathToAbsolute(lPageDirectory, 'index.css');
-        if (!FileSystem.exists(lCssFile)) {
-            FileSystem.write(lCssFile,
-                'p {\n' +
-                '    color: red;\n' +
-                '}\n'
-            );
-        }
-
-        // Init ts file in source directory.
-        const lTsFile: string = FileSystem.pathToAbsolute(lPageDirectory, 'source', 'index.ts');
-        if (!FileSystem.exists(lTsFile)) {
-            FileSystem.write(lTsFile,
-                `console.log('Hello World!!!');`
-            );
-        }
     }
 }
 

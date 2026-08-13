@@ -63,7 +63,7 @@ export class PageHttpServer {
             lMimeTypeMapping.set(lExtension, lMimeType);
         }
 
-        // Define default header.
+        // Default headers enabling cross-origin isolation, required for SharedArrayBuffer to be available on the page.
         const lDefaultHeaders = {
             'Cross-Origin-Opener-Policy': 'same-origin',
             'Cross-Origin-Embedder-Policy': 'credentialless'
@@ -77,12 +77,9 @@ export class PageHttpServer {
             }
 
             const lFilePathName: string = new URL(pReqest.url).pathname;
-            let lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
-            // Special case for the package library directory.
-            if (lFilePathName.toLowerCase().startsWith('/library/')) {
-                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(9));
-            }
+            // Serve files only from the page directory, exactly like a static host would.
+            const lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
             // Send file when it is in fact a file path.
             if (FileSystem.exists(lFilePath)) {
