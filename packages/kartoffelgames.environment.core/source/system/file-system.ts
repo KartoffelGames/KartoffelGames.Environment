@@ -404,7 +404,7 @@ export class FileSystem {
      * @param pContent - File content.
      */
     public static write(pPath: string, pContent: string): void {
-        Deno.writeTextFile(pPath, pContent);
+        Deno.writeTextFileSync(pPath, pContent);
     }
 
     /**

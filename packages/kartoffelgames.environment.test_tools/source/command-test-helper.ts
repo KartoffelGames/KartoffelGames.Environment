@@ -88,7 +88,8 @@ export class CommandTestHelper {
      * @param pVersion - Initial package version.
      */
     public async addPackage(pName: string, pVersion: string = '0.0.0'): Promise<void> {
-        const lPackageDirectory: string = `${this.mRootDirectory}/packages/${this.packageDirectoryName(pName)}`;
+        const lPackageDirectoryName: string = this.packageDirectoryName(pName);
+        const lPackageDirectory: string = `${this.mRootDirectory}/packages/${lPackageDirectoryName}`;
 
         // Create the package source directory with a trivial entry file.
         await Deno.mkdir(`${lPackageDirectory}/source`, { recursive: true });
@@ -105,6 +106,18 @@ export class CommandTestHelper {
             }
         };
         await Deno.writeTextFile(`${lPackageDirectory}/deno.json`, JSON.stringify(lPackageConfiguration, null, 4));
+
+        // Register the package in the fixture root workspace. Deno requires every nested deno.json to be a member
+        // of the surrounding workspace, otherwise commands like "deno test" refuse to run inside the package.
+        const lRootConfigurationPath: string = `${this.mRootDirectory}/deno.json`;
+        const lRootConfiguration: Record<string, any> = JSON.parse(await Deno.readTextFile(lRootConfigurationPath));
+        const lWorkspaceList: Array<string> = lRootConfiguration['workspace'] ?? new Array<string>();
+        const lWorkspaceEntry: string = `./packages/${lPackageDirectoryName}`;
+        if (!lWorkspaceList.includes(lWorkspaceEntry)) {
+            lWorkspaceList.push(lWorkspaceEntry);
+        }
+        lRootConfiguration['workspace'] = lWorkspaceList;
+        await Deno.writeTextFile(lRootConfigurationPath, JSON.stringify(lRootConfiguration, null, 4));
     }
 
     /**
