@@ -2,8 +2,8 @@ import { CommandTestHelper, type CommandTestHelperResult } from '@kartoffelgames
 import { expect } from '@std/expect';
 
 Deno.test('KgCliCommand.run()', async (pContext) => {
-    await pContext.step('Build - Bundle type produces a library artifact', async (): Promise<void> => {
-        // Setup. Configure a single bundle build entry.
+    await pContext.step('Build - Bundles configured files into the app bundle directory', async (): Promise<void> => {
+        // Setup. Configure a single bundle file.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
@@ -13,7 +13,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    build: { './source/index.ts': { type: 'bundle', name: 'MyBundle' } }
+                    build: { files: { './source/index.ts': { name: 'MyBundle' } } }
                 }
             }
         }, null, 4));
@@ -23,8 +23,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
 
             // Evaluation.
             expect(lResult.success).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/library/bundle/MyBundle.js')).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/library/bundle/MyBundle.js.map')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/app/bundle/MyBundle.js')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/app/bundle/MyBundle.js.map')).toBeTruthy();
         } finally {
             await lHelper.dispose();
         }
@@ -46,97 +46,11 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
-    await pContext.step('Error: Unknown build type', async (): Promise<void> => {
-        // Setup. Configure an unsupported build type.
+    await pContext.step('Build - Inject-reload injects the client only into reloadable entries', async (): Promise<void> => {
+        // Setup. One reloadable entry and one non-reloadable entry (e.g. a worker).
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
-        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
-            name: '@test/package',
-            version: '0.0.0',
-            exports: './source/index.ts',
-            kg: {
-                source: './source',
-                config: {
-                    build: { './source/index.ts': { type: 'desktop', name: 'MyApp' } }
-                }
-            }
-        }, null, 4));
-        try {
-            // Process.
-            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package' });
-
-            // Evaluation.
-            expect(lResult.success).toBeFalsy();
-            expect(lResult.output).toContain('Unknown build type "desktop"');
-        } finally {
-            await lHelper.dispose();
-        }
-    });
-
-    await pContext.step('Build - Page type writes the bundle into the page build directory', async (): Promise<void> => {
-        // Setup. Configure a single page build entry.
-        const lHelper: CommandTestHelper = await CommandTestHelper.create();
-        await lHelper.addPackage('@test/package');
-        lHelper.writePackageFile('@test/package', 'page/source/index.ts', 'console.log(\'page\');\n');
-        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
-            name: '@test/package',
-            version: '0.0.0',
-            exports: './source/index.ts',
-            kg: {
-                source: './source',
-                config: {
-                    build: { './page/source/index.ts': { type: 'page', name: 'page' } }
-                }
-            }
-        }, null, 4));
-        try {
-            // Process.
-            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package' });
-
-            // Evaluation.
-            expect(lResult.success).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/page/build/page.js')).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/page/build/page.js.map')).toBeTruthy();
-
-            // Without the debug flag the live-reload client is not injected.
-            expect(lHelper.readFile('packages/test.package/page/build/page.js')).not.toContain('WebSocket');
-        } finally {
-            await lHelper.dispose();
-        }
-    });
-
-    await pContext.step('Build - Inject-reload flag injects the live reload client into any build type', async (): Promise<void> => {
-        // Setup. Configure a single bundle build entry to show inject-reload is not page-specific.
-        const lHelper: CommandTestHelper = await CommandTestHelper.create();
-        await lHelper.addPackage('@test/package');
-        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
-            name: '@test/package',
-            version: '0.0.0',
-            exports: './source/index.ts',
-            kg: {
-                source: './source',
-                config: {
-                    build: { './source/index.ts': { type: 'bundle', name: 'MyBundle' } }
-                }
-            }
-        }, null, 4));
-        try {
-            // Process.
-            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--injectreload': '' });
-
-            // Evaluation. The live-reload client is injected into the bundle-type output as well.
-            expect(lResult.success).toBeTruthy();
-            expect(lHelper.readFile('packages/test.package/library/bundle/MyBundle.js')).toContain('WebSocket');
-        } finally {
-            await lHelper.dispose();
-        }
-    });
-
-    await pContext.step('Build - Type filter builds only matching entries', async (): Promise<void> => {
-        // Setup. Configure both a bundle and a page build entry.
-        const lHelper: CommandTestHelper = await CommandTestHelper.create();
-        await lHelper.addPackage('@test/package');
-        lHelper.writePackageFile('@test/package', 'page/source/index.ts', 'console.log(\'page\');\n');
+        lHelper.writePackageFile('@test/package', 'source/worker.ts', 'console.log(\'worker\');\n');
         lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
             name: '@test/package',
             version: '0.0.0',
@@ -145,22 +59,131 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 source: './source',
                 config: {
                     build: {
-                        './source/index.ts': { type: 'bundle', name: 'MyBundle' },
-                        './page/source/index.ts': { type: 'page', name: 'page' }
+                        files: {
+                            './source/index.ts': { name: 'main', reloadable: true },
+                            './source/worker.ts': { name: 'worker' }
+                        }
                     }
                 }
             }
         }, null, 4));
         try {
-            // Process. Restrict the build to the page type.
-            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--type': 'page' });
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--injectreload': '' });
 
-            // Evaluation. Only the page entry is built, the bundle entry is skipped.
+            // Evaluation. Only the reloadable entry receives the live-reload client.
             expect(lResult.success).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/page/build/page.js')).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/library/bundle/MyBundle.js')).toBeFalsy();
+            expect(lHelper.readFile('packages/test.package/app/bundle/main.js')).toContain('WebSocket');
+            expect(lHelper.readFile('packages/test.package/app/bundle/worker.js')).not.toContain('WebSocket');
         } finally {
             await lHelper.dispose();
         }
     });
+
+    await pContext.step('Build - Skips the desktop step in bundle-only mode', async (): Promise<void> => {
+        // Setup. Configure a desktop output for the current platform, but run bundle-only.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'app/source/index.ts', 'console.log(\'app\');\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: {
+                        files: { './app/source/index.ts': { name: 'app' } },
+                        desktop: { name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macos: './dist/MyApp.app', linux: './dist/my-app' } }
+                    }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--bundle-only': '' });
+
+            // Evaluation. The bundle is produced but no desktop output directory is created.
+            expect(lResult.success).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/app/bundle/app.js')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/dist')).toBeFalsy();
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
+    await pContext.step('Build - Reload client is not injected without the flag', async (): Promise<void> => {
+        // Setup. A reloadable entry, but the build runs without the inject-reload flag.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: { files: { './source/index.ts': { name: 'main', reloadable: true } } }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package' });
+
+            // Evaluation.
+            expect(lResult.success).toBeTruthy();
+            expect(lHelper.readFile('packages/test.package/app/bundle/main.js')).not.toContain('WebSocket');
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+});
+
+// Actually compiles a desktop binary via `deno desktop`. This is slow (a real compile, and downloads the platform
+// backend on first use), so it is disabled unless KG_TEST_DESKTOP=1 is set. Requires Deno >= 2.9.
+Deno.test({
+    name: 'KgCliCommand.run() - desktop build',
+    ignore: Deno.env.get('KG_TEST_DESKTOP') !== '1',
+    fn: async (): Promise<void> => {
+        // The expected output path for the current platform.
+        const lExpectedOutput: string = (() => {
+            switch (Deno.build.os) {
+                case 'windows': return 'packages/test.package/dist/MyApp';
+                case 'darwin': return 'packages/test.package/dist/MyApp.app';
+                default: return 'packages/test.package/dist/my-app';
+            }
+        })();
+
+        // Setup.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'app/index.html', '<html><body><script src="/bundle/app.js"></script></body></html>\n');
+        lHelper.writePackageFile('@test/package', 'app/source/index.ts', 'console.log(\'app\');\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: {
+                        files: { './app/source/index.ts': { name: 'app', reloadable: true } },
+                        desktop: { name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macos: './dist/MyApp.app', linux: './dist/my-app' } }
+                    }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package' });
+
+            // Evaluation. The bundle is produced and the desktop app for the current platform exists.
+            expect(lResult.success).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/app/bundle/app.js')).toBeTruthy();
+            expect(lHelper.fileExists(lExpectedOutput)).toBeTruthy();
+        } finally {
+            await lHelper.dispose();
+        }
+    }
 });

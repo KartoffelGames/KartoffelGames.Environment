@@ -1,6 +1,6 @@
-// Live-reload client injected into page builds when the build command runs in debug mode.
-// The websocket connects back to whatever host and port served the page, so no port needs to be
-// configured: the page server upgrades the same origin to a websocket and sends "REFRESH" after a rebuild.
+// Live-reload client injected into a bundle when the build command runs with the inject-reload option.
+// The websocket connects back to whatever host and port served the page, so no port needs to be configured:
+// the app server upgrades the same origin to a websocket and sends "REFRESH" after a rebuild.
 (() => {
     const lProtocol: string = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const lSocket: WebSocket = new WebSocket(`${lProtocol}://${window.location.host}`);

@@ -184,3 +184,20 @@ For each configured `output` target:
 - **Non-app / library packages** — a package with no `./app` simply configures no `files`/`desktop`
   and never runs `kg app`; its bundles (if any) still land in `./app/bundle` and can be published
   via `publish.include`.
+
+## As-built notes (implementation)
+
+Discovered while implementing against `deno desktop` (Deno 2.9.5):
+
+- **`deno desktop` ignores `--output` for directory targets** (valid `-o` values are packaged formats:
+  `.msi`/`.app`/`.dmg`/`.AppImage`/…). A bare directory build writes to `<cwd>/<app-name>/`. So
+  `DesktopBuilder` builds in a temp directory (with a generated `deno.json` `desktop` block supplying
+  `app.name`/`app.identifier`), then moves the produced directory to the configured `output` path.
+- **Static files are embedded with `--include ./app`** (not `--include-as-is`, which this version does not
+  expose) and read at runtime via `import.meta.dirname + '/app'`. Verified headlessly with `deno compile`.
+- **Current platform only** — `DesktopBuilder` builds the `output` entry matching `Deno.build.os`; other
+  platforms are skipped (cross-OS signing must run on the target OS).
+- **Build default is `{ "files": {} }`** — `desktop` is intentionally omitted from the default, not `null`:
+  the config merge (`Package.mergeObjects`) replaces a configured object with a differing-shaped default,
+  so a `null` default would clobber a user's `desktop` object. (Latent core merge quirk worth a real fix.)
+- **Desktop test** is gated behind `KG_TEST_DESKTOP=1` (a real ~30s compile that downloads the backend).

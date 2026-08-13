@@ -1,15 +1,8 @@
 import { EnvironmentBundle, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
 import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
+import { DesktopBuilder } from './desktop-builder.ts';
 
 export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
-    /**
-     * Output directory (relative to the package) for each build type.
-     */
-    private static readonly mOutputDirectoryByType: Record<string, Array<string>> = {
-        bundle: ['library', 'bundle'],
-        page: ['page', 'build']
-    };
-
     /**
      * Command description.
      */
@@ -20,11 +13,11 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                 parameters: {
                     root: 'build',
                     optional: {
-                        // Restrict the build to entries of a single build type.
-                        type: {
-                            shortName: 't'
+                        // Only produce the bundles, skip the (heavy) desktop packaging step.
+                        'bundle-only': {
+                            shortName: 'b'
                         },
-                        // Inject the live-reload client into the bundle.
+                        // Inject the live-reload client into reloadable bundles.
                         injectreload: {
                             shortName: 'r'
                         }
@@ -33,7 +26,11 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             },
             configuration: {
                 name: 'build',
-                default: {}
+                // "desktop" is intentionally omitted from the default: the config merge would replace a configured
+                // desktop object with a `null` default (differing object-ness overwrites). Absent desktop means disabled.
+                default: {
+                    files: {}
+                }
             }
         };
     }
@@ -55,55 +52,52 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
 
         // Read the build configuration of the package.
         const lConfiguration: BuildConfiguration = pPackage.cliConfigurationOf(this);
-        let lBuildEntryList: Array<[string, BuildConfigurationEntry]> = Object.entries(lConfiguration);
+        const lFileEntryList: Array<[string, BuildFile]> = Object.entries(lConfiguration.files ?? {});
+        const lDesktop: DesktopConfiguration | null = lConfiguration.desktop ?? null;
 
-        // Restrict the build to a single type when the type parameter is set.
-        const lTypeFilter: string | null = pParameter.has('type') ? pParameter.get('type') : null;
-        if (lTypeFilter !== null) {
-            lBuildEntryList = lBuildEntryList.filter(([, lBuildEntry]) => lBuildEntry.type === lTypeFilter);
-        }
+        // Parameters.
+        const lBundleOnly: boolean = pParameter.has('bundle-only');
+        const lReloadEnabled: boolean = pParameter.has('injectreload');
 
-        // Skip when nothing is configured (or nothing matches the type filter) to build.
-        if (lBuildEntryList.length === 0) {
+        // Skip when nothing is configured to build (and the desktop step is disabled or skipped).
+        if (lFileEntryList.length === 0 && (lBundleOnly || lDesktop === null)) {
             lConsole.writeLine('Nothing configured to build. Skip build.');
             return;
         }
 
-        // The inject-reload flag injects the live-reload client into every built bundle.
-        const lReloadEnabled: boolean = pParameter.has('injectreload');
+        // Bundle every configured file into the shared app bundle directory.
+        const lOutputDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'app', 'bundle');
+        for (const [lInputFilePath, lFile] of lFileEntryList) {
+            // The reload client is only injected when it was requested and the entry opts in via "reloadable".
+            const lInjectReload: boolean = lReloadEnabled && lFile.reloadable === true;
+            await this.bundleFile(pPackage, lInputFilePath, lFile.name, lOutputDirectory, lInjectReload);
+        }
 
-        // Build every configured input file into its build type output directory.
-        for (const [lInputFilePath, lBuildEntry] of lBuildEntryList) {
-            // Resolve the output directory for the build type.
-            const lOutputSubPath: Array<string> | undefined = KgCliCommand.mOutputDirectoryByType[lBuildEntry.type];
-            if (!lOutputSubPath) {
-                throw new Error(`Unknown build type "${lBuildEntry.type}" for input file "${lInputFilePath}".`);
-            }
-
-            const lOutputDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, ...lOutputSubPath);
-            await this.buildEntry(pPackage, lInputFilePath, lBuildEntry.name, lOutputDirectory, lReloadEnabled);
+        // Build the desktop application unless only bundling was requested.
+        if (!lBundleOnly && lDesktop !== null) {
+            await new DesktopBuilder().build(pPackage, lDesktop);
         }
 
         lConsole.writeLine('Build successful');
     }
 
     /**
-     * Build a single input file into a browser IIFE bundle and write it into the given output directory.
+     * Bundle a single input file into a browser IIFE bundle and write it into the output directory.
      * The output is written to `<outputDirectory>/<name>.js` together with its source map.
      *
-     * When reload is enabled the input file is wrapped in a temporary entry file that prepends the live-reload
+     * When reload is injected the input file is wrapped in a temporary entry file that prepends the live-reload
      * client and imports the real input file, so the produced bundle refreshes the browser once it is rebuilt.
      *
      * @param pPackage - Package the input file belongs to.
      * @param pInputFilePath - Local path of the input file inside the package.
      * @param pOutputName - Base name of the produced output file.
      * @param pOutputDirectory - Absolute directory the produced files are written into.
-     * @param pReload - Whether to inject the live-reload client into the bundle.
+     * @param pInjectReload - Whether to inject the live-reload client into the bundle.
      *
      * @throws {@link Error}
      * When the input file does not exist.
      */
-    private async buildEntry(pPackage: Package, pInputFilePath: string, pOutputName: string, pOutputDirectory: string, pReload: boolean): Promise<void> {
+    private async bundleFile(pPackage: Package, pInputFilePath: string, pOutputName: string, pOutputDirectory: string, pInjectReload: boolean): Promise<void> {
         // Convert the input file path from local to absolute path.
         const lAbsoluteInputFilePath: string = FileSystem.pathToAbsolute(pPackage.directory, pInputFilePath);
         if (!FileSystem.exists(lAbsoluteInputFilePath)) {
@@ -114,17 +108,17 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
         let lEntryFilePath: string = lAbsoluteInputFilePath;
         let lTemporaryEntryFilePath: string | null = null;
 
-        // When reload is enabled generate a temporary wrapper entry that injects the live-reload client.
-        if (pReload) {
+        // When reload is injected generate a temporary wrapper entry that prepends the live-reload client.
+        if (pInjectReload) {
             // Read the live-reload client source shipped with this package.
-            const lRefresherFileUrl: URL = new URL('./page-refresher.ts', import.meta.url);
-            const lRefresherFileRequest: Response = await fetch(lRefresherFileUrl);
-            const lRefresherFileText: string = await lRefresherFileRequest.text();
+            const lReloadClientFileUrl: URL = new URL('./reload-client.ts', import.meta.url);
+            const lReloadClientFileRequest: Response = await fetch(lReloadClientFileUrl);
+            const lReloadClientFileText: string = await lReloadClientFileRequest.text();
 
             // Build the wrapper entry outside the package so it never shows up in the users project. It prepends the
             // live-reload client and imports the real input file by absolute url.
             const lInputFileUrl: string = FileSystem.pathToFileUrl(lAbsoluteInputFilePath).href;
-            const lEntryFileContent: string = `${lRefresherFileText}\nimport ${JSON.stringify(lInputFileUrl)};\n`;
+            const lEntryFileContent: string = `${lReloadClientFileText}\nimport ${JSON.stringify(lInputFileUrl)};\n`;
 
             // Write the wrapper entry into the os temporary directory.
             lTemporaryEntryFilePath = Deno.makeTempFileSync({ suffix: '.bundle-entry.ts' });
@@ -155,10 +149,25 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
 }
 
 export type BuildConfiguration = {
-    [inputFilePath: string]: BuildConfigurationEntry;
+    files?: Record<string, BuildFile>;
+    desktop?: DesktopConfiguration | null;
 };
 
-type BuildConfigurationEntry = {
+export type BuildFile = {
     name: string;
-    type: string;
+    reloadable?: boolean;
+};
+
+export type DesktopConfiguration = {
+    name: string;
+    identifier: string;
+    icons?: DesktopPlatformMap;
+    output?: DesktopPlatformMap;
+    backend?: 'webview' | 'cef';
+};
+
+export type DesktopPlatformMap = {
+    windows?: string;
+    macos?: string;
+    linux?: string;
 };

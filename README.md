@@ -214,9 +214,9 @@ All packages live under [`packages/`](./packages). The CLI host and core are the
 | [environment-command-help](./packages/kartoffelgames.environment.command_help/README.md) | `help` — list all registered commands with their parameters. |
 | [environment-command-create](./packages/kartoffelgames.environment.command_create/README.md) | `create` — scaffold a new package from a blueprint (includes the custom-blueprint guide). |
 | [environment-command-sync](./packages/kartoffelgames.environment.command_sync/README.md) | `sync` — align package versions and re-apply command config defaults. |
-| [environment-command-build](./packages/kartoffelgames.environment.command_build/README.md) | `build` — build package files into distributable artifacts by type (e.g. `bundle`). |
+| [environment-command-build](./packages/kartoffelgames.environment.command_build/README.md) | `build` — bundle package files into `app/bundle` and optionally package a native desktop app. |
 | [environment-command-test](./packages/kartoffelgames.environment.command_test/README.md) | `test` — run package tests with optional coverage and inspector. |
-| [environment-command-page](./packages/kartoffelgames.environment.command_page/README.md) | `page` — build and serve a live-reloading HTML page to disk. |
+| [environment-command-app](./packages/kartoffelgames.environment.command_app/README.md) | `app` — build and serve a package's live-reloading `app/` directory to disk. |
 | [environment-command-scratchpad](./packages/kartoffelgames.environment.command_scratchpad/README.md) | `scratchpad` — serve an in-memory live-reloading scratch page. |
 | [environment-command-bump](./packages/kartoffelgames.environment.command_bump/README.md) | `bump` — bump the root project version. |
 | [environment-command-transform](./packages/kartoffelgames.environment.command_transform/README.md) | `transform` — transform a package to another runtime (Node.js via dnt). |

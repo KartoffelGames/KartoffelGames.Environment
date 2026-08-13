@@ -4,54 +4,59 @@ A command module for the [KartoffelGames CLI](https://jsr.io/@kartoffelgames/env
 
 ## Description
 
-The `build` command turns configured package source files into distributable artifacts. Each configured input file is built by a named **build type**, and the result is written to a per-type output location.
+The `build` command bundles configured source files and, optionally, packages the result into a native desktop application.
 
-Build types are extensible. Currently implemented:
+- **Bundling** — every configured file is bundled into a browser IIFE and written to the shared `app/bundle/` directory. The `app` command serves the whole `app/` directory, so the page has access to all bundles by path; to expose a bundle to other packages, list it in the package's `publish.include`.
+- **Desktop** — when a `desktop` configuration is present, the built `app/` directory is packaged into a native desktop binary via [`deno desktop`](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9).
 
-| Type | Output location | Description |
-|------|-----------------|-------------|
-| `bundle` | `library/bundle/<name>.js` (+ `.map`) | Browser IIFE bundle intended for consumption by **other packages** (imported or re-bundled at build time). |
-| `page` | `page/build/<name>.js` (+ `.map`) | Browser IIFE bundle intended to be **fetched by the browser** at runtime. Written inside the portable `page/` directory served by the `page` command, so any resource the page loads (app entry, shared libraries, workers) should use this type. |
-
-Both types share the same bundling pipeline and differ only in their output location. The `--injectreload` flag applies to every type: it injects a live-reload client into the produced bundle that refreshes the browser when the `page` command's server pushes an update.
-
-If no build entries are configured, the command does nothing and exits successfully.
+If nothing is configured, the command does nothing and exits successfully.
 
 ## Configuration
 
-Builds are configured in the package's `deno.json` under `kg.config.build`. It is a map of **input file path** to a build entry `{ type, name }`:
+Builds are configured in the package's `deno.json` under `kg.config.build`:
 
 ```jsonc
 {
     "kg": {
         "config": {
             "build": {
-                "./source/index.ts": { "type": "bundle", "name": "MyLibrary" }
+                "files": {
+                    "./app/source/index.ts": { "name": "app", "reloadable": true },
+                    "./app/source/worker.ts": { "name": "worker" }
+                },
+                "desktop": {
+                    "name": "My App",
+                    "identifier": "com.example.myapp",
+                    "icons":  { "windows": "./icons/app.ico", "macos": "./icons/app.icns", "linux": "./icons/app.png" },
+                    "output": { "windows": "./dist/MyApp", "macos": "./dist/MyApp.app", "linux": "./dist/my-app" }
+                }
             }
         }
     }
 }
 ```
 
+### `files`
+
+A map of **input file path** → bundle options. Each file is bundled to `app/bundle/<name>.js` (+ `.map`).
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| *(key)* | `string` | — | Local path of the input file inside the package. |
+| `name` | `string` | — | Base name of the produced output file. |
+| `reloadable` | `boolean` | `false` | Whether the entry *may* receive the live-reload client. Only injected when the build runs with `--injectreload` (i.e. from the `app` dev server). Leave `false` for workers and other non-`window` bundles. |
+
+### `desktop`
+
+Desktop packaging configuration, or omit it (or set it to `null`) to build no desktop binary. The desktop build embeds the `app/` directory and runs only for the **current** platform (cross-platform desktop builds involve per-OS backends and code signing that must run on the target OS).
+
 | Field | Type | Description |
 |-------|------|-------------|
-| *(key)* | `string` | Local path of the input file inside the package. |
-| `type` | `string` | Build type. One of `"bundle"` or `"page"`. |
-| `name` | `string` | Base name of the produced output file. |
-
-The example above produces `library/bundle/MyLibrary.js` and `library/bundle/MyLibrary.js.map`.
-
-Multiple entries are allowed; each is built independently. Different types can be mixed:
-
-```jsonc
-{
-    "build": {
-        "./source/index.ts": { "type": "bundle", "name": "MyLibrary" },
-        "./source/worker.ts": { "type": "bundle", "name": "MyWorker" },
-        "./page/source/index.ts": { "type": "page", "name": "page" }
-    }
-}
-```
+| `name` | `string` | Application display name. |
+| `identifier` | `string` | Reverse-DNS application id. |
+| `icons` | `{ windows?, macos?, linux? }` | Per-OS icon paths. |
+| `output` | `{ windows?, macos?, linux? }` | Per-OS output paths for the produced app. |
+| `backend` | `"webview" \| "cef"` | Optional rendering backend. Defaults to `webview`. |
 
 ## Installation
 
@@ -75,17 +80,15 @@ Register this command in the root `deno.json` of your monorepo:
 ## Usage
 
 ```
-deno task kg build [-a | -p=@scope/name] [--type=<type>] [--injectreload]
+deno task kg build [-a | -p=@scope/name] [--bundle-only] [--injectreload]
 ```
-
-When `kg.config.build` is empty (or nothing matches `--type`), the build is skipped.
 
 ### Parameters
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--type=<type>` | `-t` | Only build entries whose build type matches `<type>` (e.g. `--type=page`). |
-| `--injectreload` | `-r` | Inject the live-reload client into every produced bundle, regardless of build type. |
+| `--bundle-only` | `-b` | Only produce the bundles; skip the desktop packaging step. Used by the `app` dev server so a file change re-bundles quickly. |
+| `--injectreload` | `-r` | Inject the live-reload client into `reloadable` bundles. |
 
 ### Package Selection
 
@@ -97,15 +100,12 @@ When `kg.config.build` is empty (or nothing matches `--type`), the build is skip
 ### Examples
 
 ```bash
-# Build a specific package
+# Bundle and (if configured) package the desktop app for a specific package
 deno task kg build -p=@kartoffelgames/core
+
+# Only bundle, skip the desktop packaging step
+deno task kg build -p=@kartoffelgames/core --bundle-only
 
 # Build all packages
 deno task kg build -a
-
-# Build only the page-type entries of a package
-deno task kg build -p=@kartoffelgames/core --type=page
-
-# Build page entries with the live-reload client injected
-deno task kg build -p=@kartoffelgames/core --type=page --injectreload
 ```

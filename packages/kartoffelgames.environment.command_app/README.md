@@ -1,46 +1,46 @@
-# @kartoffelgames/environment-command-page
+# @kartoffelgames/environment-command-app
 
-A command module for the [KartoffelGames CLI](https://jsr.io/@kartoffelgames/environment-cli), used to build and serve HTML pages from packages in a monorepo.
+A command module for the [KartoffelGames CLI](https://jsr.io/@kartoffelgames/environment-cli), used to build and serve a package's client app from a monorepo.
 
 ## Description
 
-The `page` command builds and serves the package's `page/` directory over a local HTTP server. It watches both the package source and the `page/` directory for changes, automatically rebundling and refreshing the browser on updates.
+The `app` command builds and serves the package's `app/` directory over a local HTTP server. It watches both the package source and the `app/` directory for changes, automatically rebundling and refreshing the browser on updates.
 
-Unlike the `scratchpad` command, `page` outputs bundled files to disk, making the result shareable and committable to version control.
+Unlike the `scratchpad` command, `app` outputs bundled files to disk, making the result shareable and committable to version control.
 
-The server serves the `page/` directory **as-is**, exactly like a static host would — no path rewrites are applied. This keeps the directory portable: it can be published to another service (e.g. GitHub Pages) and behave the same. The live-reload client is safe in this regard because it only connects back to the serving origin as an optional extra; when that origin is absent (as on a static host) the page still works.
+The server serves the `app/` directory **as-is**, exactly like a static host would — no path rewrites are applied. This keeps the directory portable: it can be published to another service (e.g. GitHub Pages) or packaged into a desktop binary and behave the same. The live-reload client is safe in this regard because it only connects back to the serving origin as an optional extra; when that origin is absent (as on a static host) the page still works.
 
-The server sends `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: credentialless` so that [`SharedArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) is available during local development. For the deployed page to stay cross-origin isolated, the hosting service must be configured to send these headers as well.
+The server sends `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: credentialless` so that [`SharedArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) is available during local development. For the deployed app to stay cross-origin isolated, the hosting service must be configured to send these headers as well.
 
-The `page/` directory and its contents are owned by the package. The command does not scaffold any files; it only ensures the directory exists.
+The `app/` directory and its contents are owned by the package. The command does not scaffold any files; it only ensures the directory exists.
 
-The page bundle is produced by the [`build`](../kartoffelgames.environment.command_build/README.md) command: `page` runs `build` restricted to the `page` build type with the live-reload client injected (equivalent to `kg build --type=page --injectreload`). Configure the page bundle as a `page`-type entry in `kg.config.build`, pointing at the page entry file:
+The bundles are produced by the [`build`](../kartoffelgames.environment.command_build/README.md) command: `app` runs `build` in bundle-only mode with the live-reload client injected (equivalent to `kg build --bundle-only --injectreload`). Configure the bundles as `build.files` entries; any entry loaded by the browser that should live-reload during development sets `reloadable: true`:
 
 ```jsonc
 {
     "kg": {
         "config": {
             "build": {
-                "./page/source/index.ts": { "type": "page", "name": "page" }
+                "files": {
+                    "./app/source/index.ts": { "name": "app", "reloadable": true }
+                }
             }
         }
     }
 }
 ```
 
-That entry produces `page/build/page.js` (+ `.map`), which your `page/index.html` can load via `<script src="/build/page.js">`.
-
-Because the server applies no rewrites, **everything the browser loads must live inside `page/`**. Any additional browser resource (a shared library, a web worker, etc.) should therefore be its own `page`-type build entry so it is written into `page/build/` and stays part of the portable directory. The `bundle` type is for artifacts consumed by other packages at build time, not for resources fetched by the browser.
+That entry produces `app/bundle/app.js` (+ `.map`), which your `app/index.html` can load via `<script src="/bundle/app.js">`. Because the server applies no rewrites, everything the browser loads must live inside `app/` — add a `build.files` entry for each additional browser resource (shared library, worker, …) so it is written into `app/bundle/`.
 
 ## Configuration
 
-The page server is configured in the package's `deno.json` under `kg.config.page`:
+The app server is configured in the package's `deno.json` under `kg.config.app`:
 
 ```jsonc
 {
     "kg": {
         "config": {
-            "page": {
+            "app": {
                 "mimeTypeMapping": {},
                 "port": 8088
             }
@@ -80,7 +80,7 @@ Register this command in the root `deno.json` of your monorepo:
     "kg": {
         "root": true,
         "cli": [
-            "jsr:@kartoffelgames/environment-command-page@<version>"
+            "jsr:@kartoffelgames/environment-command-app@<version>"
         ],
         "packages": "./packages"
     }
@@ -90,10 +90,10 @@ Register this command in the root `deno.json` of your monorepo:
 ## Usage
 
 ```
-deno task kg page [-a | -p=@scope/name]
+deno task kg app [-a | -p=@scope/name]
 ```
 
-The command always builds the page and then serves it. To build the page without serving, use the [`build`](../kartoffelgames.environment.command_build/README.md) command directly (`kg build --type=page`).
+The command always builds the app and then serves it. To build without serving, use the [`build`](../kartoffelgames.environment.command_build/README.md) command (`kg build --bundle-only`).
 
 ### Package Selection
 
@@ -104,9 +104,9 @@ The command always builds the page and then serves it. To build the page without
 ### Examples
 
 ```bash
-# Build and serve the page for a specific package
-deno task kg page -p=@kartoffelgames/core
+# Build and serve the app for a specific package
+deno task kg app -p=@kartoffelgames/core
 
-# Build the page without serving (via the build command)
-deno task kg build -p=@kartoffelgames/core --type=page
+# Build the app bundles without serving (via the build command)
+deno task kg build -p=@kartoffelgames/core --bundle-only
 ```

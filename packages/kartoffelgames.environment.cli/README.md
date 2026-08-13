@@ -24,7 +24,7 @@ Add a `kg` task and configuration section to the root `deno.json` of your monore
             "jsr:@kartoffelgames/environment-command-build@<version>",
             "jsr:@kartoffelgames/environment-command-test@<version>",
             "jsr:@kartoffelgames/environment-command-bump@<version>",
-            "jsr:@kartoffelgames/environment-command-page@<version>",
+            "jsr:@kartoffelgames/environment-command-app@<version>",
             "jsr:@kartoffelgames/environment-command-scratchpad@<version>",
             "jsr:@kartoffelgames/environment-command-transform@<version>",
             "jsr:@kartoffelgames/environment-blueprint@<version>"
@@ -92,7 +92,7 @@ deno task kg test -p=@kartoffelgames/core --debug
 | `sync` | Package | Sync package versions and configurations. | `@kartoffelgames/environment-command-sync` |
 | `build` | Package | Build package files into distributable artifacts. | `@kartoffelgames/environment-command-build` |
 | `test` | Package | Run package tests. | `@kartoffelgames/environment-command-test` |
-| `page` | Package | Build and serve an HTML page. | `@kartoffelgames/environment-command-page` |
+| `app` | Package | Build and serve a package's app directory. | `@kartoffelgames/environment-command-app` |
 | `scratchpad` | Package | Serve a local scratchpad page. | `@kartoffelgames/environment-command-scratchpad` |
 | `transform` | Package | Transform a package to another runtime. | `@kartoffelgames/environment-command-transform` |
 
