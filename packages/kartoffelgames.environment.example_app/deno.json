@@ -1,0 +1,33 @@
+{
+    "name": "@kartoffelgames/environment-example-app",
+    "version": "5.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "exports": "./app/source/index.ts",
+    "imports": {},
+    "kg": {
+        "name": "Kartoffelgames.Environment.Example_App",
+        "source": "./app/source",
+        "config": {
+            "app": {
+                "port": 8088,
+                "mimeTypeMapping": {}
+            },
+            "build": {
+                "files": {
+                    "./app/source/index.ts": { "name": "app", "reloadable": true }
+                },
+                "desktop": {
+                    "name": "KartoffelGames Example App",
+                    "identifier": "com.kartoffelgames.example-app",
+                    "output": {
+                        "windows": "./dist/windows/ExampleApp",
+                        "macosArm": "./dist/macos-arm/ExampleApp.app",
+                        "macosIntel": "./dist/macos-intel/ExampleApp.app",
+                        "linux": "./dist/linux/example-app"
+                    }
+                }
+            }
+        }
+    }
+}

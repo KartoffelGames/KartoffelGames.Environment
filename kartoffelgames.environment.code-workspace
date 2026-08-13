@@ -57,6 +57,10 @@
             "path": "packages/kartoffelgames.environment.core"
         },
         {
+            "name": "Kartoffelgames.Environment.Example_App",
+            "path": "packages/kartoffelgames.environment.example_app"
+        },
+        {
             "name": "Kartoffelgames.Environment.Test_Tools",
             "path": "packages/kartoffelgames.environment.test_tools"
         },
