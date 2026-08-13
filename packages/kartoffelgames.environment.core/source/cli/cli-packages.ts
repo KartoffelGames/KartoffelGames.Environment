@@ -140,10 +140,16 @@ export class CliPackages {
             lReadPackageInformationList.push(lCliPackageInformationPromise);
         }
 
-        // Early resolve the quickest found package when name is filtered.
+        // Early resolve the quickest found package when name is filtered. Every non-matching package rejects its
+        // promise, so when nothing matches Promise.any rejects with an AggregateError. Treat that as "not found" and
+        // return an empty map, so the caller reports a proper "command not found" error instead of the AggregateError.
         if (pNameFilter.trim() !== '') {
-            const lFoundPackage: CliPackageInformation = await Promise.any(lReadPackageInformationList);
-            return new Map<string, CliPackageInformation>([[lFoundPackage.configuration.name, lFoundPackage]]);
+            try {
+                const lFoundPackage: CliPackageInformation = await Promise.any(lReadPackageInformationList);
+                return new Map<string, CliPackageInformation>([[lFoundPackage.configuration.name, lFoundPackage]]);
+            } catch {
+                return new Map<string, CliPackageInformation>();
+            }
         }
 
         // Wait for all packages to be read.
