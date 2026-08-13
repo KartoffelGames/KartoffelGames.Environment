@@ -2,34 +2,31 @@ import { Console, FileSystem, type Package, Process, ProcessParameter } from '@k
 import type { DesktopConfiguration } from './command.ts';
 
 /**
- * Packages a package's built `app` directory into a native desktop application using `deno desktop`.
+ * Packages a package's built `app` directory into native desktop applications using `deno desktop`.
  *
- * Builds only for the current platform: cross-platform desktop builds involve per-OS backends and code signing
- * (which must run on the target OS), so each platform is expected to build its own binary.
+ * `deno desktop` cross-compiles from a single host (the prebuilt runtime artifacts for each target are downloaded
+ * automatically), so every platform configured in the desktop `output` map is built regardless of the host OS. Only
+ * real code signing / notarization is host-bound; the produced binaries carry an ad-hoc signature by default.
  */
 export class DesktopBuilder {
     /**
-     * Build the desktop application for the given package and the current platform.
+     * Build the desktop application for the given package and every configured output target.
      *
      * @param pPackage - Package to build the desktop application for.
      * @param pConfiguration - Desktop configuration.
      *
      * @throws {@link Error}
-     * When the app directory does not exist or the `deno desktop` build fails.
+     * When the app directory does not exist or a `deno desktop` build fails.
      */
     public async build(pPackage: Package, pConfiguration: DesktopConfiguration): Promise<void> {
         const lConsole: Console = new Console();
 
-        // Determine the output for the current platform. Cross-platform builds are intentionally not attempted.
-        const lPlatform: DesktopPlatform | null = DesktopBuilder.currentPlatform();
-        if (lPlatform === null) {
-            lConsole.writeLine('Desktop build is not supported on this platform. Skip desktop.', 'yellow');
-            return;
-        }
-
-        const lOutput: string | undefined = (pConfiguration.output ?? {})[lPlatform];
-        if (!lOutput) {
-            lConsole.writeLine(`No desktop output configured for "${lPlatform}". Skip desktop.`, 'yellow');
+        // Every configured output target gets built. Nothing configured means nothing to do.
+        const lOutputEntries: Array<[string, string]> = Object.entries(pConfiguration.output ?? {}).filter(
+            (pEntry): pEntry is [string, string] => typeof pEntry[1] === 'string' && pEntry[1] !== ''
+        );
+        if (lOutputEntries.length === 0) {
+            lConsole.writeLine('No desktop output configured. Skip desktop.', 'yellow');
             return;
         }
 
@@ -39,15 +36,12 @@ export class DesktopBuilder {
             throw new Error(`App directory "${lAppDirectory}" does not exist. Nothing to package.`);
         }
 
-        // Resolve the absolute output path and ensure its parent directory exists.
-        const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lOutput);
-        FileSystem.createDirectory(FileSystem.directoryOfFile(lAbsoluteOutput));
-
-        // Assemble a temporary build directory: the server entrypoint, a copy of the app directory to embed, and a
-        // deno.json providing the application name and identifier (which come from config, not CLI flags).
+        // Assemble a temporary build directory shared by every target: the server entrypoint, a copy of the app
+        // directory to embed, and a deno.json providing the application name and identifier (which come from config,
+        // not CLI flags).
         const lBuildDirectory: string = Deno.makeTempDirSync();
         try {
-            // Copy the app directory next to the server entry so `--include ./app` embeds it.
+            // Copy the app directory next to the server entry so `--include-as-is ./app` embeds it verbatim.
             FileSystem.copyDirectory(lAppDirectory, FileSystem.pathToAbsolute(lBuildDirectory, 'app'), true);
 
             // Write the server entrypoint from the shipped template.
@@ -65,65 +59,65 @@ export class DesktopBuilder {
             };
             FileSystem.write(FileSystem.pathToAbsolute(lBuildDirectory, 'deno.json'), JSON.stringify(lDenoConfiguration, null, 4));
 
-            // Assemble the deno desktop command. `deno desktop` ignores --output for bare directory targets and
-            // writes the app into "<cwd>/<app-name>/", so the produced directory is moved to the output afterwards.
-            const lCommandParts: Array<string> = ['deno', 'desktop', 'server.ts', '--include', './app'];
-
-            // Rendering backend.
-            if (pConfiguration.backend) {
-                lCommandParts.push('--backend', pConfiguration.backend);
-            }
-
-            // Application icon for the current platform.
-            const lIcon: string | undefined = (pConfiguration.icons ?? {})[lPlatform];
-            if (lIcon) {
-                lCommandParts.push('--icon', FileSystem.pathToAbsolute(pPackage.directory, lIcon));
-            }
-
-            // Run deno desktop from the temporary build directory.
-            lConsole.writeLine(`Building desktop app "${pConfiguration.name}" for "${lPlatform}"...`);
-            await new Process().executeInConsole(new ProcessParameter(lBuildDirectory, lCommandParts));
-
-            // Locate the produced app directory (everything in the build directory except the copied "app" source).
-            let lProducedDirectory: string | null = null;
-            for (const lEntry of Deno.readDirSync(lBuildDirectory)) {
-                if (lEntry.isDirectory && lEntry.name !== 'app') {
-                    lProducedDirectory = FileSystem.pathToAbsolute(lBuildDirectory, lEntry.name);
-                    break;
+            // Build every configured target.
+            for (const [lTargetKey, lOutput] of lOutputEntries) {
+                const lTarget: DesktopTarget | undefined = DESKTOP_TARGETS[lTargetKey as DesktopTargetKey];
+                if (!lTarget) {
+                    lConsole.writeLine(`Unknown desktop output target "${lTargetKey}". Skip.`, 'yellow');
+                    continue;
                 }
-            }
-            if (lProducedDirectory === null) {
-                throw new Error('Desktop build did not produce any output.');
-            }
 
-            // Replace the configured output with the freshly produced app.
-            if (FileSystem.exists(lAbsoluteOutput)) {
-                FileSystem.deleteDirectory(lAbsoluteOutput);
+                // Resolve the absolute output path and ensure its parent directory exists. `deno desktop` accepts a
+                // bare directory as --output (unpackaged app folder); a packaged extension (.msi/.app/.dmg/.AppImage/…)
+                // switches the output format instead.
+                const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lOutput);
+                FileSystem.createDirectory(FileSystem.directoryOfFile(lAbsoluteOutput));
+
+                // Assemble the deno desktop command. The pre-built IIFE bundles under app/ are embedded as-is (no module
+                // resolution / transpilation), cross-compiled to the target triple, and written straight to the
+                // configured output path.
+                const lCommandParts: Array<string> = [
+                    'deno', 'desktop', 'server.ts',
+                    '--include-as-is', './app',
+                    '--target', lTarget.triple,
+                    '--output', lAbsoluteOutput
+                ];
+
+                // Rendering backend.
+                if (pConfiguration.backend) {
+                    lCommandParts.push('--backend', pConfiguration.backend);
+                }
+
+                // Application icon for the target's operating system.
+                const lIcon: string | undefined = (pConfiguration.icons ?? {})[lTarget.icon];
+                if (lIcon) {
+                    lCommandParts.push('--icon', FileSystem.pathToAbsolute(pPackage.directory, lIcon));
+                }
+
+                // Run deno desktop from the temporary build directory.
+                lConsole.writeLine(`Building desktop app "${pConfiguration.name}" for "${lTargetKey}" (${lTarget.triple})...`);
+                await new Process().executeInConsole(new ProcessParameter(lBuildDirectory, lCommandParts));
             }
-            FileSystem.copyDirectory(lProducedDirectory, lAbsoluteOutput, true);
         } finally {
             // Always clean up the temporary build directory.
             FileSystem.deleteDirectory(lBuildDirectory);
         }
     }
-
-    /**
-     * Map the current OS to a desktop platform key, or null when unsupported.
-     *
-     * @returns Desktop platform key of the current OS.
-     */
-    private static currentPlatform(): DesktopPlatform | null {
-        switch (Deno.build.os) {
-            case 'windows':
-                return 'windows';
-            case 'darwin':
-                return 'macos';
-            case 'linux':
-                return 'linux';
-            default:
-                return null;
-        }
-    }
 }
 
-type DesktopPlatform = 'windows' | 'macos' | 'linux';
+/**
+ * Cross-compilation target triple and icon operating system for each configured output key.
+ */
+const DESKTOP_TARGETS: Record<DesktopTargetKey, DesktopTarget> = {
+    windows: { triple: 'x86_64-pc-windows-msvc', icon: 'windows' },
+    macosArm: { triple: 'aarch64-apple-darwin', icon: 'macos' },
+    macosIntel: { triple: 'x86_64-apple-darwin', icon: 'macos' },
+    linux: { triple: 'x86_64-unknown-linux-gnu', icon: 'linux' }
+};
+
+type DesktopTargetKey = 'windows' | 'macosArm' | 'macosIntel' | 'linux';
+
+type DesktopTarget = {
+    triple: string;
+    icon: 'windows' | 'macos' | 'linux';
+};

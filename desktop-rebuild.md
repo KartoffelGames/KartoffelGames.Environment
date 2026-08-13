@@ -42,7 +42,7 @@ via Deno's experimental `deno desktop` (Deno ≥ 2.9), without a frontend framew
           "name": "My App",
           "identifier": "com.example.myapp",
           "icons":  { "windows": "./icons/app.ico", "macos": "./icons/app.icns", "linux": "./icons/app.png" },
-          "output": { "windows": "./dist/MyApp",     "macos": "./dist/MyApp.app", "linux": "./dist/my-app" }
+          "output": { "windows": "./dist/MyApp", "macosArm": "./dist/MyApp.app", "macosIntel": "./dist/MyApp-intel.app", "linux": "./dist/my-app" }
         }
       }
     }
@@ -71,7 +71,7 @@ via Deno's experimental `deno desktop` (Deno ≥ 2.9), without a frontend framew
 | `name` | `string` | Application display name. |
 | `identifier` | `string` | Reverse-DNS app id (`com.example.myapp`). |
 | `icons` | `{ windows?, macos?, linux? }` | Per-OS icon paths. |
-| `output` | `{ windows?, macos?, linux? }` | Per-OS output paths; extension picks format (`.app`/`.dmg`/`.msi`/`.AppImage`/…). |
+| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Per-target output paths (macOS split by arch); extension picks format (`.app`/`.dmg`/`.msi`/`.AppImage`/…), bare path → unpackaged folder. |
 | `backend` | `"webview" \| "cef"` (optional) | Rendering backend. Default `webview`. |
 
 The client directory is always `./app`, so `desktop` needs no `source` field.
@@ -187,16 +187,23 @@ For each configured `output` target:
 
 ## As-built notes (implementation)
 
-Discovered while implementing against `deno desktop` (Deno 2.9.5):
+Implemented against `deno desktop` (Deno 2.9):
 
-- **`deno desktop` ignores `--output` for directory targets** (valid `-o` values are packaged formats:
-  `.msi`/`.app`/`.dmg`/`.AppImage`/…). A bare directory build writes to `<cwd>/<app-name>/`. So
-  `DesktopBuilder` builds in a temp directory (with a generated `deno.json` `desktop` block supplying
-  `app.name`/`app.identifier`), then moves the produced directory to the configured `output` path.
-- **Static files are embedded with `--include ./app`** (not `--include-as-is`, which this version does not
-  expose) and read at runtime via `import.meta.dirname + '/app'`. Verified headlessly with `deno compile`.
-- **Current platform only** — `DesktopBuilder` builds the `output` entry matching `Deno.build.os`; other
-  platforms are skipped (cross-OS signing must run on the target OS).
+- **`--output` is passed directly to `deno desktop`.** It accepts a bare directory as the output (an unpackaged
+  app folder); a packaged extension (`.msi`/`.app`/`.dmg`/`.AppImage`/…) only switches the output *format*.
+  Output-path priority is CLI `--output` → `deno.json` `desktop.output` → platform default, so the earlier
+  temp-directory-and-move workaround was unnecessary (it stemmed from never passing `--output` at all, which
+  fell back to the default `<cwd>/<app-name>/`). `DesktopBuilder` still uses a temp build directory to hold the
+  generated `server.ts` + `deno.json` (`app.name`/`app.identifier`) + the copied `app/`, but writes each binary
+  straight to its configured `output`.
+- **Static files are embedded with `--include-as-is ./app`** and read at runtime via `import.meta.dirname + '/app'`.
+  `--include-as-is` (which *is* exposed) embeds the pre-built IIFE bundles verbatim; plain `--include` would treat
+  the `.js` bundles as module-graph roots and re-resolve/transpile them, the wrong pipeline for already-built assets.
+- **All configured platforms are built.** `deno desktop` cross-compiles from one host via `--target <triple>`
+  (runtime artifacts per target are downloaded automatically), so `DesktopBuilder` iterates every entry in the
+  `output` map and passes the matching triple (`x86_64-pc-windows-msvc`, `aarch64-apple-darwin`,
+  `x86_64-apple-darwin`, `x86_64-unknown-linux-gnu`). Binaries are ad-hoc signed by default; only real macOS
+  notarization/signing is host-bound and remains a follow-up.
 - **Build default is `{ "files": {} }`** — `desktop` is intentionally omitted from the default, not `null`:
   the config merge (`Package.mergeObjects`) replaces a configured object with a differing-shaped default,
   so a `null` default would clobber a user's `desktop` object. (Latent core merge quirk worth a real fix.)

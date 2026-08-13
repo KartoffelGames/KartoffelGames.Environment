@@ -161,13 +161,27 @@ export type BuildFile = {
 export type DesktopConfiguration = {
     name: string;
     identifier: string;
-    icons?: DesktopPlatformMap;
-    output?: DesktopPlatformMap;
+    icons?: DesktopIconMap;
+    output?: DesktopOutputMap;
     backend?: 'webview' | 'cef';
 };
 
-export type DesktopPlatformMap = {
+/**
+ * Icon paths keyed by operating system. Icons are per-OS (format differs by OS), not per-architecture.
+ */
+export type DesktopIconMap = {
     windows?: string;
     macos?: string;
+    linux?: string;
+};
+
+/**
+ * Output paths keyed by build target. macOS is split by architecture because a single machine cross-compiles both
+ * the Apple Silicon and the Intel binary, and each needs its own output path.
+ */
+export type DesktopOutputMap = {
+    windows?: string;
+    macosArm?: string;
+    macosIntel?: string;
     linux?: string;
 };

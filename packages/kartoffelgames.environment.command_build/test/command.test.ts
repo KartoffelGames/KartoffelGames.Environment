@@ -94,7 +94,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 config: {
                     build: {
                         files: { './app/source/index.ts': { name: 'app' } },
-                        desktop: { name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macos: './dist/MyApp.app', linux: './dist/my-app' } }
+                        desktop: { name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macosArm: './dist/MyApp.app', macosIntel: './dist/MyApp-intel.app', linux: './dist/my-app' } }
                     }
                 }
             }

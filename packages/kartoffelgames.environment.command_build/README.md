@@ -28,7 +28,7 @@ Builds are configured in the package's `deno.json` under `kg.config.build`:
                     "name": "My App",
                     "identifier": "com.example.myapp",
                     "icons":  { "windows": "./icons/app.ico", "macos": "./icons/app.icns", "linux": "./icons/app.png" },
-                    "output": { "windows": "./dist/MyApp", "macos": "./dist/MyApp.app", "linux": "./dist/my-app" }
+                    "output": { "windows": "./dist/MyApp", "macosArm": "./dist/MyApp.app", "macosIntel": "./dist/MyApp-intel.app", "linux": "./dist/my-app" }
                 }
             }
         }
@@ -48,14 +48,14 @@ A map of **input file path** → bundle options. Each file is bundled to `app/bu
 
 ### `desktop`
 
-Desktop packaging configuration, or omit it (or set it to `null`) to build no desktop binary. The desktop build embeds the `app/` directory and runs only for the **current** platform (cross-platform desktop builds involve per-OS backends and code signing that must run on the target OS).
+Desktop packaging configuration, or omit it (or set it to `null`) to build no desktop binary. The desktop build embeds the `app/` directory and builds **every configured `output` target**. `deno desktop` cross-compiles from a single host (the runtime artifacts for each target are downloaded automatically), so a build machine can turn out the Windows, macOS and Linux binaries at once. Only real macOS code signing / notarization is host-bound; unsigned binaries carry an ad-hoc signature by default.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `string` | Application display name. |
 | `identifier` | `string` | Reverse-DNS application id. |
 | `icons` | `{ windows?, macos?, linux? }` | Per-OS icon paths. |
-| `output` | `{ windows?, macos?, linux? }` | Per-OS output paths for the produced app. |
+| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Per-target output paths for the produced app. macOS is split by architecture (Apple Silicon / Intel). A bare path produces an unpackaged app folder; a packaged extension (`.msi`/`.app`/`.dmg`/`.AppImage`/…) switches format. |
 | `backend` | `"webview" \| "cef"` | Optional rendering backend. Defaults to `webview`. |
 
 ## Installation
