@@ -55,6 +55,9 @@ export class CommandTestHelper {
         };
         await Deno.writeTextFile(`${lRootDirectory}/deno.json`, JSON.stringify(lProjectConfiguration, null, 4));
 
+        // Write a VS Code workspace file. The create command registers every new package in it, so it must exist.
+        await Deno.writeTextFile(`${lRootDirectory}/project.code-workspace`, JSON.stringify({ folders: [] }, null, 4));
+
         // Create the packages directory so package-scoped commands have a place to look.
         await Deno.mkdir(`${lRootDirectory}/packages`, { recursive: true });
 
@@ -82,42 +85,33 @@ export class CommandTestHelper {
     }
 
     /**
-     * Scaffold a package inside the fixture's packages directory.
+     * Scaffold a package inside the fixture by running the real `create` command with the default `kg-main` blueprint.
      *
      * @param pName - JSR package name, e.g. `@scope/my-package`.
      * @param pVersion - Initial package version.
      */
     public async addPackage(pName: string, pVersion: string = '0.0.0'): Promise<void> {
-        const lPackageDirectoryName: string = this.packageDirectoryName(pName);
-        const lPackageDirectory: string = `${this.mRootDirectory}/packages/${lPackageDirectoryName}`;
-
-        // Create the package source directory with a trivial entry file.
-        await Deno.mkdir(`${lPackageDirectory}/source`, { recursive: true });
-        await Deno.writeTextFile(`${lPackageDirectory}/source/index.ts`, 'export {};\n');
-
-        // Write the package configuration. The kg id is derived from the name by the CLI at runtime.
-        const lPackageConfiguration: Record<string, any> = {
-            name: pName,
-            version: pVersion,
-            exports: './source/index.ts',
-            kg: {
-                source: './source',
-                config: {}
-            }
-        };
-        await Deno.writeTextFile(`${lPackageDirectory}/deno.json`, JSON.stringify(lPackageConfiguration, null, 4));
-
-        // Register the package in the fixture root workspace. Deno requires every nested deno.json to be a member
-        // of the surrounding workspace, otherwise commands like "deno test" refuse to run inside the package.
-        const lRootConfigurationPath: string = `${this.mRootDirectory}/deno.json`;
-        const lRootConfiguration: Record<string, any> = JSON.parse(await Deno.readTextFile(lRootConfigurationPath));
-        const lWorkspaceList: Array<string> = lRootConfiguration['workspace'] ?? new Array<string>();
-        const lWorkspaceEntry: string = `./packages/${lPackageDirectoryName}`;
-        if (!lWorkspaceList.includes(lWorkspaceEntry)) {
-            lWorkspaceList.push(lWorkspaceEntry);
+        // Scaffold the package through the create command using the default blueprint. Both parameters are passed
+        // explicitly so the command never falls back to an interactive prompt (the subprocess has no stdin).
+        const lResult: CommandTestHelperResult = await this.run('kg create', { '--blueprint': 'kg-main', '--packagename': pName });
+        if (!lResult.success) {
+            throw new Error(`Failed to create package "${pName}":\n${lResult.errorOutput || lResult.output}`);
         }
-        lRootConfiguration['workspace'] = lWorkspaceList;
-        await Deno.writeTextFile(lRootConfigurationPath, JSON.stringify(lRootConfiguration, null, 4));
+
+        const lPackageDirectory: string = `${this.mRootDirectory}/packages/${this.packageDirectoryName(pName)}`;
+
+        // Remove the blueprint's placeholder test so the package starts without any test files.
+        try {
+            await Deno.remove(`${lPackageDirectory}/test`, { recursive: true });
+        } catch {
+            // No test directory present, nothing to remove.
+        }
+
+        // Apply the requested version, as the blueprint always scaffolds with its own default version.
+        const lPackageConfigurationPath: string = `${lPackageDirectory}/deno.json`;
+        const lPackageConfiguration: Record<string, any> = JSON.parse(await Deno.readTextFile(lPackageConfigurationPath));
+        lPackageConfiguration['version'] = pVersion;
+        await Deno.writeTextFile(lPackageConfigurationPath, JSON.stringify(lPackageConfiguration, null, 4));
     }
 
     /**
