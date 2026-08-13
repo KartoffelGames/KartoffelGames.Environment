@@ -15,7 +15,7 @@
             },
             "build": {
                 "files": {
-                    "./page/source/index.ts": { "name": "app", "reloadable": true }
+                    "./page/source/index.ts": { "name": "pageentry", "type": "page", "output": "./page/bundle/app.js" }
                 },
                 "desktop": {
                     "name": "KartoffelGames Example App",

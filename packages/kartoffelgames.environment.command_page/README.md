@@ -14,7 +14,7 @@ The server sends `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Emb
 
 The `page/` directory and its contents are owned by the package. The command does not scaffold any files; it only ensures the directory exists.
 
-The bundles are produced by the [`build`](../kartoffelgames.environment.command_build/README.md) command: `page` runs `build` in bundle-only mode with the live-reload client injected (equivalent to `kg build --bundle-only --injectreload`). Configure the bundles as `build.files` entries; any entry loaded by the browser that should live-reload during development sets `reloadable: true`:
+The bundles are produced by the [`build`](../kartoffelgames.environment.command_build/README.md) command: `page` runs `build` in bundle-only mode with the live-reload client injected (equivalent to `kg build --bundle-only --injectreload`). Configure the bundles as `build.files` entries; give the browser entry `"type": "page"` so it receives the live-reload client during development (a `"bundle"` entry, e.g. a worker, does not):
 
 ```jsonc
 {
@@ -22,7 +22,7 @@ The bundles are produced by the [`build`](../kartoffelgames.environment.command_
         "config": {
             "build": {
                 "files": {
-                    "./page/source/index.ts": { "name": "app", "reloadable": true }
+                    "./page/source/index.ts": { "name": "pageentry", "type": "page", "output": "./page/bundle/app.js" }
                 }
             }
         }

@@ -21,8 +21,8 @@ Builds are configured in the package's `deno.json` under `kg.config.build`:
         "config": {
             "build": {
                 "files": {
-                    "./page/source/index.ts": { "name": "app", "reloadable": true },
-                    "./page/source/worker.ts": { "name": "worker" }
+                    "./page/source/index.ts": { "name": "pageentry", "type": "page", "output": "./page/bundle/app.js" },
+                    "./page/source/worker.ts": { "name": "worker", "type": "bundle", "output": "./page/bundle/worker.js" }
                 },
                 "desktop": {
                     "name": "My App",
@@ -38,13 +38,14 @@ Builds are configured in the package's `deno.json` under `kg.config.build`:
 
 ### `files`
 
-A map of **input file path** → bundle options. Each file is bundled to `page/bundle/<name>.js` (+ `.map`).
+A map of **input file path** → bundle options. Each file is bundled to the `output` path it configures (+ `.map`).
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | *(key)* | `string` | — | Local path of the input file inside the package. |
-| `name` | `string` | — | Base name of the produced output file. |
-| `reloadable` | `boolean` | `false` | Whether the entry *may* receive the live-reload client. Only injected when the build runs with `--injectreload` (i.e. from the `page` dev server). Leave `false` for workers and other non-`window` bundles. |
+| `name` | `string` | — | Kept for now, but **not** used by the bundle process (the output filename comes from `output`). |
+| `type` | `"page" \| "bundle"` | — | Entry kind. A `page` entry receives the live-reload client when the build runs with `--injectreload` (i.e. from the `page` dev server); a `bundle` entry never does (use it for workers and other non-`window` bundles). |
+| `output` | `string` | — | Output path of the produced bundle, **including the filename** (e.g. `./page/bundle/app.js`). |
 
 ### `desktop`
 
@@ -88,7 +89,7 @@ deno task kg build [-a | -p=@scope/name] [--bundle-only] [--injectreload]
 | Flag | Short | Description |
 |------|-------|-------------|
 | `--bundle-only` | `-b` | Only produce the bundles; skip the desktop packaging step. Used by the `page` dev server so a file change re-bundles quickly. |
-| `--injectreload` | `-r` | Inject the live-reload client into `reloadable` bundles. |
+| `--injectreload` | `-r` | Inject the live-reload client into `page` type entries. |
 
 ### Package Selection
 

@@ -104,7 +104,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
     /**
      * Bundle the page by running the build command in bundle-only mode with the live-reload client injected.
-     * The build command writes the bundled files into the page bundle directory. Only entries marked reloadable
+     * The build command writes the bundled files into their configured output paths. Only "page" type entries
      * receive the live-reload client. The desktop packaging step is skipped (bundle-only) to keep the watch fast.
      *
      * @param pProject - Project.

@@ -3,7 +3,7 @@ import { expect } from '@std/expect';
 
 Deno.test('KgCliCommand.run()', async (pContext) => {
     await pContext.step('Page - Bundles the page and starts the server', async (): Promise<void> => {
-        // Setup. Configure the page port and a reloadable bundle entry, plus a non-reloadable one.
+        // Setup. Configure the page port and a "page" entry, plus a "bundle" entry (e.g. a worker).
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'page/source/index.ts', 'console.log(\'page\');\n');
@@ -18,8 +18,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                     page: { port: 8091, mimeTypeMapping: {} },
                     build: {
                         files: {
-                            './page/source/index.ts': { name: 'app', reloadable: true },
-                            './page/source/worker.ts': { name: 'worker' }
+                            './page/source/index.ts': { name: 'app', type: 'page', output: './page/bundle/app.js' },
+                            './page/source/worker.ts': { name: 'worker', type: 'bundle', output: './page/bundle/worker.js' }
                         }
                     }
                 }
@@ -38,7 +38,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             expect(lHelper.fileExists('packages/test.package/page/bundle/app.js')).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/page/bundle/worker.js')).toBeTruthy();
 
-            // The live-reload client is injected only into the reloadable entry.
+            // The live-reload client is injected only into the "page" entry.
             expect(lHelper.readFile('packages/test.package/page/bundle/app.js')).toContain('WebSocket');
             expect(lHelper.readFile('packages/test.package/page/bundle/worker.js')).not.toContain('WebSocket');
         } finally {

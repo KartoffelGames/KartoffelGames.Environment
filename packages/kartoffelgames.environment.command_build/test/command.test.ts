@@ -13,7 +13,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    build: { files: { './source/index.ts': { name: 'MyBundle' } } }
+                    build: { files: { './source/index.ts': { name: 'MyBundle', type: 'bundle', output: './page/bundle/MyBundle.js' } } }
                 }
             }
         }, null, 4));
@@ -46,8 +46,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
-    await pContext.step('Build - Inject-reload injects the client only into reloadable entries', async (): Promise<void> => {
-        // Setup. One reloadable entry and one non-reloadable entry (e.g. a worker).
+    await pContext.step('Build - Inject-reload injects the client only into page entries', async (): Promise<void> => {
+        // Setup. One "page" entry and one "bundle" entry (e.g. a worker).
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'source/worker.ts', 'console.log(\'worker\');\n');
@@ -60,8 +60,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 config: {
                     build: {
                         files: {
-                            './source/index.ts': { name: 'main', reloadable: true },
-                            './source/worker.ts': { name: 'worker' }
+                            './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' },
+                            './source/worker.ts': { name: 'worker', type: 'bundle', output: './page/bundle/worker.js' }
                         }
                     }
                 }
@@ -71,7 +71,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             // Process.
             const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--injectreload': '' });
 
-            // Evaluation. Only the reloadable entry receives the live-reload client.
+            // Evaluation. Only the "page" entry receives the live-reload client.
             expect(lResult.success).toBeTruthy();
             expect(lHelper.readFile('packages/test.package/page/bundle/main.js')).toContain('WebSocket');
             expect(lHelper.readFile('packages/test.package/page/bundle/worker.js')).not.toContain('WebSocket');
@@ -93,7 +93,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 source: './source',
                 config: {
                     build: {
-                        files: { './page/source/index.ts': { name: 'app' } },
+                        files: { './page/source/index.ts': { name: 'app', type: 'page', output: './page/bundle/app.js' } },
                         desktop: { name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macosArm: './dist/MyApp.app', macosIntel: './dist/MyApp-intel.app', linux: './dist/my-app' } }
                     }
                 }
@@ -113,7 +113,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
     });
 
     await pContext.step('Build - Reload client is not injected without the flag', async (): Promise<void> => {
-        // Setup. A reloadable entry, but the build runs without the inject-reload flag.
+        // Setup. A "page" entry, but the build runs without the inject-reload flag.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
@@ -123,7 +123,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    build: { files: { './source/index.ts': { name: 'main', reloadable: true } } }
+                    build: { files: { './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' } } }
                 }
             }
         }, null, 4));

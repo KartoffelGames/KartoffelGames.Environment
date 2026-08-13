@@ -17,7 +17,7 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                         'bundle-only': {
                             shortName: 'b'
                         },
-                        // Inject the live-reload client into reloadable bundles.
+                        // Inject the live-reload client into "page" type entries.
                         injectreload: {
                             shortName: 'r'
                         }
@@ -65,12 +65,25 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             return;
         }
 
-        // Bundle every configured file into the shared page bundle directory.
-        const lOutputDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page', 'bundle');
+        // Bundle every configured file into its configured output path.
         for (const [lInputFilePath, lFile] of lFileEntryList) {
-            // The reload client is only injected when it was requested and the entry opts in via "reloadable".
-            const lInjectReload: boolean = lReloadEnabled && lFile.reloadable === true;
-            await this.bundleFile(pPackage, lInputFilePath, lFile.name, lOutputDirectory, lInjectReload);
+            // The output path (including the filename) is configured per entry.
+            if (!lFile.output) {
+                throw new Error(`Build entry "${lInputFilePath}" has no "output" path configured.`);
+            }
+
+            // The reload client is only injected when requested and the entry is a "page" (a "bundle" never gets it).
+            const lInjectReload: boolean = lReloadEnabled && lFile.type === 'page';
+
+            // Split the configured output path into its directory and its basename (without extension); the bundle is
+            // always emitted as `<basename>.js` (+ `.map`) into that directory.
+            const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lFile.output);
+            const lOutputDirectory: string = FileSystem.directoryOfFile(lAbsoluteOutput);
+            const lOutputFileName: string = FileSystem.fileOfPath(lAbsoluteOutput);
+            const lDotIndex: number = lOutputFileName.lastIndexOf('.');
+            const lOutputName: string = lDotIndex < 0 ? lOutputFileName : lOutputFileName.substring(0, lDotIndex);
+
+            await this.bundleFile(pPackage, lInputFilePath, lOutputName, lOutputDirectory, lInjectReload);
         }
 
         // Build the desktop application unless only bundling was requested.
@@ -154,8 +167,21 @@ export type BuildConfiguration = {
 };
 
 export type BuildFile = {
+    /**
+     * Kept for now but no longer used by the bundle process (the output filename comes from `output`).
+     */
     name: string;
-    reloadable?: boolean;
+
+    /**
+     * Entry kind. A "page" entry receives the live-reload client when the build runs with `--injectreload`
+     * (i.e. from the `page` dev server); a "bundle" entry never does.
+     */
+    type: 'page' | 'bundle';
+
+    /**
+     * Output path of the produced bundle, including the filename (e.g. `./page/bundle/app.js`).
+     */
+    output: string;
 };
 
 export type DesktopConfiguration = {
