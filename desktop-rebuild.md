@@ -200,4 +200,3 @@ Discovered while implementing against `deno desktop` (Deno 2.9.5):
 - **Build default is `{ "files": {} }`** — `desktop` is intentionally omitted from the default, not `null`:
   the config merge (`Package.mergeObjects`) replaces a configured object with a differing-shaped default,
   so a `null` default would clobber a user's `desktop` object. (Latent core merge quirk worth a real fix.)
-- **Desktop test** is gated behind `KG_TEST_DESKTOP=1` (a real ~30s compile that downloads the backend).
