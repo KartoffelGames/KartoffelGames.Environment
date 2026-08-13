@@ -1,22 +1,22 @@
 import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment-command-build';
 import { type CliCommandDescription, CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
-import { AppFileWatcher } from './file_handler/app-file-watcher.ts';
-import { AppHttpServer } from './file_handler/app-http-server.ts';
+import { PageFileWatcher } from './file_handler/page-file-watcher.ts';
+import { PageHttpServer } from './file_handler/page-http-server.ts';
 
-export class KgCliCommand implements ICliPackageCommand<AppConfiguration> {
+export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     /**
      * Command description.
      */
-    public get information(): CliCommandDescription<AppConfiguration> {
+    public get information(): CliCommandDescription<PageConfiguration> {
         return {
             command: {
-                description: 'Build and serve the app directory over a local http server.',
+                description: 'Build and serve the page directory over a local http server.',
                 parameters: {
-                    root: 'app'
+                    root: 'page'
                 }
             },
             configuration: {
-                name: 'app',
+                name: 'page',
                 default: {
                     mimeTypeMapping: {},
                     port: 8088
@@ -31,9 +31,9 @@ export class KgCliCommand implements ICliPackageCommand<AppConfiguration> {
      * @param pProject - Project.
      */
     public async run(pProject: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
-        // Needs a package to run the app server.
+        // Needs a package to run the page server.
         if (pPackage === null) {
-            throw new Error('Package to run app not specified.');
+            throw new Error('Package to run page not specified.');
         }
 
         // Read cli configuration from cli package.
@@ -42,33 +42,33 @@ export class KgCliCommand implements ICliPackageCommand<AppConfiguration> {
         // Create console.
         const lConsole = new Console();
 
-        // App directory of www files and the generated bundle output directory inside it.
-        const lAppDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'app');
-        const lAppBundleDirectory: string = FileSystem.pathToAbsolute(lAppDirectory, 'bundle');
+        // Page directory of www files and the generated bundle output directory inside it.
+        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
+        const lPageBundleDirectory: string = FileSystem.pathToAbsolute(lPageDirectory, 'bundle');
 
-        // Ensure the app directory exists so the file watcher and http server have a valid root. The app content
+        // Ensure the page directory exists so the file watcher and http server have a valid root. The page content
         // itself is owned by the package and is not scaffolded by this command.
-        FileSystem.createDirectory(lAppDirectory);
+        FileSystem.createDirectory(lPageDirectory);
 
-        // Create watch paths for package source and app directory.
+        // Create watch paths for package source and page directory.
         const lWatchPaths: Array<string> = [
             pPackage.sourceDirectory,
-            lAppDirectory
+            lPageDirectory
         ];
 
-        // Build app http-server.
-        const lHttpServer: AppHttpServer = new AppHttpServer(lPackageConfiguration.port, lAppDirectory, lPackageConfiguration.mimeTypeMapping);
+        // Build page http-server.
+        const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lPageDirectory, lPackageConfiguration.mimeTypeMapping);
 
         // Build initial bundle files.
         lConsole.writeLine('Starting initial bundle...');
-        await this.bundleApp(pProject, pPackage);
+        await this.bundlePage(pProject, pPackage);
 
         // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
         let lBuilding: boolean = false;
 
-        // Rebundle app files and refresh connected browsers when files have changed.
+        // Rebundle page files and refresh connected browsers when files have changed.
         // The bundle output directory is ignored so the bundler writing its own output does not trigger another build.
-        const lWatcher: AppFileWatcher = new AppFileWatcher(lWatchPaths, [lAppBundleDirectory]);
+        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths, [lPageBundleDirectory]);
         lWatcher.addListener(async () => {
             // Skip when a build is already running, to prevent multiple builds at the same time.
             if (lBuilding) {
@@ -79,9 +79,9 @@ export class KgCliCommand implements ICliPackageCommand<AppConfiguration> {
             // Signal that a rebuild has started, as bundling can take a while and would otherwise look unresponsive.
             lConsole.writeLine('File change detected. Bundling...', 'yellow');
 
-            // Rebundle the app. Bundle errors are reported but must not stop the watcher.
+            // Rebundle the page. Bundle errors are reported but must not stop the watcher.
             try {
-                await this.bundleApp(pProject, pPackage);
+                await this.bundlePage(pProject, pPackage);
                 lConsole.writeLine('Build finished', 'green');
             } catch (pError) {
                 lConsole.writeLine((<Error>pError).message, 'red');
@@ -98,19 +98,19 @@ export class KgCliCommand implements ICliPackageCommand<AppConfiguration> {
         lWatcher.start();
 
         // Start http server asnyc and keep process running as long as server is running.
-        lConsole.writeLine('Starting app server...');
+        lConsole.writeLine('Starting page server...');
         await lHttpServer.start();
     }
 
     /**
-     * Bundle the app by running the build command in bundle-only mode with the live-reload client injected.
-     * The build command writes the bundled files into the app bundle directory. Only entries marked reloadable
+     * Bundle the page by running the build command in bundle-only mode with the live-reload client injected.
+     * The build command writes the bundled files into the page bundle directory. Only entries marked reloadable
      * receive the live-reload client. The desktop packaging step is skipped (bundle-only) to keep the watch fast.
      *
      * @param pProject - Project.
-     * @param pPackage - Package to bundle the app for.
+     * @param pPackage - Package to bundle the page for.
      */
-    private async bundleApp(pProject: Project, pPackage: Package): Promise<void> {
+    private async bundlePage(pProject: Project, pPackage: Package): Promise<void> {
         // Run the build command in bundle-only mode with the live-reload client injected.
         const lBuildParameter: CliParameter = new CliParameter('build');
         lBuildParameter.set('bundle-only', null);
@@ -121,7 +121,7 @@ export class KgCliCommand implements ICliPackageCommand<AppConfiguration> {
 }
 
 
-type AppConfiguration = {
+type PageConfiguration = {
     mimeTypeMapping: Record<string, string>;
     port: number;
 };

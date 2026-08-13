@@ -1,6 +1,6 @@
 import { Console, FileSystem } from '@kartoffelgames/environment-core';
 
-export class AppHttpServer {
+export class PageHttpServer {
     private readonly mMimeTypesMapping: Record<string, string>;
     private readonly mOpenWebsockets: Set<WebSocket>;
     private readonly mPort: number;

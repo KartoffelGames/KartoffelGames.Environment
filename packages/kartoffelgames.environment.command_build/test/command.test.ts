@@ -2,7 +2,7 @@ import { CommandTestHelper, type CommandTestHelperResult } from '@kartoffelgames
 import { expect } from '@std/expect';
 
 Deno.test('KgCliCommand.run()', async (pContext) => {
-    await pContext.step('Build - Bundles configured files into the app bundle directory', async (): Promise<void> => {
+    await pContext.step('Build - Bundles configured files into the page bundle directory', async (): Promise<void> => {
         // Setup. Configure a single bundle file.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
@@ -23,8 +23,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
 
             // Evaluation.
             expect(lResult.success).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/app/bundle/MyBundle.js')).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/app/bundle/MyBundle.js.map')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/page/bundle/MyBundle.js')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/page/bundle/MyBundle.js.map')).toBeTruthy();
         } finally {
             await lHelper.dispose();
         }
@@ -73,8 +73,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
 
             // Evaluation. Only the reloadable entry receives the live-reload client.
             expect(lResult.success).toBeTruthy();
-            expect(lHelper.readFile('packages/test.package/app/bundle/main.js')).toContain('WebSocket');
-            expect(lHelper.readFile('packages/test.package/app/bundle/worker.js')).not.toContain('WebSocket');
+            expect(lHelper.readFile('packages/test.package/page/bundle/main.js')).toContain('WebSocket');
+            expect(lHelper.readFile('packages/test.package/page/bundle/worker.js')).not.toContain('WebSocket');
         } finally {
             await lHelper.dispose();
         }
@@ -84,7 +84,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         // Setup. Configure a desktop output for the current platform, but run bundle-only.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
-        lHelper.writePackageFile('@test/package', 'app/source/index.ts', 'console.log(\'app\');\n');
+        lHelper.writePackageFile('@test/package', 'page/source/index.ts', 'console.log(\'app\');\n');
         lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
             name: '@test/package',
             version: '0.0.0',
@@ -93,7 +93,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 source: './source',
                 config: {
                     build: {
-                        files: { './app/source/index.ts': { name: 'app' } },
+                        files: { './page/source/index.ts': { name: 'app' } },
                         desktop: { name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macosArm: './dist/MyApp.app', macosIntel: './dist/MyApp-intel.app', linux: './dist/my-app' } }
                     }
                 }
@@ -105,7 +105,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
 
             // Evaluation. The bundle is produced but no desktop output directory is created.
             expect(lResult.success).toBeTruthy();
-            expect(lHelper.fileExists('packages/test.package/app/bundle/app.js')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/page/bundle/app.js')).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/dist')).toBeFalsy();
         } finally {
             await lHelper.dispose();
@@ -133,7 +133,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
 
             // Evaluation.
             expect(lResult.success).toBeTruthy();
-            expect(lHelper.readFile('packages/test.package/app/bundle/main.js')).not.toContain('WebSocket');
+            expect(lHelper.readFile('packages/test.package/page/bundle/main.js')).not.toContain('WebSocket');
         } finally {
             await lHelper.dispose();
         }

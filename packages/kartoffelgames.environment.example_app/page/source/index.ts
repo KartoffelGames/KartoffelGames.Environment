@@ -1,6 +1,6 @@
-// Entry point of the example app. It is bundled by `kg build` / `kg app` into ./app/bundle/app.js and loaded by
-// ./app/index.html. It is deliberately framework-free and self-contained (no imports): a small, typed, interactive
-// UI built straight from the DOM API, so the same bundle runs identically when served by `kg app` and when embedded
+// Entry point of the example app. It is bundled by `kg build` / `kg page` into ./page/bundle/app.js and loaded by
+// ./page/index.html. It is deliberately framework-free and self-contained (no imports): a small, typed, interactive
+// UI built straight from the DOM API, so the same bundle runs identically when served by `kg page` and when embedded
 // into a native binary by the desktop build.
 
 /**
@@ -119,7 +119,7 @@ const render = (pMount: HTMLElement): void => {
 
     // ---- Footer ------------------------------------------------------------------------------------------------
     const lFooter = el('footer', { class: 'footer' }, [
-        'Edit app/source/index.ts and save — the page live-reloads while running `kg app`.'
+        'Edit page/source/index.ts and save — the page live-reloads while running `kg page`.'
     ]);
 
     // ---- Mount -------------------------------------------------------------------------------------------------

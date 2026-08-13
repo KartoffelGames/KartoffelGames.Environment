@@ -1,14 +1,14 @@
 # @kartoffelgames/environment-example-app
 
-An example package that exercises the `app` (dev server) and `build` (bundle + native desktop) commands with a real,
+An example package that exercises the `page` (dev server) and `build` (bundle + native desktop) commands with a real,
 framework-free client page: HTML + CSS + a light interactive TypeScript bundle.
 
-It is not published; it exists so the `app`/`build`/desktop pipeline can be tested end-to-end against actual content.
+It is not published; it exists so the `page`/`build`/desktop pipeline can be tested end-to-end against actual content.
 
 ## Layout
 
 ```
-app/
+page/
   index.html          # loads /index.css and /bundle/app.js
   index.css           # theming via CSS variables + [data-theme]
   source/
@@ -21,10 +21,10 @@ The bundle entry and desktop packaging are configured in [`deno.json`](./deno.js
 
 ## Try it
 
-Serve the page with live reload (edit `app/source/index.ts` and save to see it refresh):
+Serve the page with live reload (edit `page/source/index.ts` and save to see it refresh):
 
 ```bash
-deno task kg app -p=@kartoffelgames/environment-example-app
+deno task kg page -p=@kartoffelgames/environment-example-app
 ```
 
 Then open <http://127.0.0.1:8088>.
@@ -44,4 +44,4 @@ deno task kg build -p=@kartoffelgames/environment-example-app
 ```
 
 The `crossOriginIsolated` badge on the page turns green when the server sends the COOP/COEP headers — the same headers
-the `app` dev server and the generated desktop server both emit, so `SharedArrayBuffer` is available in either.
+the `page` dev server and the generated desktop server both emit, so `SharedArrayBuffer` is available in either.

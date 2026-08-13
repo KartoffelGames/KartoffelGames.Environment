@@ -6,8 +6,8 @@ A command module for the [KartoffelGames CLI](https://jsr.io/@kartoffelgames/env
 
 The `build` command bundles configured source files and, optionally, packages the result into a native desktop application.
 
-- **Bundling** — every configured file is bundled into a browser IIFE and written to the shared `app/bundle/` directory. The `app` command serves the whole `app/` directory, so the page has access to all bundles by path; to expose a bundle to other packages, list it in the package's `publish.include`.
-- **Desktop** — when a `desktop` configuration is present, the built `app/` directory is packaged into a native desktop binary via [`deno desktop`](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9).
+- **Bundling** — every configured file is bundled into a browser IIFE and written to the shared `page/bundle/` directory. The `page` command serves the whole `page/` directory, so the page has access to all bundles by path; to expose a bundle to other packages, list it in the package's `publish.include`.
+- **Desktop** — when a `desktop` configuration is present, the built `page/` directory is packaged into a native desktop binary via [`deno desktop`](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9).
 
 If nothing is configured, the command does nothing and exits successfully.
 
@@ -21,8 +21,8 @@ Builds are configured in the package's `deno.json` under `kg.config.build`:
         "config": {
             "build": {
                 "files": {
-                    "./app/source/index.ts": { "name": "app", "reloadable": true },
-                    "./app/source/worker.ts": { "name": "worker" }
+                    "./page/source/index.ts": { "name": "app", "reloadable": true },
+                    "./page/source/worker.ts": { "name": "worker" }
                 },
                 "desktop": {
                     "name": "My App",
@@ -38,17 +38,17 @@ Builds are configured in the package's `deno.json` under `kg.config.build`:
 
 ### `files`
 
-A map of **input file path** → bundle options. Each file is bundled to `app/bundle/<name>.js` (+ `.map`).
+A map of **input file path** → bundle options. Each file is bundled to `page/bundle/<name>.js` (+ `.map`).
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | *(key)* | `string` | — | Local path of the input file inside the package. |
 | `name` | `string` | — | Base name of the produced output file. |
-| `reloadable` | `boolean` | `false` | Whether the entry *may* receive the live-reload client. Only injected when the build runs with `--injectreload` (i.e. from the `app` dev server). Leave `false` for workers and other non-`window` bundles. |
+| `reloadable` | `boolean` | `false` | Whether the entry *may* receive the live-reload client. Only injected when the build runs with `--injectreload` (i.e. from the `page` dev server). Leave `false` for workers and other non-`window` bundles. |
 
 ### `desktop`
 
-Desktop packaging configuration, or omit it (or set it to `null`) to build no desktop binary. The desktop build embeds the `app/` directory (its files ride into the binary through the generated server's module graph). Configure an `output` for each platform you ship, but note that `deno desktop` (2.9.x) does **not** cross-compile the app: a build only produces binaries for the **host** OS/arch. So on any given machine the build produces the output whose platform matches the host and **skips** the others with a message — build each platform on its own OS (e.g. a CI matrix). Unsigned binaries carry an ad-hoc signature by default; real macOS signing / notarization is a separate, host-bound step.
+Desktop packaging configuration, or omit it (or set it to `null`) to build no desktop binary. The desktop build embeds the `page/` directory (its files ride into the binary through the generated server's module graph). Configure an `output` for each platform you ship, but note that `deno desktop` (2.9.x) does **not** cross-compile the app: a build only produces binaries for the **host** OS/arch. So on any given machine the build produces the output whose platform matches the host and **skips** the others with a message — build each platform on its own OS (e.g. a CI matrix). Unsigned binaries carry an ad-hoc signature by default; real macOS signing / notarization is a separate, host-bound step.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -87,7 +87,7 @@ deno task kg build [-a | -p=@scope/name] [--bundle-only] [--injectreload]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--bundle-only` | `-b` | Only produce the bundles; skip the desktop packaging step. Used by the `app` dev server so a file change re-bundles quickly. |
+| `--bundle-only` | `-b` | Only produce the bundles; skip the desktop packaging step. Used by the `page` dev server so a file change re-bundles quickly. |
 | `--injectreload` | `-r` | Inject the live-reload client into `reloadable` bundles. |
 
 ### Package Selection

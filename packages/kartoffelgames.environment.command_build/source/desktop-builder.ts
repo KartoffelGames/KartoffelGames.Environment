@@ -2,11 +2,11 @@ import { Console, FileSystem, type Package, Process, ProcessParameter } from '@k
 import type { DesktopConfiguration } from './command.ts';
 
 /**
- * Packages a package's built `app` directory into native desktop applications using `deno desktop`.
+ * Packages a package's built `page` directory into native desktop applications using `deno desktop`.
  *
  * Three behaviours of `deno desktop` (verified against Deno 2.9.5) shape this implementation:
- * - Static files are **not** embedded via `--include`; only the module graph is embedded. So the app directory is
- *   embedded by generating a server entry that imports every app file as a raw module (`with { type: "text" }` for
+ * - Static files are **not** embedded via `--include`; only the module graph is embedded. So the page directory is
+ *   embedded by generating a server entry that imports every page file as a raw module (`with { type: "text" }` for
  *   text, `{ type: "bytes" }` for binary) and serves them from an in-memory manifest — no runtime filesystem access.
  * - `--output` is ignored for bare (unpackaged) directory targets: the build always writes to `<cwd>/<app-name>/`.
  *   So the build runs in a temp directory and the produced app directory is moved to the configured output path.
@@ -23,7 +23,7 @@ export class DesktopBuilder {
      * @param pConfiguration - Desktop configuration.
      *
      * @throws {@link Error}
-     * When the app directory does not exist or a `deno desktop` build fails or produces no output.
+     * When the page directory does not exist or a `deno desktop` build fails or produces no output.
      */
     public async build(pPackage: Package, pConfiguration: DesktopConfiguration): Promise<void> {
         const lConsole: Console = new Console();
@@ -57,29 +57,29 @@ export class DesktopBuilder {
             return;
         }
 
-        // The app directory that gets embedded into the binary. It must have been bundled beforehand.
-        const lAppDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'app');
-        if (!FileSystem.exists(lAppDirectory)) {
-            throw new Error(`App directory "${lAppDirectory}" does not exist. Nothing to package.`);
+        // The page directory that gets embedded into the binary. It must have been bundled beforehand.
+        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
+        if (!FileSystem.exists(lPageDirectory)) {
+            throw new Error(`Page directory "${lPageDirectory}" does not exist. Nothing to package.`);
         }
 
-        // Collect every file under the app directory as an app-root-relative posix path (e.g. "index.html",
+        // Collect every file under the page directory as a page-root-relative posix path (e.g. "index.html",
         // "bundle/app.js"). These become the embedded module-graph imports of the generated server.
-        const lRelativeFiles: Array<string> = FileSystem.findFiles(lAppDirectory).map((pAbsolute: string): string => {
-            return pAbsolute.substring(lAppDirectory.length).replaceAll('\\', '/').replace(/^\//, '');
+        const lRelativeFiles: Array<string> = FileSystem.findFiles(lPageDirectory).map((pAbsolute: string): string => {
+            return pAbsolute.substring(lPageDirectory.length).replaceAll('\\', '/').replace(/^\//, '');
         });
         if (lRelativeFiles.length === 0) {
-            throw new Error(`App directory "${lAppDirectory}" is empty. Run the bundle step before packaging the desktop app.`);
+            throw new Error(`Page directory "${lPageDirectory}" is empty. Run the bundle step before packaging the desktop app.`);
         }
 
         // Assemble a temporary build directory shared by every target: the generated server entrypoint, a copy of the
-        // app directory to embed, and a deno.json providing the application metadata and enabling raw imports.
+        // page directory to embed, and a deno.json providing the application metadata and enabling raw imports.
         const lBuildDirectory: string = Deno.makeTempDirSync();
         try {
-            // Copy the app directory next to the server entry so the generated imports (`./app/...`) resolve.
-            FileSystem.copyDirectory(lAppDirectory, FileSystem.pathToAbsolute(lBuildDirectory, 'app'), true);
+            // Copy the page directory next to the server entry so the generated imports (`./page/...`) resolve.
+            FileSystem.copyDirectory(lPageDirectory, FileSystem.pathToAbsolute(lBuildDirectory, 'page'), true);
 
-            // Write the generated server entry: the shipped template with its markers replaced by the app's
+            // Write the generated server entry: the shipped template with its markers replaced by the page's
             // embedded module imports and manifest entries.
             const lTemplate: string = await (await fetch(new URL('./desktop-server-template.ts', import.meta.url))).text();
             const lManifest: { imports: string; entries: string } = DesktopBuilder.buildServerManifest(lRelativeFiles);
@@ -128,10 +128,10 @@ export class DesktopBuilder {
                 lConsole.writeLine(`Building desktop app "${pConfiguration.name}" for "${lTargetKey}" (${lTarget.triple})...`);
                 await new Process().executeInConsole(new ProcessParameter(lBuildDirectory, lCommandParts));
 
-                // Locate the produced app directory (every directory in the build dir except the copied "app" source).
+                // Locate the produced app directory (every directory in the build dir except the copied "page" source).
                 let lProducedDirectory: string | null = null;
                 for (const lEntry of Deno.readDirSync(lBuildDirectory)) {
-                    if (lEntry.isDirectory && lEntry.name !== 'app') {
+                    if (lEntry.isDirectory && lEntry.name !== 'page') {
                         lProducedDirectory = FileSystem.pathToAbsolute(lBuildDirectory, lEntry.name);
                         break;
                     }
@@ -159,7 +159,7 @@ export class DesktopBuilder {
 
     /**
      * Build the two pieces injected into the server template: the raw-module imports and the manifest entries, one
-     * per app file. Together they embed the whole app directory into the binary through the module graph.
+     * per page file. Together they embed the whole page directory into the binary through the module graph.
      *
      * @param pRelativeFiles - App-root-relative posix paths of every file to embed (e.g. "index.html", "bundle/app.js").
      *
@@ -176,7 +176,7 @@ export class DesktopBuilder {
             const lMimeType: string = MIME_TYPES[lExtension] ?? (lIsText ? 'text/plain' : 'application/octet-stream');
 
             const lVariable: string = `lFile${pIndex}`;
-            const lSpecifier: string = JSON.stringify(`./app/${pRelativeFile}`);
+            const lSpecifier: string = JSON.stringify(`./page/${pRelativeFile}`);
             const lManifestKey: string = JSON.stringify(`/${pRelativeFile}`);
 
             lImportLines.push(`import ${lVariable} from ${lSpecifier} with { type: ${JSON.stringify(lAttributeType)} };`);

@@ -1,5 +1,5 @@
 {
     "type": "command",
-    "name": "app",
+    "name": "page",
     "commandEntryClass": "KgCliCommand"
 }

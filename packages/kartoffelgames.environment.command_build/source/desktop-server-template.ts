@@ -1,8 +1,8 @@
 // Template for the generated desktop server entrypoint. DesktopBuilder copies this file into the temporary build
-// directory and replaces the two marker lines below with the app's embedded module imports and manifest entries:
+// directory and replaces the two marker lines below with the page's embedded module imports and manifest entries:
 //   - the IMPORTS marker -> one raw-module import per app file (with { type: "text" | "bytes" }).
 //   - the MANIFEST marker -> one manifest entry per app file (path -> { body, mime type }).
-// It embeds the whole app directory through the module graph (deno desktop does not embed via --include) and serves
+// It embeds the whole page directory through the module graph (deno desktop does not embed via --include) and serves
 // it from memory. It must stay self-contained (Deno globals only) so it type-checks both as-is and after replacement.
 
 // __DESKTOP_SERVER_IMPORTS__
@@ -13,7 +13,7 @@ const MANIFEST: Map<string, DesktopFileEntry> = new Map<string, DesktopFileEntry
     // __DESKTOP_SERVER_MANIFEST__
 ]);
 
-// Cross-origin isolation headers so SharedArrayBuffer is available, matching the app dev server.
+// Cross-origin isolation headers so SharedArrayBuffer is available, matching the page dev server.
 const DEFAULT_HEADERS: Record<string, string> = {
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Cross-Origin-Embedder-Policy': 'credentialless'

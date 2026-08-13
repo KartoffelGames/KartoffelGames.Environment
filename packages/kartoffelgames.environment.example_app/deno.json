@@ -3,19 +3,19 @@
     "version": "5.0.1",
     "license": "LGPL-3.0-only",
     "tasks": {},
-    "exports": "./app/source/index.ts",
+    "exports": "./page/source/index.ts",
     "imports": {},
     "kg": {
         "name": "Kartoffelgames.Environment.Example_App",
-        "source": "./app/source",
+        "source": "./page/source",
         "config": {
-            "app": {
+            "page": {
                 "port": 8088,
                 "mimeTypeMapping": {}
             },
             "build": {
                 "files": {
-                    "./app/source/index.ts": { "name": "app", "reloadable": true }
+                    "./page/source/index.ts": { "name": "app", "reloadable": true }
                 },
                 "desktop": {
                     "name": "KartoffelGames Example App",

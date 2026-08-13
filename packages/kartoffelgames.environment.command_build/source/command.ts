@@ -65,8 +65,8 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             return;
         }
 
-        // Bundle every configured file into the shared app bundle directory.
-        const lOutputDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'app', 'bundle');
+        // Bundle every configured file into the shared page bundle directory.
+        const lOutputDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page', 'bundle');
         for (const [lInputFilePath, lFile] of lFileEntryList) {
             // The reload client is only injected when it was requested and the entry opts in via "reloadable".
             const lInjectReload: boolean = lReloadEnabled && lFile.reloadable === true;
