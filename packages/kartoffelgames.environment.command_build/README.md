@@ -48,14 +48,14 @@ A map of **input file path** → bundle options. Each file is bundled to `app/bu
 
 ### `desktop`
 
-Desktop packaging configuration, or omit it (or set it to `null`) to build no desktop binary. The desktop build embeds the `app/` directory and builds **every configured `output` target**. `deno desktop` cross-compiles from a single host (the runtime artifacts for each target are downloaded automatically), so a build machine can turn out the Windows, macOS and Linux binaries at once. Only real macOS code signing / notarization is host-bound; unsigned binaries carry an ad-hoc signature by default.
+Desktop packaging configuration, or omit it (or set it to `null`) to build no desktop binary. The desktop build embeds the `app/` directory (its files ride into the binary through the generated server's module graph). Configure an `output` for each platform you ship, but note that `deno desktop` (2.9.x) does **not** cross-compile the app: a build only produces binaries for the **host** OS/arch. So on any given machine the build produces the output whose platform matches the host and **skips** the others with a message — build each platform on its own OS (e.g. a CI matrix). Unsigned binaries carry an ad-hoc signature by default; real macOS signing / notarization is a separate, host-bound step.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `string` | Application display name. |
 | `identifier` | `string` | Reverse-DNS application id. |
 | `icons` | `{ windows?, macos?, linux? }` | Per-OS icon paths. |
-| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Per-target output paths for the produced app. macOS is split by architecture (Apple Silicon / Intel). A bare path produces an unpackaged app folder; a packaged extension (`.msi`/`.app`/`.dmg`/`.AppImage`/…) switches format. |
+| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Destination path for each target's produced app directory (macOS split by architecture — Apple Silicon / Intel). The build always emits `deno desktop`'s unpackaged app-folder layout; the path is just where it is placed, the extension does not change the format. |
 | `backend` | `"webview" \| "cef"` | Optional rendering backend. Defaults to `webview`. |
 
 ## Installation
