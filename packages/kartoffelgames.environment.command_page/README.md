@@ -10,18 +10,32 @@ Unlike the `scratchpad` command, `page` outputs bundled files to disk, making th
 
 On first run, the command initializes a `page/` directory with starter `index.html`, `index.css`, and `source/index.ts` files if they do not already exist.
 
+The page bundle itself is produced by the [`build`](../kartoffelgames.environment.command_build/README.md) command: `page` runs `build` restricted to the `page` build type with the live-reload client injected (equivalent to `kg build --type=page --injectreload`). This means the page bundle must be configured as a `page`-type entry in `kg.config.build`, pointing at the page entry file:
+
+```jsonc
+{
+    "kg": {
+        "config": {
+            "build": {
+                "./page/source/index.ts": { "type": "page", "name": "page" }
+            }
+        }
+    }
+}
+```
+
+That entry produces `page/build/page.js` (+ `.map`), which the starter `index.html` loads via `<script src="/build/page.js">`.
+
 ## Configuration
 
-The page feature is configured in the package's `deno.json` under `kg.config.page`:
+The page server is configured in the package's `deno.json` under `kg.config.page`:
 
 ```jsonc
 {
     "kg": {
         "config": {
             "page": {
-                "enabled": false,
                 "mimeTypeMapping": {},
-                "build": false,
                 "port": 8088
             }
         }
@@ -31,9 +45,7 @@ The page feature is configured in the package's `deno.json` under `kg.config.pag
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enabled` | `boolean` | `false` | Whether page building and serving is enabled for this package. |
 | `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server (see below). |
-| `build` | `boolean` | `false` | When `true`, run the `build` command for the package before bundling the page (produces `library/<type>/…`). |
 | `port` | `number` | `8088` | The port the local HTTP server listens on. |
 
 ### MIME Type Mapping
@@ -72,15 +84,10 @@ Register this command in the root `deno.json` of your monorepo:
 ## Usage
 
 ```
-deno task kg page [-a | -p=@scope/name] [--force] [--build-only]
+deno task kg page [-a | -p=@scope/name]
 ```
 
-### Parameters
-
-| Parameter | Short | Description |
-|-----------|-------|-------------|
-| `--force` | `-f` | Force building even if the page feature is disabled in the package configuration. |
-| `--build-only` | `-b` | Only build the page files without starting the HTTP server. |
+The command always builds the page and then serves it. To build the page without serving, use the [`build`](../kartoffelgames.environment.command_build/README.md) command directly (`kg build --type=page`).
 
 ### Package Selection
 
@@ -94,9 +101,6 @@ deno task kg page [-a | -p=@scope/name] [--force] [--build-only]
 # Build and serve the page for a specific package
 deno task kg page -p=@kartoffelgames/core
 
-# Only build without serving
-deno task kg page -p=@kartoffelgames/core -b
-
-# Force build even if page is disabled in config
-deno task kg page -p=@kartoffelgames/core -f
+# Build the page without serving (via the build command)
+deno task kg build -p=@kartoffelgames/core --type=page
 ```
