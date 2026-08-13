@@ -1,5 +1,5 @@
 {
-    "name": "@kartoffelgames/environment-command-page",
+    "name": "@kartoffelgames/environment-command-app",
     "version": "5.0.1",
     "license": "LGPL-3.0-only",
     "tasks": {},
@@ -19,13 +19,11 @@
         ]
     },
     "kg": {
-        "name": "Kartoffelgames.Environment.Command_Page",
+        "name": "Kartoffelgames.Environment.Command_App",
         "config": {
-            "page": {
-                "enabled": false,
+            "app": {
                 "port": 8088,
-                "mimeTypeMapping": {},
-                "build": false
+                "mimeTypeMapping": {}
             },
             "scratchpad": {
                 "port": 8888,
@@ -40,7 +38,10 @@
                 "enableNode": false,
                 "nodeDirectory": "./node"
             },
-            "build": {}
+            "build": {
+                "files": {},
+                "desktop": null
+            }
         },
         "source": "./source"
     }

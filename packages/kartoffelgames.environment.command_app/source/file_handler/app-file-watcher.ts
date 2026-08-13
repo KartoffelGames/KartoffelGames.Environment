@@ -1,8 +1,8 @@
 import { FileSystem } from "@kartoffelgames/environment-core";
 
-export class PageFileWatcher {
+export class AppFileWatcher {
     private readonly mIgnoredPaths: Array<string>;
-    private readonly mListener: Array<PageFileWatcherListener>;
+    private readonly mListener: Array<AppFileWatcherListener>;
     private readonly mWatchedPaths: Array<string>;
     private mWatcher: Deno.FsWatcher | null;
 
@@ -15,7 +15,7 @@ export class PageFileWatcher {
     public constructor(pWatchPaths: Array<string>, pIgnorePaths: Array<string>) {
         this.mWatchedPaths = pWatchPaths;
         this.mIgnoredPaths = pIgnorePaths.map((pPath) => FileSystem.normalizePath(pPath));
-        this.mListener = new Array<PageFileWatcherListener>();
+        this.mListener = new Array<AppFileWatcherListener>();
         this.mWatcher = null;
     }
 
@@ -24,12 +24,12 @@ export class PageFileWatcher {
      * 
      * @param pListener - Listener to add.
      */
-    public addListener(pListener: PageFileWatcherListener): void {
+    public addListener(pListener: AppFileWatcherListener): void {
         this.mListener.push(pListener);
     }
 
     /**
-     * Initialize watcher for page files.
+     * Initialize watcher for app files.
      * 
      * @param pWatchPaths - Watch paths.
      * @param pWatchCallback - Watch callback.
@@ -114,4 +114,4 @@ export class PageFileWatcher {
     }
 }
 
-export type PageFileWatcherListener = () => void;
+export type AppFileWatcherListener = () => void;

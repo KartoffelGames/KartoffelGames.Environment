@@ -1,6 +1,6 @@
 import { Console, FileSystem } from '@kartoffelgames/environment-core';
 
-export class PageHttpServer {
+export class AppHttpServer {
     private readonly mMimeTypesMapping: Record<string, string>;
     private readonly mOpenWebsockets: Set<WebSocket>;
     private readonly mPort: number;
@@ -37,7 +37,6 @@ export class PageHttpServer {
     /**
      * Start webserver.
      * Listens on localhost and serves files from the configured root path.
-     * Serves the package library directory when any /library/ path is requested.
      */
     public async start(): Promise<void> {
         // Prevent server from starting multiple times.
