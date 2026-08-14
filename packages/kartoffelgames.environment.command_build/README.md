@@ -44,6 +44,8 @@ Builds are configured in the package's `deno.json` under `kg.config.build`. Ever
 
 A map of **input file path** → entry options. The `type` field selects the entry kind and the rest of its shape.
 
+Entries are built **sequentially, in the order they are declared** in `files` (the object's key order, exactly as written in `deno.json`) — each entry's build fully completes before the next one starts. Order the entries accordingly when one build depends on another's output (e.g. declare a `bundle`/`page` entry before a `desktop` entry that includes its output).
+
 #### `page` / `bundle` entries
 
 | Field | Type | Description |
