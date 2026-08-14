@@ -103,17 +103,18 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     }
 
     /**
-     * Bundle the page by running the build command in bundle-only mode with the live-reload client injected.
-     * The build command writes the bundled files into their configured output paths. Only "page" type entries
-     * receive the live-reload client. The desktop packaging step is skipped (bundle-only) to keep the watch fast.
+     * Bundle the page by running the build command for the "page" and "bundle" types with the live-reload client
+     * injected. The build command writes the bundled files into their configured output paths. Only "page" type
+     * entries receive the live-reload client. Restricting the build to the "page" and "bundle" types skips the
+     * (heavy) desktop packaging step, keeping the watch fast.
      *
      * @param pProject - Project.
      * @param pPackage - Package to bundle the page for.
      */
     private async bundlePage(pProject: Project, pPackage: Package): Promise<void> {
-        // Run the build command in bundle-only mode with the live-reload client injected.
+        // Run the build command for the "page" and "bundle" types only, with the live-reload client injected.
         const lBuildParameter: CliParameter = new CliParameter('build');
-        lBuildParameter.set('bundle-only', null);
+        lBuildParameter.set('types', 'page,bundle');
         lBuildParameter.set('injectreload', null);
 
         await new BuildCommand().run(pProject, pPackage, lBuildParameter);

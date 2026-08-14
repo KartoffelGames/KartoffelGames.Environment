@@ -32,7 +32,7 @@ Then open <http://127.0.0.1:8088>.
 Produce just the bundles (no desktop compile):
 
 ```bash
-deno task kg build -p=@kartoffelgames/environment-example-app --bundle-only
+deno task kg build -p=@kartoffelgames/environment-example-app --types=page,bundle
 ```
 
 Build the native desktop binary (requires Deno ≥ 2.9 with `deno desktop`). `deno desktop` does not cross-compile, so

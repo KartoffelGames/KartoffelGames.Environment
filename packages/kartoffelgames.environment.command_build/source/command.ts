@@ -13,9 +13,10 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                 parameters: {
                     root: 'build',
                     optional: {
-                        // Only produce the bundles, skip the (heavy) desktop packaging step.
-                        'bundle-only': {
-                            shortName: 'b'
+                        // Comma-separated list of build types to build (e.g. "page,bundle"). When omitted, everything
+                        // configured is built.
+                        types: {
+                            shortName: 't'
                         },
                         // Inject the live-reload client into "page" type entries.
                         injectreload: {
@@ -52,15 +53,22 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
 
         // Read the build configuration of the package.
         const lConfiguration: BuildConfiguration = pPackage.cliConfigurationOf(this);
-        const lFileEntryList: Array<[string, BuildFile]> = Object.entries(lConfiguration.files ?? {});
         const lDesktop: DesktopConfiguration | null = lConfiguration.desktop ?? null;
 
         // Parameters.
-        const lBundleOnly: boolean = pParameter.has('bundle-only');
         const lReloadEnabled: boolean = pParameter.has('injectreload');
 
+        // Determine which build types to produce. Without "--types" everything configured is built; with it only the
+        // listed types are built. The value is a comma-separated list of build types (e.g. "page,bundle").
+        const lTypeFilterEnabled: boolean = pParameter.has('types');
+        const lRequestedTypes: Set<BuildType> = this.parseBuildTypes(lTypeFilterEnabled ? pParameter.get('types') : null);
+
+        // Only build the file entries whose type was requested (or every entry when no "--types" filter is set).
+        const lFileEntryList: Array<[string, BuildFile]> = Object.entries(lConfiguration.files ?? {})
+            .filter(([, lFile]: [string, BuildFile]) => !lTypeFilterEnabled || lRequestedTypes.has(lFile.type));
+
         // Skip when nothing is configured to build (and the desktop step is disabled or skipped).
-        if (lFileEntryList.length === 0 && (lBundleOnly || lDesktop === null)) {
+        if (lFileEntryList.length === 0 && (lTypeFilterEnabled || lDesktop === null)) {
             lConsole.writeLine('Nothing configured to build. Skip build.');
             return;
         }
@@ -86,12 +94,54 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             await this.bundleFile(pPackage, lInputFilePath, lOutputName, lOutputDirectory, lInjectReload);
         }
 
-        // Build the desktop application unless only bundling was requested.
-        if (!lBundleOnly && lDesktop !== null) {
+        // Build the desktop application on a full build (no "--types" filter). Desktop is not a selectable build type
+        // yet; a follow-up task will turn "desktop" into a selectable type and gate it through the type filter.
+        if (!lTypeFilterEnabled && lDesktop !== null) {
             await new DesktopBuilder().build(pPackage, lDesktop);
         }
 
         lConsole.writeLine('Build successful');
+    }
+
+    /**
+     * Parse the comma-separated `--types` value into a set of build types.
+     *
+     * @param pRawTypes - Raw comma-separated types value, or null when no "--types" filter was set.
+     *
+     * @returns The set of requested build types. Empty when no filter was set.
+     *
+     * @throws {@link Error}
+     * When an unknown build type is requested, or when the filter is set but resolves to no valid type.
+     */
+    private parseBuildTypes(pRawTypes: string | null): Set<BuildType> {
+        const lRequestedTypes: Set<BuildType> = new Set<BuildType>();
+
+        // No filter set: an empty set means "build everything".
+        if (pRawTypes === null) {
+            return lRequestedTypes;
+        }
+
+        for (const lRawType of pRawTypes.split(',')) {
+            // Ignore empty segments produced by stray or trailing commas.
+            const lType: string = lRawType.trim();
+            if (lType === '') {
+                continue;
+            }
+
+            // Only file entry types are selectable for now. "desktop" becomes a selectable type in a follow-up task.
+            if (lType !== 'page' && lType !== 'bundle') {
+                throw new Error(`Unknown build type "${lType}". Valid build types are: page, bundle.`);
+            }
+
+            lRequestedTypes.add(lType);
+        }
+
+        // A set "--types" filter must resolve to at least one valid type.
+        if (lRequestedTypes.size === 0) {
+            throw new Error('Parameter "--types" needs at least one build type.');
+        }
+
+        return lRequestedTypes;
     }
 
     /**
@@ -166,6 +216,11 @@ export type BuildConfiguration = {
     desktop?: DesktopConfiguration | null;
 };
 
+/**
+ * Selectable build type.
+ */
+export type BuildType = 'page' | 'bundle';
+
 export type BuildFile = {
     /**
      * Kept for now but no longer used by the bundle process (the output filename comes from `output`).
@@ -176,7 +231,7 @@ export type BuildFile = {
      * Entry kind. A "page" entry receives the live-reload client when the build runs with `--injectreload`
      * (i.e. from the `page` dev server); a "bundle" entry never does.
      */
-    type: 'page' | 'bundle';
+    type: BuildType;
 
     /**
      * Output path of the produced bundle, including the filename (e.g. `./page/bundle/app.js`).

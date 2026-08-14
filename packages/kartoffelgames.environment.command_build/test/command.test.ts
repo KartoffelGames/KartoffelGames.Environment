@@ -80,8 +80,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
-    await pContext.step('Build - Skips the desktop step in bundle-only mode', async (): Promise<void> => {
-        // Setup. Configure a desktop output for the current platform, but run bundle-only.
+    await pContext.step('Build - Skips the desktop step when --types is set', async (): Promise<void> => {
+        // Setup. Configure a desktop output for the current platform, but restrict the build to file types.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'page/source/index.ts', 'console.log(\'app\');\n');
@@ -101,12 +101,73 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }, null, 4));
         try {
             // Process.
-            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--bundle-only': '' });
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'page,bundle' });
 
             // Evaluation. The bundle is produced but no desktop output directory is created.
             expect(lResult.success).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/page/bundle/app.js')).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/dist')).toBeFalsy();
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
+    await pContext.step('Build - Only builds the entries of the requested types', async (): Promise<void> => {
+        // Setup. One "page" entry and one "bundle" entry, but build only the "bundle" type.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'source/worker.ts', 'console.log(\'worker\');\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: {
+                        files: {
+                            './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' },
+                            './source/worker.ts': { name: 'worker', type: 'bundle', output: './page/bundle/worker.js' }
+                        }
+                    }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'bundle' });
+
+            // Evaluation. Only the "bundle" entry is built; the "page" entry is skipped.
+            expect(lResult.success).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/page/bundle/worker.js')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/page/bundle/main.js')).toBeFalsy();
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
+    await pContext.step('Build - Fails on an unknown build type', async (): Promise<void> => {
+        // Setup. A single valid entry, but request an unknown type.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: { files: { './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' } } }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'unknown' });
+
+            // Evaluation. The command fails and reports the unknown type.
+            expect(lResult.success).toBeFalsy();
+            expect(lResult.output).toContain('Unknown build type "unknown"');
         } finally {
             await lHelper.dispose();
         }

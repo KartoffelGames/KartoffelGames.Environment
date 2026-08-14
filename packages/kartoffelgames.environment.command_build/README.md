@@ -81,14 +81,14 @@ Register this command in the root `deno.json` of your monorepo:
 ## Usage
 
 ```
-deno task kg build [-a | -p=@scope/name] [--bundle-only] [--injectreload]
+deno task kg build [-a | -p=@scope/name] [--types=page,bundle] [--injectreload]
 ```
 
 ### Parameters
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--bundle-only` | `-b` | Only produce the bundles; skip the desktop packaging step. Used by the `page` dev server so a file change re-bundles quickly. |
+| `--types` | `-t` | Comma-separated list of build types to build (`page`, `bundle`). Only the file entries whose `type` is listed are built, and the desktop packaging step is skipped. When omitted, everything configured is built. Used by the `page` dev server (`--types=page,bundle`) so a file change re-bundles quickly. |
 | `--injectreload` | `-r` | Inject the live-reload client into `page` type entries. |
 
 ### Package Selection
@@ -104,8 +104,8 @@ deno task kg build [-a | -p=@scope/name] [--bundle-only] [--injectreload]
 # Bundle and (if configured) package the desktop app for a specific package
 deno task kg build -p=@kartoffelgames/core
 
-# Only bundle, skip the desktop packaging step
-deno task kg build -p=@kartoffelgames/core --bundle-only
+# Only build the page and bundle types, skip the desktop packaging step
+deno task kg build -p=@kartoffelgames/core --types=page,bundle
 
 # Build all packages
 deno task kg build -a

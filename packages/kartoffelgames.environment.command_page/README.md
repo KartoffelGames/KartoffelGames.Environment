@@ -14,7 +14,7 @@ The server sends `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Emb
 
 The `page/` directory and its contents are owned by the package. The command does not scaffold any files; it only ensures the directory exists.
 
-The bundles are produced by the [`build`](../kartoffelgames.environment.command_build/README.md) command: `page` runs `build` in bundle-only mode with the live-reload client injected (equivalent to `kg build --bundle-only --injectreload`). Configure the bundles as `build.files` entries; give the browser entry `"type": "page"` so it receives the live-reload client during development (a `"bundle"` entry, e.g. a worker, does not):
+The bundles are produced by the [`build`](../kartoffelgames.environment.command_build/README.md) command: `page` runs `build` for the `page` and `bundle` types with the live-reload client injected (equivalent to `kg build --types=page,bundle --injectreload`). Configure the bundles as `build.files` entries; give the browser entry `"type": "page"` so it receives the live-reload client during development (a `"bundle"` entry, e.g. a worker, does not):
 
 ```jsonc
 {
@@ -93,7 +93,7 @@ Register this command in the root `deno.json` of your monorepo:
 deno task kg page [-a | -p=@scope/name]
 ```
 
-The command always builds the page and then serves it. To build without serving, use the [`build`](../kartoffelgames.environment.command_build/README.md) command (`kg build --bundle-only`).
+The command always builds the page and then serves it. To build without serving, use the [`build`](../kartoffelgames.environment.command_build/README.md) command (`kg build --types=page,bundle`).
 
 ### Package Selection
 
@@ -108,5 +108,5 @@ The command always builds the page and then serves it. To build without serving,
 deno task kg page -p=@kartoffelgames/core
 
 # Build the page bundles without serving (via the build command)
-deno task kg build -p=@kartoffelgames/core --bundle-only
+deno task kg build -p=@kartoffelgames/core --types=page,bundle
 ```
