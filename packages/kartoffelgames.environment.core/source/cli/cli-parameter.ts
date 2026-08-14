@@ -1,9 +1,7 @@
 import type { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
 /**
- * The `CliParameter` class provides methods to manage command-line parameters.
- * It allows extracting the root command, checking for the existence of parameters,
- * retrieving parameter values, setting parameter values, and deleting parameters.
+ * Manages command-line parameters: extract the root command, check, get, set and delete values.
  */
 export class CliParameter {
     private static readonly mGlobalParameters: Map<string, CliParameterOptionalParameter> = (() => {
@@ -24,21 +22,15 @@ export class CliParameter {
     })();
 
     /**
-     * Creates a `CliParameter` instance for a given command and its parameters.
+     * Create a `CliParameter` for a command from its raw parameters.
      *
-     * @param pCliCommand - The CLI command package containing command information.
-     * @param pParameter - An array of strings representing the parameters passed to the command.
-     * 
-     * @returns A `CliParameter` instance populated with the provided parameters.
-     * 
+     * @param pCliCommand - CLI command package containing command information.
+     * @param pParameter - Parameters passed to the command.
+     *
+     * @returns Populated `CliParameter` instance.
+     *
      * @throws {@link Error}
-     * Will throw an error if no parameters are provided.
-     * @throws {@link Error}
-     * Will throw an error if the root parameter does not match the expected value.
-     * @throws {@link Error}
-     * Will throw an error if a required parameter is missing or starts with a dash.
-     * @throws {@link Error}
-     * Will throw an error if an unexpected parameter is encountered.
+     * When no parameters are given, the root does not match, a required parameter is missing or starts with a dash, or an unexpected parameter is encountered.
      */
     public static forCommand(pCliCommand: ICliPackageCommand, pParameter: Array<string>): CliParameter {
         // At least one parameter (the root) is required.
@@ -148,13 +140,14 @@ export class CliParameter {
     }
 
     /**
-     * Parses an array of command-line parameters and constructs a `CliParameter` object that only contains global parameters.
-     * 
-     * @param pParameter - An array of strings representing the command-line parameters.
-     * 
-     * @returns A `CliParameter` object constructed from the provided parameters.
-     * 
-     * @throws {Error} If no command parameter value was specified.
+     * Parse command-line parameters into a `CliParameter` containing only global parameters.
+     *
+     * @param pParameter - Command-line parameters.
+     *
+     * @returns Constructed `CliParameter`.
+     *
+     * @throws {@link Error}
+     * When no parameters are given.
      */
     public static globals(pParameter: Array<string>): CliParameter {
         // At least one parameter (the root) is required.
@@ -235,16 +228,14 @@ export class CliParameter {
 
     
     /**
-     * Retrieves the value of a specified parameter.
+     * Get the value of a parameter.
      *
-     * @param pParameterName - The name of the parameter to retrieve.
-     * 
-     * @returns The value of the specified parameter.
-     * 
-     * @throws {@link Error} 
-     * Will throw an error if the parameter does not exist.
-     * @throws {@link Error} 
-     * Will throw an error if the parameter exists but does not have a value.
+     * @param pParameterName - Parameter name.
+     *
+     * @returns Parameter value.
+     *
+     * @throws {@link Error}
+     * When the parameter does not exist or has no value.
      */
     public get(pParameterName: string): string {
         // Check if parameter exists.

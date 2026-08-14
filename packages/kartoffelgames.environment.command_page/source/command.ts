@@ -28,8 +28,10 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
     /**
      * Execute command.
-     * @param pParameter - Command parameter.
+     *
      * @param pProject - Project.
+     * @param pPackage - Package the command is applied to.
+     * @param _pParameter - Command parameter.
      */
     public async run(pProject: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
         // Needs a package to run the page server.
@@ -47,8 +49,8 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
         const lPageBundleDirectory: string = FileSystem.pathToAbsolute(lPageDirectory, 'bundle');
 
-        // Ensure the page directory exists so the file watcher and http server have a valid root. The page content
-        // itself is owned by the package and is not scaffolded by this command.
+        // Ensure the page directory exists so the watcher and http server have a valid root. Its content is owned by
+        // the package, not scaffolded here.
         FileSystem.createDirectory(lPageDirectory);
 
         // Create watch paths for package source and page directory.
@@ -64,20 +66,20 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         lConsole.writeLine('Starting initial bundle...');
         await this.bundlePage(pProject, pPackage);
 
-        // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
+        // Halt other watcher events while one is processing, to prevent concurrent builds.
         let lBuilding: boolean = false;
 
         // Rebundle page files and refresh connected browsers when files have changed.
         // The bundle output directory is ignored so the bundler writing its own output does not trigger another build.
         const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths, [lPageBundleDirectory]);
         lWatcher.addListener(async () => {
-            // Skip when a build is already running, to prevent multiple builds at the same time.
+            // Skip when a build is already running.
             if (lBuilding) {
                 return;
             }
             lBuilding = true;
 
-            // Signal that a rebuild has started, as bundling can take a while and would otherwise look unresponsive.
+            // Signal the rebuild, since bundling can take a while.
             lConsole.writeLine('File change detected. Bundling...', 'yellow');
 
             // Rebundle the page. Bundle errors are reported but must not stop the watcher.
@@ -105,9 +107,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
     /**
      * Bundle the page by running the build command for the "page" and "bundle" types with the live-reload client
-     * injected. The build command writes the bundled files into their configured output paths. Only "page" type
-     * entries receive the live-reload client. Restricting the build to the "page" and "bundle" types skips the
-     * (heavy) desktop packaging step, keeping the watch fast.
+     * injected. Restricting to those types skips the desktop step, keeping the watch fast.
      *
      * @param pProject - Project.
      * @param pPackage - Package to bundle the page for.

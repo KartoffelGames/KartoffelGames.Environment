@@ -29,12 +29,13 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
     /**
      * Execute command.
-     * 
-     * @param pParameter - Command parameter.
+     *
      * @param pProjectHandler - Project.
+     * @param pPackage - Package the command is applied to.
+     * @param _pParameter - Command parameter.
      */
     public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
-        // Needs a package to run test.
+        // Needs a package to run scratchpad.
         if (pPackage === null) {
             throw new Error('Package to run scratchpad not specified.');
         }
@@ -73,18 +74,18 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         await lScratchpadBundler.bundle();
         lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
         
-        // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
+        // Halt other watcher events while one is processing, to prevent concurrent builds.
         let lBuilding: boolean = false;
 
         // Rebundle scratchpad files and refresh connected browsers when files have changed.
         lWatcher.addListener(async () => {
-            // Skip when a build is already running, to prevent multiple builds at the same time.
+            // Skip when a build is already running.
             if (lBuilding) {
                 return;
             }
             lBuilding = true;
 
-            // Signal that a rebuild has started, as bundling can take a while and would otherwise look unresponsive.
+            // Signal the rebuild, since bundling can take a while.
             lConsole.writeLine('File change detected. Bundling...', 'yellow');
 
             // Bundle files and update server served scratchpad files once they have changed.
@@ -114,13 +115,9 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
     }
 
     /**
-     * Initializes the scratchpad files for the given package.
-     * 
-     * This method creates a scratchpad directory and initializes the following files:
-     * - `index.html`: A basic HTML file with a linked CSS file and a script.
-     * - `index.css`: A basic CSS file that styles a paragraph element.
-     * - `index.ts`: A TypeScript file that logs "Hello World!!!" to the console.
-     * 
+     * Create the scratchpad directory and its starter files (index.html, index.css, source/index.ts) if they do not
+     * already exist.
+     *
      * @param pScratchpadDirectory - Absolute path of the scratchpad directory the files are initialized in.
      */
     private initScratchpadFiles(pScratchpadDirectory: string): void {

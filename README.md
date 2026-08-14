@@ -1,8 +1,8 @@
 # KartoffelGames Environment
 
-A build-environment toolchain for **Deno-based monorepos**. It provides a single, pluggable command-line interface (`kg`) that manages a workspace of packages: scaffolding new packages, bundling, testing, versioning, transforming to other runtimes, and serving live-reloading dev pages.
+A build-environment toolchain for **Deno-based monorepos**. It provides a single, pluggable command-line interface (`kg`) that manages a workspace of packages: scaffolding, bundling, testing, versioning, transforming to other runtimes, and serving live-reloading dev pages.
 
-The whole system is modular: the CLI itself contains almost no command logic. Every command (and every project blueprint) lives in its own package that is loaded dynamically at runtime based on the root project's configuration. This means you can pick exactly the commands you need — and add your own.
+The system is modular. The CLI itself contains almost no command logic. Every command and project blueprint lives in its own package, loaded dynamically at runtime from the root project's configuration, so you can pick exactly the commands you need and add your own.
 
 ## Quick start
 
@@ -12,7 +12,7 @@ Initialize a new monorepo project in an empty directory:
 deno run -A jsr:@kartoffelgames/environment
 ```
 
-This scaffolds a root project from the built-in project blueprint, asks for a project scope (e.g. `@example`), and wires up a `kg` task. Afterwards, list everything the CLI can do:
+This scaffolds a root project from the built-in blueprint, asks for a project scope (e.g. `@example`), and wires up a `kg` task. Afterwards, list everything the CLI can do:
 
 ```bash
 deno task kg help
@@ -34,10 +34,10 @@ The environment is split into three kinds of packages:
 
 When you run `deno task kg <command> [flags]`:
 
-1. The **CLI host** (`environment-cli`) trims the process arguments down to everything after the CLI entry file and parses the **global flags** (`-a`/`--all`, `-p`/`--package`, `--debug`).
-2. It constructs a `Project` by walking **up** the directory tree until it finds the `deno.json` marked with `kg.root: true`. That file is the single source of truth for the monorepo.
-3. It reads the `kg.cli` array from the root `deno.json` — a list of import paths to command and blueprint packages — and resolves the one whose `kg-cli.config.json` `name` matches the command word you typed.
-4. It imports that package, instantiates its command class, validates your parameters against the command's declared parameter schema, and runs it — once per target package.
+1. The **CLI host** (`environment-cli`) parses the **global flags** (`-a`/`--all`, `-p`/`--package`, `--debug`).
+2. It constructs a `Project` by walking up the directory tree until it finds the `deno.json` marked with `kg.root: true`, the single source of truth for the monorepo.
+3. It reads the `kg.cli` array from the root `deno.json` (import paths to command and blueprint packages) and resolves the one whose `kg-cli.config.json` `name` matches the command word.
+4. It imports that package, instantiates its command class, validates your parameters against the command's parameter schema, and runs it once per target package.
 
 ### Project vs. package scope
 
@@ -80,8 +80,8 @@ The root `deno.json` marks the monorepo and configures the CLI under a `kg` bloc
 | Field | Type | Description |
 |-------|------|-------------|
 | `kg.root` | `boolean` | Must be `true`. Marks this `deno.json` as the monorepo root. The CLI searches parent directories for it. |
-| `kg.packages` | `string` | Relative path to the directory holding all packages. Package discovery scans one level deep for `deno.json` files here. |
-| `kg.cli` | `string[]` | Import paths of the command and blueprint packages to load. Add an entry here to enable a command. |
+| `kg.packages` | `string` | Relative path to the directory holding all packages. Discovery scans one level deep for `deno.json` files. |
+| `kg.cli` | `string[]` | Import paths of the command and blueprint packages to load. Add an entry to enable a command. |
 
 ## Package configuration
 
@@ -104,11 +104,11 @@ Each package has its own `deno.json`. In addition to the standard Deno fields, t
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `kg.name` | `string` | The package **id** — a normalized name derived from `name` (e.g. `@example/my-package` → `Example.My_Package`). Used to target the package with `-p`. It is always recomputed from `name`. |
+| `kg.name` | `string` | The package id, a normalized name derived from `name` (e.g. `@example/my-package` becomes `Example.My_Package`). Used to target the package with `-p`. Always recomputed from `name`. |
 | `kg.source` | `string` | Relative path to the package source directory. Defaults to `./source`. |
-| `kg.config` | `object` | Per-command configuration. Each command owns one key here (e.g. `test`, `page`, `transform`). Missing values are filled from the command's defaults. |
+| `kg.config` | `object` | Per-command configuration. Each command owns one key (e.g. `test`, `page`, `transform`). Missing values are filled from the command's defaults. |
 
-Each command defines its own configuration shape and defaults; see the per-command README. The `sync` command re-applies every command's default configuration into each package's `kg.config`, keeping the whole workspace aligned after a version bump or a schema change.
+Each command defines its own configuration shape and defaults, documented in its per-command README. The `sync` command re-applies every command's default configuration into each package's `kg.config`, keeping the workspace aligned after a version bump or a schema change.
 
 ## The core package
 
@@ -117,14 +117,14 @@ Each command defines its own configuration shape and defaults; see the per-comma
 | Export | Purpose |
 |--------|---------|
 | `Project` | Represents the monorepo root. Finds the root `deno.json`, reads/saves configuration, enumerates and looks up packages, exposes `CliPackages`. |
-| `Package` | Represents a single package. Reads/saves its `deno.json`, resolves source directory, and reads/merges per-command `kg.config`. Also converts a package name to its normalized id (`Package.nameToId`). |
+| `Package` | Represents a single package. Reads/saves its `deno.json`, resolves the source directory, reads/merges per-command `kg.config`, and normalizes a package name to its id (`Package.nameToId`). |
 | `CliPackages` | Discovers command/blueprint plugin packages from the root `kg.cli` list (via each plugin's `kg-cli.config.json`) and instantiates their command classes. |
-| `CliCommand` | Wraps a resolved plugin command; validates parameters and runs it against a package. |
+| `CliCommand` | Wraps a resolved plugin command, validates parameters, and runs it against a package. |
 | `CliParameter` | Parses and validates the invocation into root/required/optional parameters, including the shared global flags. |
-| `ICliPackageCommand` | The interface every command class implements: an `information` descriptor (parameters + configuration schema) plus a `run()` method. |
+| `ICliPackageCommand` | The interface every command class implements: an `information` descriptor (parameters and configuration schema) plus a `run()` method. |
 | `Import` | Dynamic `import()` helpers for modules, JSON, and resolving import specifiers to URLs/paths. |
-| `Process` / `ProcessParameter` / `ProcessContext` | Spawn child processes (e.g. `deno test`), capture or inherit their I/O, and read the current process args / working directory. |
-| `FileSystem` | Synchronous file/directory helpers: read/write, copy, glob, recursive find (forward **and** reverse/upward search), path conversion. |
+| `Process` / `ProcessParameter` / `ProcessContext` | Spawn child processes (e.g. `deno test`), capture or inherit their I/O, and read the current process args and working directory. |
+| `FileSystem` | Synchronous file/directory helpers: read/write, copy, glob, recursive find (forward and reverse/upward search), path conversion. |
 | `Console` | Console output helpers: colored lines, banners, and validated prompts. |
 
 ### Anatomy of a command
@@ -161,12 +161,12 @@ export class KgCliCommand implements ICliPackageCommand<MyConfig> {
 ```
 
 - **`required`** parameters are positional and must not start with a dash.
-- **`optional`** parameters are named flags. `shortName` enables a one-letter alias; a `default` makes the flag always present with that value.
-- **`configuration`** (optional) declares a config block stored under `kg.config[name]` in each package's `deno.json`, with defaults filled in on read.
+- **`optional`** parameters are named flags. `shortName` enables a one-letter alias. A `default` makes the flag always present with that value.
+- **`configuration`** (optional) declares a config block stored under `kg.config[name]`, with defaults filled in on read.
 
 ## The blueprint mechanic
 
-Blueprints are the templates the `create` command uses to scaffold new packages (and the `init` flow uses to scaffold a whole project). They are pluggable the same way commands are.
+Blueprints are the templates the `create` command uses to scaffold new packages, and the `init` flow uses to scaffold a whole project. They are pluggable the same way commands are.
 
 A **blueprint package** declares itself with `"type": "blueprint"` in its `kg-cli.config.json` and points at a resolver class:
 
@@ -180,10 +180,10 @@ A **blueprint package** declares itself with `"type": "blueprint"` in its `kg-cl
 
 The resolver implements `ICliPackageBlueprintResolver` (from `@kartoffelgames/environment-command-create`):
 
-- **`availableBlueprints()`** returns a `Map<string, URL>` of blueprint name → URL of a `.zip` file containing the template.
-- **`afterCopy(parameter, project)`** runs after the CLI extracts the zip into the new package directory. This is where placeholders such as `{{PACKAGE_NAME}}`, `{{PACKAGE_ID_NAME}}`, `{{PACKAGE_FOLDER}}` and `{{PROJECT_FOLDER}}` are replaced.
+- **`availableBlueprints()`** returns a `Map<string, URL>` of blueprint name to the URL of a `.zip` template.
+- **`afterCopy(parameter, project)`** runs after the CLI extracts the zip into the new package directory. It replaces placeholders such as `{{PACKAGE_NAME}}`, `{{PACKAGE_ID_NAME}}`, `{{PACKAGE_FOLDER}}` and `{{PROJECT_FOLDER}}`.
 
-When you run `kg create`, the command collects blueprints from **every** registered blueprint package, lets you pick one by name, unzips it into `packages/<id>/`, runs the resolver's `afterCopy`, and registers the new package in both the root `deno.json` workspace and the VS Code `*.code-workspace` file.
+`kg create` collects blueprints from every registered blueprint package, lets you pick one by name, unzips it into `packages/<id>/`, runs the resolver's `afterCopy`, and registers the new package in both the root `deno.json` workspace and the VS Code `*.code-workspace` file.
 
 The bundled `@kartoffelgames/environment-blueprint` package ships the default `kg-main` template. See its README and the **create** README for the full custom-blueprint walkthrough.
 
@@ -196,30 +196,30 @@ The bundled `@kartoffelgames/environment-blueprint` package ships the default `k
 3. Export both the class and the config from the package's `deno.json` `exports`.
 4. Add the package's import path to `kg.cli` in your root `deno.json`.
 
-The command word is now available as `deno task kg <name>`. The **create** README contains a complete, copy-pasteable example.
+The command word is now available as `deno task kg <name>`. The **create** README contains a complete example.
 
 ### Add a blueprint
 
-Follow the same steps but with `"type": "blueprint"` and a `packageBlueprints.resolveClass` entry pointing at an `ICliPackageBlueprintResolver` implementation, then register it in `kg.cli`. Full walkthrough in the [create command README](./packages/kartoffelgames.environment.command_create/README.md).
+Follow the same steps with `"type": "blueprint"` and a `packageBlueprints.resolveClass` entry pointing at an `ICliPackageBlueprintResolver` implementation, then register it in `kg.cli`. Full walkthrough in the [create command README](./packages/kartoffelgames.environment.command_create/README.md).
 
 ## Repository layout
 
-All packages live under [`packages/`](./packages). The CLI host and core are the foundation; everything prefixed `command_` is a loadable command; `blueprint` is the default blueprint provider; `bundle` is the bundling engine used by several commands.
+All packages live under [`packages/`](./packages). The CLI host and core are the foundation, everything prefixed `command_` is a loadable command, `blueprint` is the default blueprint provider, and `bundle` is the bundling engine used by several commands.
 
 ## Package documentation
 
 | Package | Description |
 |---------|-------------|
 | [environment-cli](./packages/kartoffelgames.environment.cli/README.md) | The `kg` CLI host: argument parsing, project resolution, command loading, global flags. |
-| [environment-command-help](./packages/kartoffelgames.environment.command_help/README.md) | `help` — list all registered commands with their parameters. |
-| [environment-command-create](./packages/kartoffelgames.environment.command_create/README.md) | `create` — scaffold a new package from a blueprint (includes the custom-blueprint guide). |
-| [environment-command-sync](./packages/kartoffelgames.environment.command_sync/README.md) | `sync` — align package versions and re-apply command config defaults. |
-| [environment-command-build](./packages/kartoffelgames.environment.command_build/README.md) | `build` — bundle package files into `page/bundle` and optionally package a native desktop app. |
-| [environment-command-test](./packages/kartoffelgames.environment.command_test/README.md) | `test` — run package tests with optional coverage and inspector. |
-| [environment-command-page](./packages/kartoffelgames.environment.command_page/README.md) | `page` — build and serve a package's live-reloading `page/` directory to disk. |
-| [environment-command-scratchpad](./packages/kartoffelgames.environment.command_scratchpad/README.md) | `scratchpad` — serve an in-memory live-reloading scratch page. |
-| [environment-command-bump](./packages/kartoffelgames.environment.command_bump/README.md) | `bump` — bump the root project version. |
-| [environment-command-transform](./packages/kartoffelgames.environment.command_transform/README.md) | `transform` — transform a package to another runtime (Node.js via dnt). |
+| [environment-command-help](./packages/kartoffelgames.environment.command_help/README.md) | `help`, list all registered commands with their parameters. |
+| [environment-command-create](./packages/kartoffelgames.environment.command_create/README.md) | `create`, scaffold a new package from a blueprint (includes the custom-blueprint guide). |
+| [environment-command-sync](./packages/kartoffelgames.environment.command_sync/README.md) | `sync`, align package versions and re-apply command config defaults. |
+| [environment-command-build](./packages/kartoffelgames.environment.command_build/README.md) | `build`, bundle package files into `page/bundle` and optionally package a native desktop app. |
+| [environment-command-test](./packages/kartoffelgames.environment.command_test/README.md) | `test`, run package tests with optional coverage and inspector. |
+| [environment-command-page](./packages/kartoffelgames.environment.command_page/README.md) | `page`, build and serve a package's live-reloading page directory to disk. |
+| [environment-command-scratchpad](./packages/kartoffelgames.environment.command_scratchpad/README.md) | `scratchpad`, serve an in-memory live-reloading scratch page. |
+| [environment-command-bump](./packages/kartoffelgames.environment.command_bump/README.md) | `bump`, bump the root project version. |
+| [environment-command-transform](./packages/kartoffelgames.environment.command_transform/README.md) | `transform`, transform a package to another runtime (Node.js via dnt). |
 
 > Note: `@kartoffelgames/environment-core`, `@kartoffelgames/environment-bundle`, `@kartoffelgames/environment-blueprint` and the `@kartoffelgames/environment` init package do not ship their own README. Core is summarized in [The core package](#the-core-package) and the blueprint provider in [The blueprint mechanic](#the-blueprint-mechanic). `@kartoffelgames/environment-bundle` is the bundling engine used internally by the `page` and `scratchpad` commands.
 

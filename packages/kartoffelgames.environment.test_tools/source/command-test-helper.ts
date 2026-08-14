@@ -179,11 +179,11 @@ export class CommandTestHelper {
      * Run an environment CLI command against the fixture.
      *
      * The command is written the same way it is typed on the shell, e.g. `kg bump`. A leading
-     * `kg` token is optional. Named parameters are provided as a map; an empty string value emits
+     * `kg` token is optional. Named parameters are provided as a map. An empty string value emits
      * a bare flag (e.g. `{ '--coverage': '' }` becomes `--coverage`), any other value is joined
      * with `=` (e.g. `{ '-p': '@scope/name' }` becomes `-p=@scope/name`).
      *
-     * The call never throws for a failing command; inspect {@link CommandTestHelperResult.success}
+     * The call never throws for a failing command. Inspect {@link CommandTestHelperResult.success}
      * and {@link CommandTestHelperResult.output} instead. CLI error messages are written to stdout.
      *
      * @param pCommand - Command line, e.g. `kg bump` or `bump`.

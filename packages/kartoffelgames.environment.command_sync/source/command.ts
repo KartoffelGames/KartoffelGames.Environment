@@ -18,12 +18,13 @@ export class KgCliCommand implements ICliPackageCommand {
 
     /**
      * Execute command.
-     * 
+     *
+     * @param pProjectHandler - Project.
+     * @param pPackage - Package the command is applied to.
      * @param _pParameter - Command parameter.
-     * @param _pCliPackages - All cli packages grouped by type.
      */
     public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
-        // Needs a package to run test.
+        // Needs a package to run sync.
         if (pPackage === null) {
             throw new Error('Package to sync not specified.');
         }
@@ -46,9 +47,9 @@ export class KgCliCommand implements ICliPackageCommand {
 
     /**
      * Update kg project configuration to updated structure.
-     * 
-     * @param pProjectList - Local project list.
-     * @param pProject - Project handler.
+     *
+     * @param pProject - Project.
+     * @param pPackage - Package to update.
      */
     private async updatePackageConfiguration(pProject: Project, pPackage: Package): Promise<void> {
         // Collect every configuration key that belongs to an available command.

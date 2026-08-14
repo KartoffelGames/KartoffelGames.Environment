@@ -6,10 +6,10 @@ A command module for the [KartoffelGames CLI](https://jsr.io/@kartoffelgames/env
 
 The `build` command builds every configured entry. Each entry has a `type` that decides how it is built.
 
-- **`page` / `bundle`** — the entry is bundled into a browser IIFE and written to the `output` path it configures (+ `.map`). A `page` entry additionally receives the live-reload client when the build runs with `--injectreload` (i.e. from the `page` dev server); a `bundle` entry never does (use it for workers and other non-`window` bundles).
-- **`desktop`** — the entry file is compiled into a native desktop application via [`deno desktop`](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9). The desktop build is standalone: it does **not** serve or embed the `page/` directory — it just compiles the given entry file.
+- **`page` / `bundle`**: the entry is bundled into a browser IIFE and written to the `output` path it configures (+ `.map`). A `page` entry also receives the live-reload client when the build runs with `--injectreload` (from the `page` dev server). A `bundle` entry never does, so use it for workers and other non-`window` bundles.
+- **`desktop`**: the entry file is compiled into a native desktop application via [`deno desktop`](https://docs.deno.com/runtime/desktop/) (Deno ≥ 2.9). The desktop build is standalone. It does **not** serve or embed the `page/` directory, it just compiles the given entry file.
 
-Which entries are built can be narrowed with [`--types`](#parameters). If nothing is configured (or nothing matches the requested types), the command does nothing and exits successfully.
+Which entries are built can be narrowed with [`--types`](#parameters). If nothing is configured, or nothing matches the requested types, the command does nothing and exits successfully.
 
 ## Configuration
 
@@ -42,23 +42,23 @@ Builds are configured in the package's `deno.json` under `kg.config.build`. Ever
 
 ### `files`
 
-A map of **input file path** → entry options. The `type` field selects the entry kind and the rest of its shape.
+A map of **input file path** to entry options. The `type` field selects the entry kind and the rest of its shape.
 
-Entries are built **sequentially, in the order they are declared** in `files` (the object's key order, exactly as written in `deno.json`) — each entry's build fully completes before the next one starts. Order the entries accordingly when one build depends on another's output (e.g. declare a `bundle`/`page` entry before a `desktop` entry that includes its output).
+Entries are built **sequentially, in the order they are declared** in `files` (the object's key order in `deno.json`), each build finishing before the next starts. Order them accordingly when one build depends on another's output, for example declare a `bundle`/`page` entry before a `desktop` entry that includes its output.
 
 #### `page` / `bundle` entries
 
 | Field | Type | Description |
 |-------|------|-------------|
 | *(key)* | `string` | Local path of the input file inside the package. |
-| `type` | `"page" \| "bundle"` | Entry kind. A `page` entry receives the live-reload client when the build runs with `--injectreload`; a `bundle` entry never does. |
+| `type` | `"page" \| "bundle"` | Entry kind. A `page` entry receives the live-reload client under `--injectreload`, a `bundle` entry never does. |
 | `output` | `string` | Output path of the produced bundle, **including the filename** (e.g. `./page/bundle/app.js`). |
 
 #### `desktop` entries
 
-A `desktop` entry compiles its input file into a native application via `deno desktop`. A dedicated `desktop-build-deno.json` (a copy of the package `deno.json` with the app name/identifier injected) is generated next to the package `deno.json` for the build and removed afterwards. `deno desktop` (2.9.x) produces binaries for the **host** OS/arch only, so the build only produces the configured `output` whose platform matches the host and **skips** the others with a message — build each platform on its own OS (e.g. a CI matrix).
+A `desktop` entry compiles its input file into a native application via `deno desktop`. A dedicated `desktop-build-deno.json` (a copy of the package `deno.json` with the app name/identifier injected) is written next to the package `deno.json` for the build and removed afterwards. `deno desktop` (2.9.x) produces binaries for the **host** OS/arch only, so the build produces only the configured `output` matching the host and **skips** the others with a message. Build each platform on its own OS (e.g. a CI matrix).
 
-Each `output` is a **directory** the application is produced into. The desktop build does not serve or embed any page directory; to ship website (or other) files with the app, list them under `include` — after each target is built, the matching files are copied into that target's output directory so the running application can read them as real files.
+Each `output` is a **directory** the application is produced into. To ship website or other files with the app, list them under `include`. After each target is built, the matching files are copied into that target's output directory so the running application can read them as real files.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -67,9 +67,9 @@ Each `output` is a **directory** the application is produced into. The desktop b
 | `name` | `string` | Application display name. |
 | `identifier` | `string` | Reverse-DNS application id. |
 | `icons` | `{ windows?, macos?, linux? }` | Per-OS icon paths. |
-| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Output **directory** for each target's produced application (macOS split by architecture — Apple Silicon / Intel). |
+| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Output **directory** for each target's produced application (macOS split by architecture, Apple Silicon and Intel). |
 | `backend` | `"webview" \| "cef" \| "raw"` | Optional rendering backend. Defaults to `deno desktop`'s default. |
-| `include` | `Array<{ directory, filter? }>` | Directories copied into every produced output after the build. Each is copied **preserving its own name** into `<output>/<directory name>/…`; the optional `filter` is a list of globstar patterns (e.g. `["**/*.js", "**/*.html"]`) and a file is copied when it matches any of them. When `filter` is omitted or empty, every file in the directory is copied. |
+| `include` | `Array<{ directory, filter? }>` | Directories copied into every produced output after the build. Each is copied **preserving its own name** into `<output>/<directory name>/`. The optional `filter` is a list of globstar patterns (e.g. `["**/*.js", "**/*.html"]`) and a file is copied when it matches any of them. When `filter` is omitted or empty, every file in the directory is copied. |
 
 ## Installation
 
@@ -100,7 +100,7 @@ deno task kg build [-a | -p=@scope/name] [--types=page,bundle] [--injectreload]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--types` | `-t` | Comma-separated list of build types to build (`page`, `bundle`, `desktop`). Only the entries whose `type` is listed are built. When omitted, everything configured is built. Used by the `page` dev server (`--types=page,bundle`) so a file change re-bundles quickly without triggering a desktop build. |
+| `--types` | `-t` | Comma-separated list of build types to build (`page`, `bundle`, `desktop`). Only entries whose `type` is listed are built. When omitted, everything configured is built. The `page` dev server passes `--types=page,bundle` so a file change re-bundles quickly without triggering a desktop build. |
 | `--injectreload` | `-r` | Inject the live-reload client into `page` type entries. |
 
 ### Package Selection

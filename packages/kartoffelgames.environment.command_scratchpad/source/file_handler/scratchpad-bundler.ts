@@ -42,14 +42,13 @@ export class ScratchpadBundler {
     }
 
     /**
-     * Rebundle scratchpad files.
-     * When main source bundle is required, the package library is bundled first into the package library directory.
+     * Rebundle scratchpad files. When `build` is set, the package is built first via the build command.
      */
     public async bundle(): Promise<boolean> {
         const lConsole = new Console();
 
         // Build the package artifacts first when required, by running the build command. Only the "page" and "bundle"
-        // types are built; the (heavy) desktop packaging step is skipped, matching the fast dev-loop of the page server.
+        // types are built, the desktop step is skipped to match the page server's fast dev loop.
         if (this.mBuild) {
             try {
                 const lBuildParameter: CliParameter = new CliParameter('build');

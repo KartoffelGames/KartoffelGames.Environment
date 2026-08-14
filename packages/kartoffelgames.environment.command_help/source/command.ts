@@ -19,8 +19,10 @@ export class KgCliCommand implements ICliPackageCommand {
 
     /**
      * Execute command.
+     *
+     * @param pProject - Project.
+     * @param _pPackage - Package the command is applied to.
      * @param _pParameter - Command parameter.
-     * @param pCommandPackages - All cli packages grouped by type.
      */
     public async run(pProject: Project, _pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
         // Create each package async.

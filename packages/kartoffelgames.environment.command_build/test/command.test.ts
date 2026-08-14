@@ -31,7 +31,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
     });
 
     await pContext.step('Build - Builds entries in declaration order (a later bundle can consume an earlier one)', async (): Promise<void> => {
-        // Setup. The first entry produces a bundle; the second entry imports that produced bundle. The second bundle
+        // Setup. The first entry produces a bundle. The second entry imports that produced bundle. The second bundle
         // can only be built once the first one exists, so a successful build proves the entries run in declaration order.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
@@ -243,7 +243,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             // Process.
             const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'bundle' });
 
-            // Evaluation. Only the "bundle" entry is built; the "page" entry is skipped.
+            // Evaluation. Only the "bundle" entry is built. The "page" entry is skipped.
             expect(lResult.success).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/page/bundle/worker.js')).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/page/bundle/main.js')).toBeFalsy();

@@ -12,8 +12,7 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                 parameters: {
                     root: 'build',
                     optional: {
-                        // Comma-separated list of build types to build (e.g. "page,bundle"). When omitted, everything
-                        // configured is built.
+                        // Comma-separated build types to build (e.g. "page,bundle"). Omitted builds everything.
                         types: {
                             shortName: 't'
                         },
@@ -54,12 +53,12 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
         // Parameters.
         const lReloadEnabled: boolean = pParameter.has('injectreload');
 
-        // Determine which build types to produce. Without "--types" everything configured is built; with it only the
-        // listed types are built. The value is a comma-separated list of build types (e.g. "page,bundle").
+        // Determine which build types to produce. Without "--types" everything is built, otherwise only the listed
+        // types. The value is a comma-separated list (e.g. "page,bundle").
         const lTypeFilterEnabled: boolean = pParameter.has('types');
         const lRequestedTypes: Set<BuildType> = this.parseBuildTypes(lTypeFilterEnabled ? pParameter.get('types') : null);
 
-        // Only build the file entries whose type was requested (or every entry when no "--types" filter is set).
+        // Only build the entries whose type was requested, or every entry when no "--types" filter is set.
         const lFileEntryList: Array<[string, BuildFile]> = Object.entries(lConfiguration.files ?? {})
             .filter(([, lFile]: [string, BuildFile]) => !lTypeFilterEnabled || lRequestedTypes.has(lFile.type));
 
@@ -72,8 +71,8 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
         // Build every configured entry according to its type.
         for (const [lInputFilePath, lFile] of lFileEntryList) {
             switch (lFile.type) {
-                // A "page" and a "bundle" entry are both browser bundles; only a "page" entry receives the live-reload
-                // client (and only when requested).
+                // A "page" and a "bundle" entry are both browser bundles. Only a "page" entry receives the live-reload
+                // client, and only when requested.
                 case 'page':
                 case 'bundle': {
                     // The output path (including the filename) is configured per entry.
@@ -81,11 +80,11 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                         throw new Error(`Build entry "${lInputFilePath}" has no "output" path configured.`);
                     }
 
-                    // The reload client is only injected when requested and the entry is a "page" (a "bundle" never gets it).
+                    // The reload client is only injected when requested and the entry is a "page".
                     const lInjectReload: boolean = lReloadEnabled && lFile.type === 'page';
 
-                    // Split the configured output path into its directory and its basename (without extension); the bundle
-                    // is always emitted as `<basename>.js` (+ `.map`) into that directory.
+                    // Split the output path into directory and basename (without extension). The bundle is emitted as
+                    // `<basename>.js` (+ `.map`) into that directory.
                     const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lFile.output);
                     const lOutputDirectory: string = FileSystem.directoryOfFile(lAbsoluteOutput);
                     const lOutputFileName: string = FileSystem.fileOfPath(lAbsoluteOutput);
@@ -120,7 +119,7 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
     private parseBuildTypes(pRawTypes: string | null): Set<BuildType> {
         const lRequestedTypes: Set<BuildType> = new Set<BuildType>();
 
-        // No filter set: an empty set means "build everything".
+        // No filter set. An empty set means "build everything".
         if (pRawTypes === null) {
             return lRequestedTypes;
         }
@@ -149,11 +148,10 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
     }
 
     /**
-     * Bundle a single input file into a browser IIFE bundle and write it into the output directory.
-     * The output is written to `<outputDirectory>/<name>.js` together with its source map.
+     * Bundle a single input file into a browser IIFE and write `<outputDirectory>/<name>.js` plus its source map.
      *
-     * When reload is injected the input file is wrapped in a temporary entry file that prepends the live-reload
-     * client and imports the real input file, so the produced bundle refreshes the browser once it is rebuilt.
+     * When reload is injected, the input is wrapped in a temporary entry that prepends the live-reload client and
+     * imports the real file, so the bundle refreshes the browser after each rebuild.
      *
      * @param pPackage - Package the input file belongs to.
      * @param pInputFilePath - Local path of the input file inside the package.
@@ -217,16 +215,13 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
     /**
      * Build a native desktop application from a single entry file using `deno desktop`.
      *
-     * A dedicated `desktop-build-deno.json` is written next to the package's `deno.json`: a copy of the package
-     * configuration with the desktop app metadata (name, identifier) injected under a `desktop.app` block. `deno
-     * desktop` reads name/identifier from it via `--config`, while running from the package directory keeps the
-     * package's own module/import resolution intact. Backend, icon and output are passed as command-line flags.
+     * A dedicated `desktop-build-deno.json` (a copy of the package `deno.json` with the desktop app metadata injected
+     * under `desktop.app`) is written next to the package `deno.json`. `deno desktop` reads the name and identifier
+     * from it via `--config`, and running from the package directory keeps the package's own import resolution intact.
+     * Backend, icon and output are passed as flags.
      *
-     * Unlike the previous implementation this does not spin up an http server or embed the `page` directory; it just
-     * compiles the given entry file.
-     *
-     * `deno desktop` produces host-platform binaries only, so only the configured output targets whose OS/arch match
-     * this host are built; the others are skipped and must be built on their own OS (e.g. a CI matrix).
+     * `deno desktop` produces host-platform binaries only, so only the output targets whose OS/arch match this host are
+     * built. The others are skipped and must be built on their own OS (e.g. a CI matrix).
      *
      * @param pPackage - Package the desktop app belongs to.
      * @param pInputFilePath - Local path of the desktop entry file inside the package.
@@ -244,7 +239,7 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             throw new Error(`Build input file "${lAbsoluteInputFilePath}" does not exist.`);
         }
 
-        // Validate the configured include directories up-front so a misconfiguration fails before the (heavy) build.
+        // Validate the configured include directories up-front so a misconfiguration fails before the heavy build.
         const lIncludes: Array<BuildFileDesktopInclude> = pConfiguration.include ?? [];
         for (const lInclude of lIncludes) {
             const lIncludeDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, lInclude.directory);
@@ -262,8 +257,8 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             return;
         }
 
-        // deno desktop only builds for the host platform, so keep only the configured targets whose OS/arch match this
-        // host; the rest have to be built on their own OS.
+        // deno desktop only builds for the host platform, so keep only the targets whose OS/arch match this host. The
+        // rest must be built on their own OS.
         const lHostBuilds: Array<[string, DesktopTarget, string]> = [];
         for (const [lTargetKey, lOutput] of lOutputEntries) {
             const lTarget: DesktopTarget | undefined = DESKTOP_TARGETS[lTargetKey as DesktopTargetKey];
@@ -272,7 +267,7 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                 continue;
             }
             if (lTarget.os !== Deno.build.os || lTarget.arch !== Deno.build.arch) {
-                lConsole.writeLine(`Desktop target "${lTargetKey}" (${lTarget.triple}) cannot be cross-built on this host (${Deno.build.os}/${Deno.build.arch}); build it on that OS. Skip.`, 'yellow');
+                lConsole.writeLine(`Desktop target "${lTargetKey}" (${lTarget.triple}) cannot be cross-built on this host (${Deno.build.os}/${Deno.build.arch}). Build it on that OS. Skip.`, 'yellow');
                 continue;
             }
             lHostBuilds.push([lTargetKey, lTarget, lOutput]);
@@ -282,9 +277,9 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             return;
         }
 
-        // Write the dedicated desktop build configuration next to the package deno.json: a copy of the original config
-        // with the desktop app metadata injected. It sits inside the package directory so relative import resolution is
-        // unchanged, and deno desktop reads the app name/identifier from it via --config.
+        // Write the desktop build config next to the package deno.json: a copy with the desktop app metadata injected.
+        // It sits in the package directory so import resolution is unchanged, and deno desktop reads name/identifier
+        // from it via --config.
         const lPackageConfigurationPath: string = FileSystem.pathToAbsolute(pPackage.directory, 'deno.json');
         const lDesktopConfigurationPath: string = FileSystem.pathToAbsolute(pPackage.directory, 'desktop-build-deno.json');
         const lPackageConfiguration: Record<string, unknown> = JSON.parse(FileSystem.read(lPackageConfigurationPath));
@@ -302,8 +297,8 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                 // The output directory deno desktop produces the application into.
                 const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lOutput);
 
-                // Assemble the deno desktop command. Name/identifier come from the generated config; backend, icon and
-                // output are passed as flags. --target is intentionally omitted (host-platform build only).
+                // Assemble the deno desktop command. Name/identifier come from the generated config. Backend, icon and
+                // output are flags. --target is omitted (host-platform build only).
                 const lCommandParts: Array<string> = ['deno', 'desktop', '--config', lDesktopConfigurationPath];
 
                 // Output path of the produced application.
@@ -339,9 +334,9 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
     }
 
     /**
-     * Copy the configured include directories into a desktop output directory. Each include directory is copied,
-     * preserving its own name, into `<output>/<include directory name>/...`; only the files matching one of the
-     * include's `filter` glob patterns are copied (a file matching multiple patterns is copied once).
+     * Copy the configured include directories into a desktop output directory. Each is copied, preserving its own
+     * name, into `<output>/<include directory name>/`. Only files matching one of the include's `filter` glob patterns
+     * are copied, and a file matching multiple patterns is copied once.
      *
      * @param pPackageDirectory - Package directory the include directories are resolved against.
      * @param pOutputDirectory - Desktop output directory the include directories are copied into.
@@ -352,8 +347,8 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             const lIncludeDirectory: string = FileSystem.pathToAbsolute(pPackageDirectory, lInclude.directory);
             const lIncludeName: string = FileSystem.fileOfPath(lIncludeDirectory);
 
-            // Collect the files to copy. Without a filter every file in the directory is copied; otherwise every file
-            // matching any of the filter patterns (a file matching multiple patterns is copied once).
+            // Collect the files to copy. Without a filter, every file in the directory. Otherwise every file matching
+            // any filter pattern, deduplicated.
             let lMatchedFiles: Array<string>;
             if (!lInclude.filter || lInclude.filter.length === 0) {
                 lMatchedFiles = FileSystem.findFiles(lIncludeDirectory);
@@ -393,8 +388,7 @@ export type BuildType = 'page' | 'bundle' | 'desktop';
 export type BuildFile = BuildFilePage | BuildFileBundle | BuildFileDesktop;
 
 /**
- * A "page" entry: a browser bundle that receives the live-reload client when the build runs with `--injectreload`
- * (i.e. from the `page` dev server).
+ * A "page" entry. A browser bundle that receives the live-reload client under `--injectreload`.
  */
 export type BuildFilePage = {
     type: 'page';
@@ -406,7 +400,7 @@ export type BuildFilePage = {
 };
 
 /**
- * A "bundle" entry: a browser bundle that never receives the live-reload client (e.g. a worker).
+ * A "bundle" entry. A browser bundle that never receives the live-reload client (e.g. a worker).
  */
 export type BuildFileBundle = {
     type: 'bundle';
@@ -418,7 +412,7 @@ export type BuildFileBundle = {
 };
 
 /**
- * A "desktop" entry: a native desktop application compiled from its entry file (the record key) via `deno desktop`.
+ * A "desktop" entry. A native desktop application compiled from its entry file (the record key) via `deno desktop`.
  */
 export type BuildFileDesktop = {
     type: 'desktop';
@@ -439,7 +433,7 @@ export type BuildFileDesktop = {
     icons?: DesktopIconMap;
 
     /**
-     * Destination path for each build target's produced application (macOS split by architecture).
+     * Output directory for each build target's produced application (macOS split by architecture).
      */
     output?: DesktopOutputMap;
 
@@ -456,8 +450,8 @@ export type BuildFileDesktop = {
 };
 
 /**
- * A directory copied into a desktop output. The directory is copied preserving its own name into
- * `<output>/<directory name>/...`; `filter` selects which files inside it are copied.
+ * A directory copied into a desktop output, preserving its own name into `<output>/<directory name>/`. `filter`
+ * selects which files inside it are copied.
  */
 export type BuildFileDesktopInclude = {
     /**
@@ -466,9 +460,8 @@ export type BuildFileDesktopInclude = {
     directory: string;
 
     /**
-     * Optional glob patterns (globstar) selecting which files inside `directory` are copied; a file is copied when it
-     * matches any pattern (e.g. `["**\/*.js", "**\/*.html", "**\/*.css"]`). When omitted or empty, every file in
-     * `directory` is copied.
+     * Optional glob patterns (globstar) selecting which files inside `directory` are copied. A file is copied when it
+     * matches any pattern (e.g. `["**\/*.js", "**\/*.html", "**\/*.css"]`). When omitted or empty, every file is copied.
      */
     filter?: Array<string>;
 };
@@ -484,7 +477,7 @@ export type DesktopIconMap = {
 
 /**
  * Output paths keyed by build target. macOS is split by architecture because each architecture needs its own binary
- * and therefore its own output path.
+ * and output path.
  */
 export type DesktopOutputMap = {
     windows?: string;

@@ -4,8 +4,8 @@ import { CliParameter } from './cli-parameter.ts';
 import type { ICliPackageCommand } from './i-cli-package-command.interface.ts';
 
 /**
- * Command line interface command that can be executed.
- * Converts and validates environment split commands into a easy to use command pattern.
+ * Executable command line interface command.
+ * Validates and wraps environment split commands into an easy-to-use pattern.
  */
 export class CliCommand {
     private readonly mCliPackageCommand: ICliPackageCommand;
@@ -19,7 +19,7 @@ export class CliCommand {
     }
 
     /**
-     * Cli packages.
+     * Project the command runs against.
      */
     public get project(): Project {
         return this.mProject;
@@ -27,10 +27,9 @@ export class CliCommand {
 
     /**
      * Constructor.
-     * 
-     * @param pCommandName - Command name.
-     * @param pParameter - Command parameter.
-     * @param pCliPackages - Cli packages.
+     *
+     * @param pProject - Project the command runs against.
+     * @param pCliPackageCommand - CLI package command.
      */
     public constructor(pProject: Project, pCliPackageCommand: ICliPackageCommand) {
         this.mCliPackageCommand = pCliPackageCommand;
@@ -39,9 +38,9 @@ export class CliCommand {
 
     /**
      * Execute command.
+     *
+     * @param pPackage - Package the command is applied to.
      * @param pParameterInput - Command parameter.
-     * @param pPackage -  Package the command should be applied to.
-     * 
      */
     public async execute(pPackage: Package | null, pParameterInput: Array<string>): Promise<void> {
         // Validate command pattern for cli package configuration.

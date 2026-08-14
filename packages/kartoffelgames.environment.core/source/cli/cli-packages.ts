@@ -76,7 +76,7 @@ export class CliPackages {
      * 
      * @param pType - Cli command package type.
      * 
-     * @returns all available cli package informations of the provided type.s  
+     * @returns All available cli package informations of the provided type.
      */
     public async readAll<TTypeValues extends Record<string, any> = object>(pType?: string): Promise<Array<CliPackageInformation<TTypeValues>>> {
         // Read all packages with by a name filter.

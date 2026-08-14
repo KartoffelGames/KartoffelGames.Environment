@@ -38,11 +38,8 @@ export class Command implements ICliPackageCommand {
 
     /**
      * Create blueprint files.
-     * 
-     * @param pProjectName - Package name.
-     * @param pBlueprint - Blueprint name.
-     * @param pCommandParameter - Command parameter.
-     * @returns 
+     *
+     * @returns Target path of the created project.
      */
     private async createBlueprint(): Promise<string> {
         const lConsole = new Console();
@@ -58,7 +55,7 @@ export class Command implements ICliPackageCommand {
         // Ask the user about the project scope.
         const lProjectScope: string = await lConsole.promt('Project Scope (@example): ', /^@[a-z]+/);
 
-        // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
+        // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the blueprint path.
         const lProjectBlueprintZipUrlString: string = import.meta.url.replace('source/command.ts', 'blueprint/project-blueprint.zip');
         const lProjectBlueprintZipUrl: URL = new URL(lProjectBlueprintZipUrlString);
 

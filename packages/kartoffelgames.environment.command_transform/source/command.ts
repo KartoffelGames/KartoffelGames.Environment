@@ -33,14 +33,15 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
 
     /**
      * Execute command.
-     * 
-     * @param _pParameter - Command parameter.
-     * @param pCommandPackages - All cli packages grouped by type.
+     *
+     * @param pProject - Project.
+     * @param pPackage - Package the command is applied to.
+     * @param pParameter - Command parameter.
      */
     public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
-        // Needs a package to run page.
+        // Needs a package to run transform.
         if (pPackage === null) {
-            throw new Error('Package to run page not specified.');
+            throw new Error('Package to transform not specified.');
         }
 
         // Read cli configuration.
@@ -128,24 +129,11 @@ export class KgCliCommand implements ICliPackageCommand<TransformConfiguration> 
      * @param pPackage - The package within the project to transform.
      * @param pNodeDirectory - The directory where the transformed Node.js project will be output.
      * @returns A promise that resolves when the transformation is complete.
-     * 
+     *
      * @remarks
-     * This function performs the following steps:
-     * 1. Ensures a `package.json` file exists in the project root directory.
-     * 2. Cleans the old Node.js transformation directory.
-     * 3. Identifies all files used in the export `deno.json` property.
-     * 4. Filters out non-TypeScript files from the exported file list.
-     * 5. Creates a temporary TypeScript file to maintain the original directory structure.
-     * 6. Converts all exported files to relative paths.
-     * 7. Identifies and includes additional files specified in the `publish.include` configuration.
-     * 8. Excludes files specified in the `publish.exclude` configuration.
-     * 9. Removes TypeScript files from the published files list.
-     * 10. Removes duplicate entries from the published files list.
-     * 11. Converts all published files to relative paths.
-     * 12. Writes the temporary core-import-placeholder TypeScript file.
-     * 13. Uses the `build` function to transform the project to Node.js.
-     * 14. Adds the package path to the root project's `package.json` workspaces.
-     * 15. Cleans up the temporary core-import-placeholder TypeScript file.
+     * Ensures a root `package.json` exists, cleans the old output directory, collects the exported
+     * TypeScript entry points and the non-TypeScript files to publish, runs `@deno/dnt` to emit the
+     * Node.js build, and registers the output in the root `package.json` workspaces.
      */
     private async transformToNode(pProject: Project, pPackage: Package, pNodeDirectory: string): Promise<void> {
         // Create a package.json file in project root directory if it does not exist.
