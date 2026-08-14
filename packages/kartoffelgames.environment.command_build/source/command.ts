@@ -1,6 +1,5 @@
 import { EnvironmentBundle, type EnvironmentBundleOutput } from '@kartoffelgames/environment-bundle';
-import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
-import { DesktopBuilder } from './desktop-builder.ts';
+import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, Process, ProcessParameter, type Project } from '@kartoffelgames/environment-core';
 
 export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
     /**
@@ -27,8 +26,6 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             },
             configuration: {
                 name: 'build',
-                // "desktop" is intentionally omitted from the default: the config merge would replace a configured
-                // desktop object with a `null` default (differing object-ness overwrites). Absent desktop means disabled.
                 default: {
                     files: {}
                 }
@@ -53,7 +50,6 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
 
         // Read the build configuration of the package.
         const lConfiguration: BuildConfiguration = pPackage.cliConfigurationOf(this);
-        const lDesktop: DesktopConfiguration | null = lConfiguration.desktop ?? null;
 
         // Parameters.
         const lReloadEnabled: boolean = pParameter.has('injectreload');
@@ -67,37 +63,45 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
         const lFileEntryList: Array<[string, BuildFile]> = Object.entries(lConfiguration.files ?? {})
             .filter(([, lFile]: [string, BuildFile]) => !lTypeFilterEnabled || lRequestedTypes.has(lFile.type));
 
-        // Skip when nothing is configured to build (and the desktop step is disabled or skipped).
-        if (lFileEntryList.length === 0 && (lTypeFilterEnabled || lDesktop === null)) {
+        // Skip when nothing is configured to build.
+        if (lFileEntryList.length === 0) {
             lConsole.writeLine('Nothing configured to build. Skip build.');
             return;
         }
 
-        // Bundle every configured file into its configured output path.
+        // Build every configured entry according to its type.
         for (const [lInputFilePath, lFile] of lFileEntryList) {
-            // The output path (including the filename) is configured per entry.
-            if (!lFile.output) {
-                throw new Error(`Build entry "${lInputFilePath}" has no "output" path configured.`);
+            switch (lFile.type) {
+                // A "page" and a "bundle" entry are both browser bundles; only a "page" entry receives the live-reload
+                // client (and only when requested).
+                case 'page':
+                case 'bundle': {
+                    // The output path (including the filename) is configured per entry.
+                    if (!lFile.output) {
+                        throw new Error(`Build entry "${lInputFilePath}" has no "output" path configured.`);
+                    }
+
+                    // The reload client is only injected when requested and the entry is a "page" (a "bundle" never gets it).
+                    const lInjectReload: boolean = lReloadEnabled && lFile.type === 'page';
+
+                    // Split the configured output path into its directory and its basename (without extension); the bundle
+                    // is always emitted as `<basename>.js` (+ `.map`) into that directory.
+                    const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lFile.output);
+                    const lOutputDirectory: string = FileSystem.directoryOfFile(lAbsoluteOutput);
+                    const lOutputFileName: string = FileSystem.fileOfPath(lAbsoluteOutput);
+                    const lDotIndex: number = lOutputFileName.lastIndexOf('.');
+                    const lOutputName: string = lDotIndex < 0 ? lOutputFileName : lOutputFileName.substring(0, lDotIndex);
+
+                    await this.bundleFile(pPackage, lInputFilePath, lOutputName, lOutputDirectory, lInjectReload);
+                    break;
+                }
+
+                // A "desktop" entry is compiled into a native application via "deno desktop".
+                case 'desktop': {
+                    await this.buildDesktop(pPackage, lInputFilePath, lFile);
+                    break;
+                }
             }
-
-            // The reload client is only injected when requested and the entry is a "page" (a "bundle" never gets it).
-            const lInjectReload: boolean = lReloadEnabled && lFile.type === 'page';
-
-            // Split the configured output path into its directory and its basename (without extension); the bundle is
-            // always emitted as `<basename>.js` (+ `.map`) into that directory.
-            const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lFile.output);
-            const lOutputDirectory: string = FileSystem.directoryOfFile(lAbsoluteOutput);
-            const lOutputFileName: string = FileSystem.fileOfPath(lAbsoluteOutput);
-            const lDotIndex: number = lOutputFileName.lastIndexOf('.');
-            const lOutputName: string = lDotIndex < 0 ? lOutputFileName : lOutputFileName.substring(0, lDotIndex);
-
-            await this.bundleFile(pPackage, lInputFilePath, lOutputName, lOutputDirectory, lInjectReload);
-        }
-
-        // Build the desktop application on a full build (no "--types" filter). Desktop is not a selectable build type
-        // yet; a follow-up task will turn "desktop" into a selectable type and gate it through the type filter.
-        if (!lTypeFilterEnabled && lDesktop !== null) {
-            await new DesktopBuilder().build(pPackage, lDesktop);
         }
 
         lConsole.writeLine('Build successful');
@@ -128,9 +132,9 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                 continue;
             }
 
-            // Only file entry types are selectable for now. "desktop" becomes a selectable type in a follow-up task.
-            if (lType !== 'page' && lType !== 'bundle') {
-                throw new Error(`Unknown build type "${lType}". Valid build types are: page, bundle.`);
+            // Validate against the known build types.
+            if (lType !== 'page' && lType !== 'bundle' && lType !== 'desktop') {
+                throw new Error(`Unknown build type "${lType}". Valid build types are: page, bundle, desktop.`);
             }
 
             lRequestedTypes.add(lType);
@@ -209,29 +213,136 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             }
         }
     }
+
+    /**
+     * Build a native desktop application from a single entry file using `deno desktop`.
+     *
+     * A dedicated `desktop-build-deno.json` is written next to the package's `deno.json`: a copy of the package
+     * configuration with the desktop app metadata (name, identifier) injected under a `desktop.app` block. `deno
+     * desktop` reads name/identifier from it via `--config`, while running from the package directory keeps the
+     * package's own module/import resolution intact. Backend, icon and output are passed as command-line flags.
+     *
+     * Unlike the previous implementation this does not spin up an http server or embed the `page` directory; it just
+     * compiles the given entry file.
+     *
+     * `deno desktop` produces host-platform binaries only, so only the configured output targets whose OS/arch match
+     * this host are built; the others are skipped and must be built on their own OS (e.g. a CI matrix).
+     *
+     * @param pPackage - Package the desktop app belongs to.
+     * @param pInputFilePath - Local path of the desktop entry file inside the package.
+     * @param pConfiguration - Desktop build entry configuration.
+     *
+     * @throws {@link Error}
+     * When the entry file does not exist.
+     */
+    private async buildDesktop(pPackage: Package, pInputFilePath: string, pConfiguration: BuildFileDesktop): Promise<void> {
+        const lConsole: Console = new Console();
+
+        // The entry file compiled into the desktop binary must exist.
+        const lAbsoluteInputFilePath: string = FileSystem.pathToAbsolute(pPackage.directory, pInputFilePath);
+        if (!FileSystem.exists(lAbsoluteInputFilePath)) {
+            throw new Error(`Build input file "${lAbsoluteInputFilePath}" does not exist.`);
+        }
+
+        // Read every configured output target. Nothing configured means nothing to do.
+        const lOutputEntries: Array<[string, string]> = Object.entries(pConfiguration.output ?? {}).filter(
+            (pEntry): pEntry is [string, string] => typeof pEntry[1] === 'string' && pEntry[1] !== ''
+        );
+        if (lOutputEntries.length === 0) {
+            lConsole.writeLine('No desktop output configured. Skip desktop.', 'yellow');
+            return;
+        }
+
+        // deno desktop only builds for the host platform, so keep only the configured targets whose OS/arch match this
+        // host; the rest have to be built on their own OS.
+        const lHostBuilds: Array<[string, DesktopTarget, string]> = [];
+        for (const [lTargetKey, lOutput] of lOutputEntries) {
+            const lTarget: DesktopTarget | undefined = DESKTOP_TARGETS[lTargetKey as DesktopTargetKey];
+            if (!lTarget) {
+                lConsole.writeLine(`Unknown desktop output target "${lTargetKey}". Skip.`, 'yellow');
+                continue;
+            }
+            if (lTarget.os !== Deno.build.os || lTarget.arch !== Deno.build.arch) {
+                lConsole.writeLine(`Desktop target "${lTargetKey}" (${lTarget.triple}) cannot be cross-built on this host (${Deno.build.os}/${Deno.build.arch}); build it on that OS. Skip.`, 'yellow');
+                continue;
+            }
+            lHostBuilds.push([lTargetKey, lTarget, lOutput]);
+        }
+        if (lHostBuilds.length === 0) {
+            lConsole.writeLine(`No configured desktop output matches this host platform (${Deno.build.os}/${Deno.build.arch}). Skip desktop.`, 'yellow');
+            return;
+        }
+
+        // Write the dedicated desktop build configuration next to the package deno.json: a copy of the original config
+        // with the desktop app metadata injected. It sits inside the package directory so relative import resolution is
+        // unchanged, and deno desktop reads the app name/identifier from it via --config.
+        const lPackageConfigurationPath: string = FileSystem.pathToAbsolute(pPackage.directory, 'deno.json');
+        const lDesktopConfigurationPath: string = FileSystem.pathToAbsolute(pPackage.directory, 'desktop-build-deno.json');
+        const lPackageConfiguration: Record<string, unknown> = JSON.parse(FileSystem.read(lPackageConfigurationPath));
+        lPackageConfiguration['desktop'] = {
+            app: {
+                name: pConfiguration.name,
+                identifier: pConfiguration.identifier
+            }
+        };
+        FileSystem.write(lDesktopConfigurationPath, JSON.stringify(lPackageConfiguration, null, 4));
+
+        try {
+            // Build every host-matching target.
+            for (const [lTargetKey, lTarget, lOutput] of lHostBuilds) {
+                // Assemble the deno desktop command. Name/identifier come from the generated config; backend, icon and
+                // output are passed as flags. --target is intentionally omitted (host-platform build only).
+                const lCommandParts: Array<string> = ['deno', 'desktop', '--config', lDesktopConfigurationPath];
+
+                // Output path of the produced application.
+                lCommandParts.push('--output', FileSystem.pathToAbsolute(pPackage.directory, lOutput));
+
+                // Rendering backend.
+                if (pConfiguration.backend) {
+                    lCommandParts.push('--backend', pConfiguration.backend);
+                }
+
+                // Application icon for the target's operating system.
+                const lIcon: string | undefined = (pConfiguration.icons ?? {})[lTarget.icon];
+                if (lIcon) {
+                    lCommandParts.push('--icon', FileSystem.pathToAbsolute(pPackage.directory, lIcon));
+                }
+
+                // The entry file to compile (script argument comes last).
+                lCommandParts.push(lAbsoluteInputFilePath);
+
+                lConsole.writeLine(`Building desktop app "${pConfiguration.name}" for "${lTargetKey}" (${lTarget.triple})...`);
+                await new Process().executeInConsole(new ProcessParameter(pPackage.directory, lCommandParts));
+            }
+        } finally {
+            // Always remove the generated desktop build configuration.
+            if (FileSystem.exists(lDesktopConfigurationPath)) {
+                Deno.removeSync(lDesktopConfigurationPath);
+            }
+        }
+    }
 }
 
 export type BuildConfiguration = {
     files?: Record<string, BuildFile>;
-    desktop?: DesktopConfiguration | null;
 };
 
 /**
  * Selectable build type.
  */
-export type BuildType = 'page' | 'bundle';
+export type BuildType = 'page' | 'bundle' | 'desktop';
 
-export type BuildFile = {
-    /**
-     * Kept for now but no longer used by the bundle process (the output filename comes from `output`).
-     */
-    name: string;
+/**
+ * A single build entry, discriminated by its `type`.
+ */
+export type BuildFile = BuildFilePage | BuildFileBundle | BuildFileDesktop;
 
-    /**
-     * Entry kind. A "page" entry receives the live-reload client when the build runs with `--injectreload`
-     * (i.e. from the `page` dev server); a "bundle" entry never does.
-     */
-    type: BuildType;
+/**
+ * A "page" entry: a browser bundle that receives the live-reload client when the build runs with `--injectreload`
+ * (i.e. from the `page` dev server).
+ */
+export type BuildFilePage = {
+    type: 'page';
 
     /**
      * Output path of the produced bundle, including the filename (e.g. `./page/bundle/app.js`).
@@ -239,12 +350,48 @@ export type BuildFile = {
     output: string;
 };
 
-export type DesktopConfiguration = {
+/**
+ * A "bundle" entry: a browser bundle that never receives the live-reload client (e.g. a worker).
+ */
+export type BuildFileBundle = {
+    type: 'bundle';
+
+    /**
+     * Output path of the produced bundle, including the filename (e.g. `./page/bundle/worker.js`).
+     */
+    output: string;
+};
+
+/**
+ * A "desktop" entry: a native desktop application compiled from its entry file (the record key) via `deno desktop`.
+ */
+export type BuildFileDesktop = {
+    type: 'desktop';
+
+    /**
+     * Application display name.
+     */
     name: string;
+
+    /**
+     * Reverse-DNS application id.
+     */
     identifier: string;
+
+    /**
+     * Per-OS icon paths.
+     */
     icons?: DesktopIconMap;
+
+    /**
+     * Destination path for each build target's produced application (macOS split by architecture).
+     */
     output?: DesktopOutputMap;
-    backend?: 'webview' | 'cef';
+
+    /**
+     * Rendering backend. Defaults to `deno desktop`'s default when omitted.
+     */
+    backend?: 'webview' | 'cef' | 'raw';
 };
 
 /**
@@ -257,12 +404,32 @@ export type DesktopIconMap = {
 };
 
 /**
- * Output paths keyed by build target. macOS is split by architecture because a single machine cross-compiles both
- * the Apple Silicon and the Intel binary, and each needs its own output path.
+ * Output paths keyed by build target. macOS is split by architecture because each architecture needs its own binary
+ * and therefore its own output path.
  */
 export type DesktopOutputMap = {
     windows?: string;
     macosArm?: string;
     macosIntel?: string;
     linux?: string;
+};
+
+/**
+ * Target triple, host OS/arch, and icon operating system for each configured desktop output key. `os`/`arch` are
+ * compared against `Deno.build.os`/`Deno.build.arch` to decide whether the host can build a target.
+ */
+const DESKTOP_TARGETS: Record<DesktopTargetKey, DesktopTarget> = {
+    windows: { triple: 'x86_64-pc-windows-msvc', os: 'windows', arch: 'x86_64', icon: 'windows' },
+    macosArm: { triple: 'aarch64-apple-darwin', os: 'darwin', arch: 'aarch64', icon: 'macos' },
+    macosIntel: { triple: 'x86_64-apple-darwin', os: 'darwin', arch: 'x86_64', icon: 'macos' },
+    linux: { triple: 'x86_64-unknown-linux-gnu', os: 'linux', arch: 'x86_64', icon: 'linux' }
+};
+
+type DesktopTargetKey = 'windows' | 'macosArm' | 'macosIntel' | 'linux';
+
+type DesktopTarget = {
+    triple: string;
+    os: typeof Deno.build.os;
+    arch: typeof Deno.build.arch;
+    icon: 'windows' | 'macos' | 'linux';
 };

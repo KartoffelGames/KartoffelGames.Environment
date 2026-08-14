@@ -39,8 +39,7 @@
                 "nodeDirectory": "./node"
             },
             "build": {
-                "files": {},
-                "desktop": null
+                "files": {}
             }
         },
         "source": "./source"

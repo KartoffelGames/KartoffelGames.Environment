@@ -18,8 +18,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                     page: { port: 8091, mimeTypeMapping: {} },
                     build: {
                         files: {
-                            './page/source/index.ts': { name: 'app', type: 'page', output: './page/bundle/app.js' },
-                            './page/source/worker.ts': { name: 'worker', type: 'bundle', output: './page/bundle/worker.js' }
+                            './page/source/index.ts': { type: 'page', output: './page/bundle/app.js' },
+                            './page/source/worker.ts': { type: 'bundle', output: './page/bundle/worker.js' }
                         }
                     }
                 }

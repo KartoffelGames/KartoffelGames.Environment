@@ -13,7 +13,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    build: { files: { './source/index.ts': { name: 'MyBundle', type: 'bundle', output: './page/bundle/MyBundle.js' } } }
+                    build: { files: { './source/index.ts': { type: 'bundle', output: './page/bundle/MyBundle.js' } } }
                 }
             }
         }, null, 4));
@@ -60,8 +60,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 config: {
                     build: {
                         files: {
-                            './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' },
-                            './source/worker.ts': { name: 'worker', type: 'bundle', output: './page/bundle/worker.js' }
+                            './source/index.ts': { type: 'page', output: './page/bundle/main.js' },
+                            './source/worker.ts': { type: 'bundle', output: './page/bundle/worker.js' }
                         }
                     }
                 }
@@ -80,8 +80,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
-    await pContext.step('Build - Skips the desktop step when --types is set', async (): Promise<void> => {
-        // Setup. Configure a desktop output for the current platform, but restrict the build to file types.
+    await pContext.step('Build - A --types filter excludes the desktop entry', async (): Promise<void> => {
+        // Setup. A "page" entry and a "desktop" entry, but restrict the build to the "page" and "bundle" types.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'page/source/index.ts', 'console.log(\'app\');\n');
@@ -93,8 +93,10 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 source: './source',
                 config: {
                     build: {
-                        files: { './page/source/index.ts': { name: 'app', type: 'page', output: './page/bundle/app.js' } },
-                        desktop: { name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macosArm: './dist/MyApp.app', macosIntel: './dist/MyApp-intel.app', linux: './dist/my-app' } }
+                        files: {
+                            './page/source/index.ts': { type: 'page', output: './page/bundle/app.js' },
+                            './desktop/main.ts': { type: 'desktop', name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macosArm: './dist/MyApp.app', macosIntel: './dist/MyApp-intel.app', linux: './dist/my-app' } }
+                        }
                     }
                 }
             }
@@ -103,10 +105,38 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             // Process.
             const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'page,bundle' });
 
-            // Evaluation. The bundle is produced but no desktop output directory is created.
+            // Evaluation. The page bundle is produced but the desktop entry is not built.
             expect(lResult.success).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/page/bundle/app.js')).toBeTruthy();
             expect(lHelper.fileExists('packages/test.package/dist')).toBeFalsy();
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
+    await pContext.step('Build - A desktop entry without output is skipped', async (): Promise<void> => {
+        // Setup. A single "desktop" entry with no configured output. "desktop" is now a selectable build type.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'desktop/main.ts', 'console.log(\'desktop\');\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: { files: { './desktop/main.ts': { type: 'desktop', name: 'My App', identifier: 'com.example.myapp' } } }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process. Requesting the "desktop" type proves it is a valid build type.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'desktop' });
+
+            // Evaluation. The build succeeds and reports the desktop entry was skipped for lack of output.
+            expect(lResult.success).toBeTruthy();
+            expect(lResult.output).toContain('No desktop output configured. Skip desktop.');
         } finally {
             await lHelper.dispose();
         }
@@ -126,8 +156,8 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                 config: {
                     build: {
                         files: {
-                            './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' },
-                            './source/worker.ts': { name: 'worker', type: 'bundle', output: './page/bundle/worker.js' }
+                            './source/index.ts': { type: 'page', output: './page/bundle/main.js' },
+                            './source/worker.ts': { type: 'bundle', output: './page/bundle/worker.js' }
                         }
                     }
                 }
@@ -157,7 +187,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    build: { files: { './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' } } }
+                    build: { files: { './source/index.ts': { type: 'page', output: './page/bundle/main.js' } } }
                 }
             }
         }, null, 4));
@@ -184,7 +214,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    build: { files: { './source/index.ts': { name: 'main', type: 'page', output: './page/bundle/main.js' } } }
+                    build: { files: { './source/index.ts': { type: 'page', output: './page/bundle/main.js' } } }
                 }
             }
         }, null, 4));

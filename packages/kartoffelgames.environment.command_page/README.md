@@ -22,7 +22,7 @@ The bundles are produced by the [`build`](../kartoffelgames.environment.command_
         "config": {
             "build": {
                 "files": {
-                    "./page/source/index.ts": { "name": "pageentry", "type": "page", "output": "./page/bundle/app.js" }
+                    "./page/source/index.ts": { "type": "page", "output": "./page/bundle/app.js" }
                 }
             }
         }
