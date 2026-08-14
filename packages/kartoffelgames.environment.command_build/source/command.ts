@@ -244,6 +244,15 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             throw new Error(`Build input file "${lAbsoluteInputFilePath}" does not exist.`);
         }
 
+        // Validate the configured include directories up-front so a misconfiguration fails before the (heavy) build.
+        const lIncludes: Array<BuildFileDesktopInclude> = pConfiguration.include ?? [];
+        for (const lInclude of lIncludes) {
+            const lIncludeDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, lInclude.directory);
+            if (!FileSystem.pathInformation(lIncludeDirectory).isDirectory) {
+                throw new Error(`Desktop include directory "${lIncludeDirectory}" does not exist.`);
+            }
+        }
+
         // Read every configured output target. Nothing configured means nothing to do.
         const lOutputEntries: Array<[string, string]> = Object.entries(pConfiguration.output ?? {}).filter(
             (pEntry): pEntry is [string, string] => typeof pEntry[1] === 'string' && pEntry[1] !== ''
@@ -290,12 +299,15 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
         try {
             // Build every host-matching target.
             for (const [lTargetKey, lTarget, lOutput] of lHostBuilds) {
+                // The output directory deno desktop produces the application into.
+                const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lOutput);
+
                 // Assemble the deno desktop command. Name/identifier come from the generated config; backend, icon and
                 // output are passed as flags. --target is intentionally omitted (host-platform build only).
                 const lCommandParts: Array<string> = ['deno', 'desktop', '--config', lDesktopConfigurationPath];
 
                 // Output path of the produced application.
-                lCommandParts.push('--output', FileSystem.pathToAbsolute(pPackage.directory, lOutput));
+                lCommandParts.push('--output', lAbsoluteOutput);
 
                 // Rendering backend.
                 if (pConfiguration.backend) {
@@ -313,11 +325,54 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
 
                 lConsole.writeLine(`Building desktop app "${pConfiguration.name}" for "${lTargetKey}" (${lTarget.triple})...`);
                 await new Process().executeInConsole(new ProcessParameter(pPackage.directory, lCommandParts));
+
+                // Copy the configured include directories into this target's output so the running application can read
+                // them as real files. Each target gets its own copy.
+                this.copyDesktopIncludes(pPackage.directory, lAbsoluteOutput, lIncludes);
             }
         } finally {
             // Always remove the generated desktop build configuration.
             if (FileSystem.exists(lDesktopConfigurationPath)) {
                 Deno.removeSync(lDesktopConfigurationPath);
+            }
+        }
+    }
+
+    /**
+     * Copy the configured include directories into a desktop output directory. Each include directory is copied,
+     * preserving its own name, into `<output>/<include directory name>/...`; only the files matching one of the
+     * include's `filter` glob patterns are copied (a file matching multiple patterns is copied once).
+     *
+     * @param pPackageDirectory - Package directory the include directories are resolved against.
+     * @param pOutputDirectory - Desktop output directory the include directories are copied into.
+     * @param pIncludes - Configured include directories.
+     */
+    private copyDesktopIncludes(pPackageDirectory: string, pOutputDirectory: string, pIncludes: Array<BuildFileDesktopInclude>): void {
+        for (const lInclude of pIncludes) {
+            const lIncludeDirectory: string = FileSystem.pathToAbsolute(pPackageDirectory, lInclude.directory);
+            const lIncludeName: string = FileSystem.fileOfPath(lIncludeDirectory);
+
+            // Collect the files to copy. Without a filter every file in the directory is copied; otherwise every file
+            // matching any of the filter patterns (a file matching multiple patterns is copied once).
+            let lMatchedFiles: Array<string>;
+            if (!lInclude.filter || lInclude.filter.length === 0) {
+                lMatchedFiles = FileSystem.findFiles(lIncludeDirectory);
+            } else {
+                const lFilteredFiles: Set<string> = new Set<string>();
+                for (const lPattern of lInclude.filter) {
+                    for (const lFile of FileSystem.glob(lIncludeDirectory, lPattern)) {
+                        lFilteredFiles.add(lFile);
+                    }
+                }
+                lMatchedFiles = [...lFilteredFiles];
+            }
+
+            // Copy every matched file into "<output>/<include name>/<path relative to the include directory>".
+            for (const lFile of lMatchedFiles) {
+                const lRelativePath: string = FileSystem.pathToRelative(lIncludeDirectory, lFile);
+                const lDestination: string = FileSystem.pathToAbsolute(pOutputDirectory, lIncludeName, lRelativePath);
+                FileSystem.createDirectory(FileSystem.directoryOfFile(lDestination));
+                FileSystem.copyFile(lFile, lDestination);
             }
         }
     }
@@ -392,6 +447,30 @@ export type BuildFileDesktop = {
      * Rendering backend. Defaults to `deno desktop`'s default when omitted.
      */
     backend?: 'webview' | 'cef' | 'raw';
+
+    /**
+     * Directories copied into every produced desktop output after the build, so the running application can read them
+     * as real files (e.g. the website files served by the app).
+     */
+    include?: Array<BuildFileDesktopInclude>;
+};
+
+/**
+ * A directory copied into a desktop output. The directory is copied preserving its own name into
+ * `<output>/<directory name>/...`; `filter` selects which files inside it are copied.
+ */
+export type BuildFileDesktopInclude = {
+    /**
+     * Directory whose matching files are copied into every desktop output (e.g. `./page`).
+     */
+    directory: string;
+
+    /**
+     * Optional glob patterns (globstar) selecting which files inside `directory` are copied; a file is copied when it
+     * matches any pattern (e.g. `["**\/*.js", "**\/*.html", "**\/*.css"]`). When omitted or empty, every file in
+     * `directory` is copied.
+     */
+    filter?: Array<string>;
 };
 
 /**

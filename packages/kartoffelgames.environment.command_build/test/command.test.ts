@@ -142,6 +142,44 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
+    await pContext.step('Build - A desktop entry with a missing include directory fails', async (): Promise<void> => {
+        // Setup. A "desktop" entry whose include points at a directory that does not exist.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'desktop/main.ts', 'console.log(\'desktop\');\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: {
+                        files: {
+                            './desktop/main.ts': {
+                                type: 'desktop',
+                                name: 'My App',
+                                identifier: 'com.example.myapp',
+                                include: [{ directory: './does-not-exist', filter: ['**/*'] }]
+                            }
+                        }
+                    }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'desktop' });
+
+            // Evaluation. The command fails up-front on the missing include directory (before any build).
+            expect(lResult.success).toBeFalsy();
+            expect(lResult.output).toContain('Desktop include directory');
+            expect(lResult.output).toContain('does not exist');
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
     await pContext.step('Build - Only builds the entries of the requested types', async (): Promise<void> => {
         // Setup. One "page" entry and one "bundle" entry, but build only the "bundle" type.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();

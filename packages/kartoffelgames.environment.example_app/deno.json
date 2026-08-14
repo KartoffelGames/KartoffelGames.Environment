@@ -21,11 +21,14 @@
                         "name": "KartoffelGames Example App",
                         "identifier": "com.kartoffelgames.example-app",
                         "output": {
-                            "windows": "./dist/windows/ExampleApp.msi",
-                            "macosArm": "./dist/macos-arm/ExampleApp.app",
-                            "macosIntel": "./dist/macos-intel/ExampleApp.app",
-                            "linux": "./dist/linux/ExampleApp.AppImage"
-                        }
+                            "windows": "./dist/windows/ExampleApp",
+                            "macosArm": "./dist/macos-arm/ExampleApp",
+                            "macosIntel": "./dist/macos-intel/ExampleApp",
+                            "linux": "./dist/linux/ExampleApp"
+                        },
+                        "include": [
+                            { "directory": "./page", "filter": ["**/*.html", "**/*.css", "**/*.js"] }
+                        ]
                     }
                 }
             }

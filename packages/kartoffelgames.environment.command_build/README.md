@@ -28,7 +28,10 @@ Builds are configured in the package's `deno.json` under `kg.config.build`. Ever
                         "name": "My App",
                         "identifier": "com.example.myapp",
                         "icons":  { "windows": "./icons/app.ico", "macos": "./icons/app.icns", "linux": "./icons/app.png" },
-                        "output": { "windows": "./dist/MyApp.msi", "macosArm": "./dist/MyApp.app", "macosIntel": "./dist/MyApp-intel.app", "linux": "./dist/MyApp.AppImage" }
+                        "output": { "windows": "./dist/windows/MyApp", "macosArm": "./dist/macos-arm/MyApp", "macosIntel": "./dist/macos-intel/MyApp", "linux": "./dist/linux/MyApp" },
+                        "include": [
+                            { "directory": "./page", "filter": ["**/*.html", "**/*.css", "**/*.js"] }
+                        ]
                     }
                 }
             }
@@ -53,6 +56,8 @@ A map of **input file path** → entry options. The `type` field selects the ent
 
 A `desktop` entry compiles its input file into a native application via `deno desktop`. A dedicated `desktop-build-deno.json` (a copy of the package `deno.json` with the app name/identifier injected) is generated next to the package `deno.json` for the build and removed afterwards. `deno desktop` (2.9.x) produces binaries for the **host** OS/arch only, so the build only produces the configured `output` whose platform matches the host and **skips** the others with a message — build each platform on its own OS (e.g. a CI matrix).
 
+Each `output` is a **directory** the application is produced into. The desktop build does not serve or embed any page directory; to ship website (or other) files with the app, list them under `include` — after each target is built, the matching files are copied into that target's output directory so the running application can read them as real files.
+
 | Field | Type | Description |
 |-------|------|-------------|
 | *(key)* | `string` | Local path of the desktop entry file inside the package. |
@@ -60,8 +65,9 @@ A `desktop` entry compiles its input file into a native application via `deno de
 | `name` | `string` | Application display name. |
 | `identifier` | `string` | Reverse-DNS application id. |
 | `icons` | `{ windows?, macos?, linux? }` | Per-OS icon paths. |
-| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Destination path for each target's produced application (macOS split by architecture — Apple Silicon / Intel). The extension selects the `deno desktop` package format (e.g. `.msi`, `.app`, `.AppImage`, `.dmg`, `.deb`, `.rpm`). |
+| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Output **directory** for each target's produced application (macOS split by architecture — Apple Silicon / Intel). |
 | `backend` | `"webview" \| "cef" \| "raw"` | Optional rendering backend. Defaults to `deno desktop`'s default. |
+| `include` | `Array<{ directory, filter? }>` | Directories copied into every produced output after the build. Each is copied **preserving its own name** into `<output>/<directory name>/…`; the optional `filter` is a list of globstar patterns (e.g. `["**/*.js", "**/*.html"]`) and a file is copied when it matches any of them. When `filter` is omitted or empty, every file in the directory is copied. |
 
 ## Installation
 
