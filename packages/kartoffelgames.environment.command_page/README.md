@@ -41,6 +41,7 @@ The page server is configured in the package's `deno.json` under `kg.config.page
     "kg": {
         "config": {
             "page": {
+                "directory": "./page",
                 "mimeTypeMapping": {},
                 "port": 8088
             }
@@ -51,6 +52,7 @@ The page server is configured in the package's `deno.json` under `kg.config.page
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `directory` | `string` | `"./page"` | Directory (relative to the package root) that is served and watched. |
 | `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server (see below). |
 | `port` | `number` | `8088` | The port the local HTTP server listens on. |
 

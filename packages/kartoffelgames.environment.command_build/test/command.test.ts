@@ -30,6 +30,44 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
+    await pContext.step('Build - Builds entries in declaration order (a later bundle can consume an earlier one)', async (): Promise<void> => {
+        // Setup. The first entry produces a bundle; the second entry imports that produced bundle. The second bundle
+        // can only be built once the first one exists, so a successful build proves the entries run in declaration order.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'source/first.ts', 'globalThis.myFirstMarker = \'FIRST_BUNDLE_MARKER\';\n');
+        lHelper.writePackageFile('@test/package', 'source/second.ts', 'import \'../page/bundle/first.js\';\nglobalThis.mySecondMarker = \'SECOND\';\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: {
+                        files: {
+                            './source/first.ts': { type: 'bundle', output: './page/bundle/first.js' },
+                            './source/second.ts': { type: 'bundle', output: './page/bundle/second.js' }
+                        }
+                    }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package' });
+
+            // Evaluation. Both bundles are produced and the second inlined the first's output, proving the first entry
+            // built before the second.
+            expect(lResult.success).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/page/bundle/first.js')).toBeTruthy();
+            expect(lHelper.fileExists('packages/test.package/page/bundle/second.js')).toBeTruthy();
+            expect(lHelper.readFile('packages/test.package/page/bundle/second.js')).toContain('FIRST_BUNDLE_MARKER');
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
     await pContext.step('Build - Skips when nothing is configured', async (): Promise<void> => {
         // Setup.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();

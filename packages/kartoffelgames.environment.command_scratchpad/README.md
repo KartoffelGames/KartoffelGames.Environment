@@ -19,6 +19,7 @@ The scratchpad feature is configured in the package's `deno.json` under `kg.conf
     "kg": {
         "config": {
             "scratchpad": {
+                "directory": "./scratchpad",
                 "mimeTypeMapping": {},
                 "build": false,
                 "port": 8088
@@ -30,8 +31,9 @@ The scratchpad feature is configured in the package's `deno.json` under `kg.conf
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `directory` | `string` | `"./scratchpad"` | Directory (relative to the package root) that is scaffolded, served and watched. Its `source/index.ts` is the bundle entry. |
 | `mimeTypeMapping` | `Record<string, string>` | `{}` | Maps file extensions to MIME types for the HTTP server (see below). |
-| `build` | `boolean` | `false` | When `true`, run the `build` command for the package before bundling the scratchpad (produces `library/<type>/…`). |
+| `build` | `boolean` | `false` | When `true`, run the `build` command (the `page` and `bundle` types only — never the desktop step) for the package before bundling the scratchpad. |
 | `port` | `number` | `8088` | The port the local HTTP server listens on. |
 
 ### MIME Type Mapping

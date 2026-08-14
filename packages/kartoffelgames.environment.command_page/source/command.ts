@@ -18,6 +18,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
             configuration: {
                 name: 'page',
                 default: {
+                    directory: './page',
                     mimeTypeMapping: {},
                     port: 8088
                 },
@@ -42,8 +43,8 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         // Create console.
         const lConsole = new Console();
 
-        // Page directory of www files and the generated bundle output directory inside it.
-        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
+        // Page directory of www files (configurable) and the generated bundle output directory inside it.
+        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
         const lPageBundleDirectory: string = FileSystem.pathToAbsolute(lPageDirectory, 'bundle');
 
         // Ensure the page directory exists so the file watcher and http server have a valid root. The page content
@@ -123,6 +124,7 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
 
 type PageConfiguration = {
+    directory: string;
     mimeTypeMapping: Record<string, string>;
     port: number;
 };

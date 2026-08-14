@@ -45,4 +45,32 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             await lHelper.dispose();
         }
     });
+
+    await pContext.step('Page - Serves the configured directory', async (): Promise<void> => {
+        // Setup. Configure a non-default page directory.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    page: { directory: './customweb', port: 8092, mimeTypeMapping: {} }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process. The server never exits on its own, so it is killed after a timeout.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg page', { '-p': '@test/package' }, { timeout: 8000 });
+
+            // Evaluation. The configured directory was created and used instead of the default "page".
+            expect(lResult.timedOut).toBeTruthy();
+            expect(lResult.output).toContain('Starting page server...');
+            expect(lHelper.fileExists('packages/test.package/customweb')).toBeTruthy();
+        } finally {
+            await lHelper.dispose();
+        }
+    });
 });

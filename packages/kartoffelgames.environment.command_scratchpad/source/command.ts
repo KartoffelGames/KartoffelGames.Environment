@@ -18,6 +18,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
             configuration: {
                 name: 'scratchpad',
                 default: {
+                    directory: './scratchpad',
                     mimeTypeMapping: {},
                     build: false,
                     port: 8088
@@ -41,29 +42,30 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         // Read cli configuration from cli package.
         const lPackageConfiguration = pPackage.cliConfigurationOf(this);
 
+        // Scratchpad directory of www files (configurable).
+        const lScratchpadDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
+
         // Create watch paths for package source and scratchpad directory.
         const lWatchPaths: Array<string> = [
             pPackage.sourceDirectory,
-            FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad')
+            lScratchpadDirectory
         ];
 
         // Init scratchpad files.
-        this.initScratchpadFiles(pPackage);
-
-        // Source directory of www files.
-        const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad');
+        this.initScratchpadFiles(lScratchpadDirectory);
 
         // Create console.
         const lConsole = new Console();
 
         // Build scratchpad http-server, watcher and bundler.
-        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
+        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lScratchpadDirectory, lPackageConfiguration.mimeTypeMapping);
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
             projectHandler: pProjectHandler,
             package: pPackage,
             build: lPackageConfiguration.build,
             websocketPort: lPackageConfiguration.port,
+            directory: lPackageConfiguration.directory,
         });
 
         // Build initial build files.
@@ -119,10 +121,10 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
      * - `index.css`: A basic CSS file that styles a paragraph element.
      * - `index.ts`: A TypeScript file that logs "Hello World!!!" to the console.
      * 
-     * @param pPackage - The package for which the scratchpad files are to be initialized.
+     * @param pScratchpadDirectory - Absolute path of the scratchpad directory the files are initialized in.
      */
-    private initScratchpadFiles(pPackage: Package): void {
-        const lScratchpadDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad');
+    private initScratchpadFiles(pScratchpadDirectory: string): void {
+        const lScratchpadDirectory: string = pScratchpadDirectory;
 
         // Create scratchpad directorys.
         FileSystem.createDirectory(lScratchpadDirectory);
@@ -167,6 +169,7 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
 
 type ScratchpadConfiguration = {
+    directory: string;
     mimeTypeMapping: Record<string, string>;
     build: boolean;
     port: number;

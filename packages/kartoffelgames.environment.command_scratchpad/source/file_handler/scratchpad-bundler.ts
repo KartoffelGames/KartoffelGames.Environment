@@ -5,6 +5,7 @@ import { CliParameter, Console, FileSystem, type Package, type Project } from '@
 export class ScratchpadBundler {
     private readonly mBuild: boolean;
     private readonly mBundledFiles: ScratchpadBundlerFiles;
+    private readonly mDirectory: string;
     private readonly mPackage: Package;
     private readonly mProjectHandler: Project;
     private readonly mWebsocketPort: number;
@@ -33,6 +34,7 @@ export class ScratchpadBundler {
         this.mPackage = pParameters.package;
         this.mBuild = pParameters.build;
         this.mWebsocketPort = pParameters.websocketPort;
+        this.mDirectory = pParameters.directory;
         this.mBundledFiles = {
             javascriptFileContent: new Uint8Array(0),
             mapFileContent: new Uint8Array(0),
@@ -46,11 +48,15 @@ export class ScratchpadBundler {
     public async bundle(): Promise<boolean> {
         const lConsole = new Console();
 
-        // Build the package artifacts first when required, by running the build command.
+        // Build the package artifacts first when required, by running the build command. Only the "page" and "bundle"
+        // types are built; the (heavy) desktop packaging step is skipped, matching the fast dev-loop of the page server.
         if (this.mBuild) {
             try {
+                const lBuildParameter: CliParameter = new CliParameter('build');
+                lBuildParameter.set('types', 'page,bundle');
+
                 const lBuildCommand: BuildCommand = new BuildCommand();
-                await lBuildCommand.run(this.mProjectHandler, this.mPackage, new CliParameter('build'));
+                await lBuildCommand.run(this.mProjectHandler, this.mPackage, lBuildParameter);
             } catch (e) {
                 lConsole.writeLine('Failed to build package.', 'red');
                 lConsole.writeLine((<Error>e).message, 'red');
@@ -67,7 +73,7 @@ export class ScratchpadBundler {
 
         // Build the bundle entry outside of the package directory so it never appears in the users project.
         // The entry imports the real index file by absolute url and prepends the refresher script.
-        const lScratchpadIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, './scratchpad/source/index.ts');
+        const lScratchpadIndexFilePath: string = FileSystem.pathToAbsolute(this.mPackage.directory, this.mDirectory, 'source', 'index.ts');
         const lScratchpadIndexFileUrl: string = FileSystem.pathToFileUrl(lScratchpadIndexFilePath).href;
         const lEntryFileContent: string = `${lScratchpadRefresherInputFileText}\nimport ${JSON.stringify(lScratchpadIndexFileUrl)};\n`;
 
@@ -141,4 +147,5 @@ export type ScratchpadBundlerConstructor = {
     package: Package;
     build: boolean;
     websocketPort: number;
+    directory: string;
 };
