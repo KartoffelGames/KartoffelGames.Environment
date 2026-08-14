@@ -70,6 +70,10 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
 
         // Build every configured entry according to its type.
         for (const [lInputFilePath, lFile] of lFileEntryList) {
+            // Separate each entry with a blank line and a header so the mixed build output stays readable.
+            lConsole.writeLine('');
+            lConsole.writeLine(`Building ${lFile.type} entry "${lInputFilePath}"...`);
+
             switch (lFile.type) {
                 // A "page" and a "bundle" entry are both browser bundles. Only a "page" entry receives the live-reload
                 // client, and only when requested.
@@ -92,6 +96,7 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                     const lOutputName: string = lDotIndex < 0 ? lOutputFileName : lOutputFileName.substring(0, lDotIndex);
 
                     await this.bundleFile(pPackage, lInputFilePath, lOutputName, lOutputDirectory, lInjectReload);
+                    lConsole.writeLine(`Bundled into "${lFile.output}".`);
                     break;
                 }
 
@@ -103,6 +108,7 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
             }
         }
 
+        lConsole.writeLine('');
         lConsole.writeLine('Build successful');
     }
 
@@ -298,8 +304,10 @@ export class KgCliCommand implements ICliPackageCommand<BuildConfiguration> {
                 const lAbsoluteOutput: string = FileSystem.pathToAbsolute(pPackage.directory, lOutput);
 
                 // Assemble the deno desktop command. Name/identifier come from the generated config. Backend, icon and
-                // output are flags. --target is omitted (host-platform build only).
-                const lCommandParts: Array<string> = ['deno', 'desktop', '--config', lDesktopConfigurationPath];
+                // output are flags. --target is omitted (host-platform build only). The app is granted all permissions
+                // (-A): a desktop app needs at least read for its included files and net for a local server, and it
+                // runs as a trusted user-installed application.
+                const lCommandParts: Array<string> = ['deno', 'desktop', '-A', '--config', lDesktopConfigurationPath];
 
                 // Output path of the produced application.
                 lCommandParts.push('--output', lAbsoluteOutput);
