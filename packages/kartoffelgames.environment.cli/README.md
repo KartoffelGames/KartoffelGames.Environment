@@ -26,7 +26,6 @@ Add a `kg` task and configuration section to the root `deno.json` of your monore
             "jsr:@kartoffelgames/environment-command-bump@<version>",
             "jsr:@kartoffelgames/environment-command-page@<version>",
             "jsr:@kartoffelgames/environment-command-scratchpad@<version>",
-            "jsr:@kartoffelgames/environment-command-transform@<version>",
             "jsr:@kartoffelgames/environment-blueprint@<version>"
         ],
         "packages": "./packages"
@@ -63,7 +62,7 @@ These flags are available for all commands and control which packages a command 
 Commands operate in one of two scopes depending on the flags provided:
 
 - **Project-level** (no `-a` or `-p` flag): The command runs without a package context. Commands like `bump`, `create`, and `help` operate this way.
-- **Package-level** (`-a` or `-p` flag): The command runs for one or all packages. Commands like `build`, `test`, `sync`, and `transform` require a package target.
+- **Package-level** (`-a` or `-p` flag): The command runs for one or all packages. Commands like `build`, `test`, and `sync` require a package target.
 
 ### Examples
 
@@ -94,7 +93,6 @@ deno task kg test -p=@kartoffelgames/core --debug
 | `test` | Package | Run package tests. | `@kartoffelgames/environment-command-test` |
 | `page` | Package | Build and serve a package's page directory. | `@kartoffelgames/environment-command-page` |
 | `scratchpad` | Package | Serve a local scratchpad page. | `@kartoffelgames/environment-command-scratchpad` |
-| `transform` | Package | Transform a package to another runtime. | `@kartoffelgames/environment-command-transform` |
 
 See each command's own README for detailed usage and configuration.
 

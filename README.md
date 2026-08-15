@@ -219,7 +219,6 @@ All packages live under [`packages/`](./packages). The CLI host and core are the
 | [environment-command-page](./packages/kartoffelgames.environment.command_page/README.md) | `page`, build and serve a package's live-reloading page directory to disk. |
 | [environment-command-scratchpad](./packages/kartoffelgames.environment.command_scratchpad/README.md) | `scratchpad`, serve an in-memory live-reloading scratch page. |
 | [environment-command-bump](./packages/kartoffelgames.environment.command_bump/README.md) | `bump`, bump the root project version. |
-| [environment-command-transform](./packages/kartoffelgames.environment.command_transform/README.md) | `transform`, transform a package to another runtime (Node.js via dnt). |
 
 > Note: `@kartoffelgames/environment-core`, `@kartoffelgames/environment-bundle`, `@kartoffelgames/environment-blueprint` and the `@kartoffelgames/environment` init package do not ship their own README. Core is summarized in [The core package](#the-core-package) and the blueprint provider in [The blueprint mechanic](#the-blueprint-mechanic). `@kartoffelgames/environment-bundle` is the bundling engine used internally by the `page` and `scratchpad` commands.
 
