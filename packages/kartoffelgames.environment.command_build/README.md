@@ -28,7 +28,12 @@ Builds are configured in the package's `deno.json` under `kg.config.build`. Ever
                         "name": "My App",
                         "identifier": "com.example.myapp",
                         "icons":  { "windows": "./icons/app.ico", "macos": "./icons/app.icns", "linux": "./icons/app.png" },
-                        "output": { "windows": "./dist/windows/MyApp", "macosArm": "./dist/macos-arm/MyApp", "macosIntel": "./dist/macos-intel/MyApp", "linux": "./dist/linux/MyApp" },
+                        "output": {
+                            "x86_64-pc-windows-msvc": { "directory": "./dist/windows/MyApp", "extension": "raw" },
+                            "aarch64-apple-darwin": { "directory": "./dist/macos-arm/MyApp", "extension": "app" },
+                            "x86_64-apple-darwin": { "directory": "./dist/macos-intel/MyApp", "extension": "dmg" },
+                            "x86_64-unknown-linux-gnu": { "directory": "./dist/linux/MyApp", "extension": "deb" }
+                        },
                         "include": [
                             { "directory": "./page", "filter": ["**/*.html", "**/*.css", "**/*.js"] }
                         ]
@@ -56,9 +61,11 @@ Entries are built **sequentially, in the order they are declared** in `files` (t
 
 #### `desktop` entries
 
-A `desktop` entry compiles its input file into a native application via `deno desktop`. A dedicated `desktop-build-deno.json` (a copy of the package `deno.json` with the app name/identifier injected) is written next to the package `deno.json` for the build and removed afterwards. `deno desktop` (2.9.x) produces binaries for the **host** OS/arch only, so the build produces only the configured `output` matching the host and **skips** the others with a message. Build each platform on its own OS (e.g. a CI matrix).
+A `desktop` entry compiles its input file into a native application via `deno desktop`. A dedicated `desktop-build-deno.json` (a copy of the package `deno.json` with the app name/identifier and backend injected, holding no target information) is written next to the package `deno.json` for the build and removed afterwards. `deno desktop --target` cross-compiles, so **every** configured `output` target is built regardless of the host platform.
 
-Each `output` is a **directory** the application is produced into. To ship website or other files with the app, list them under `include`. After each target is built, the matching files are copied into that target's output directory so the running application can read them as real files.
+The `output` map is keyed by the **target triple** passed to `deno desktop --target`. Each entry has a `directory` and an `extension`. The last path segment of `directory` is the produced artifact's name: for a packaged `extension` the artifact is written as `<directory>.<extension>` (e.g. `./dist/linux/MyApp` + `deb` => `./dist/linux/MyApp.deb`), while `raw` produces a plain directory without extension. On macOS, `raw` is an alias for `app`.
+
+To ship website or other files with the app, list them under `include`. Includes are copied into the produced artifact after each build, so they only work for a directory-shaped output (a `raw` directory or a macOS `app` bundle). Configuring `include` together with any other (packaged) extension fails the build.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -67,9 +74,9 @@ Each `output` is a **directory** the application is produced into. To ship websi
 | `name` | `string` | Application display name. |
 | `identifier` | `string` | Reverse-DNS application id. |
 | `icons` | `{ windows?, macos?, linux? }` | Per-OS icon paths. |
-| `output` | `{ windows?, macosArm?, macosIntel?, linux? }` | Output **directory** for each target's produced application (macOS split by architecture, Apple Silicon and Intel). |
+| `output` | `Record<triple, { directory, extension? }>` | Output per target, keyed by target triple (e.g. `x86_64-pc-windows-msvc`, `aarch64-apple-darwin`, `x86_64-apple-darwin`, `x86_64-unknown-linux-gnu`). `directory`'s last segment is the artifact name. `extension` is `raw` (plain directory, macOS alias for `app`) or a packaged file extension like `app`, `dmg`, `msi`, `deb`. Defaults to `raw`. |
 | `backend` | `"webview" \| "cef" \| "raw"` | Optional rendering backend. Defaults to `deno desktop`'s default. |
-| `include` | `Array<{ directory, filter? }>` | Directories copied into every produced output after the build. Each is copied **preserving its own name** into `<output>/<directory name>/`. The optional `filter` is a list of globstar patterns (e.g. `["**/*.js", "**/*.html"]`) and a file is copied when it matches any of them. When `filter` is omitted or empty, every file in the directory is copied. |
+| `include` | `Array<{ directory, filter? }>` | Directories copied into every produced `raw`/`app` output after the build. Each is copied **preserving its own name** next to the executable (`<output>/<directory name>/` for `raw`, `<output>/Contents/MacOS/<directory name>/` for an `app` bundle). The optional `filter` is a list of globstar patterns (e.g. `["**/*.js", "**/*.html"]`) and a file is copied when it matches any of them. When `filter` is omitted or empty, every file in the directory is copied. Only supported for `raw`/`app` outputs. |
 
 ## Installation
 

@@ -133,7 +133,16 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
                     build: {
                         files: {
                             './page/source/index.ts': { type: 'page', output: './page/bundle/app.js' },
-                            './desktop/main.ts': { type: 'desktop', name: 'My App', identifier: 'com.example.myapp', output: { windows: './dist/MyApp', macosArm: './dist/MyApp.app', macosIntel: './dist/MyApp-intel.app', linux: './dist/my-app' } }
+                            './desktop/main.ts': {
+                                type: 'desktop',
+                                name: 'My App',
+                                identifier: 'com.example.myapp',
+                                output: {
+                                    'x86_64-pc-windows-msvc': { directory: './dist/windows/MyApp', extension: 'raw' },
+                                    'aarch64-apple-darwin': { directory: './dist/macos-arm/MyApp', extension: 'app' },
+                                    'x86_64-unknown-linux-gnu': { directory: './dist/linux/MyApp', extension: 'deb' }
+                                }
+                            }
                         }
                     }
                 }
@@ -218,6 +227,83 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
         }
     });
 
+    await pContext.step('Build - A desktop entry with an unknown target triple fails', async (): Promise<void> => {
+        // Setup. A "desktop" entry whose output is keyed by a triple "deno desktop --target" does not support.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'desktop/main.ts', 'console.log(\'desktop\');\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: {
+                        files: {
+                            './desktop/main.ts': {
+                                type: 'desktop',
+                                name: 'My App',
+                                identifier: 'com.example.myapp',
+                                output: { 'totally-invalid-triple': { directory: './dist/MyApp', extension: 'raw' } }
+                            }
+                        }
+                    }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'desktop' });
+
+            // Evaluation. The command fails up-front on the unknown triple (before any build).
+            expect(lResult.success).toBeFalsy();
+            expect(lResult.output).toContain('Unknown desktop target triple');
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
+    await pContext.step('Build - A desktop entry with include and a packaged output fails', async (): Promise<void> => {
+        // Setup. A "desktop" entry that ships include files but targets a packaged (non-raw/app) output. Includes are
+        // only supported for "raw" and "app" outputs, so this must fail before any build runs.
+        const lHelper: CommandTestHelper = await CommandTestHelper.create();
+        await lHelper.addPackage('@test/package');
+        lHelper.writePackageFile('@test/package', 'desktop/main.ts', 'console.log(\'desktop\');\n');
+        lHelper.writePackageFile('@test/package', 'page/index.html', '<title>x</title>\n');
+        lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
+            name: '@test/package',
+            version: '0.0.0',
+            exports: './source/index.ts',
+            kg: {
+                source: './source',
+                config: {
+                    build: {
+                        files: {
+                            './desktop/main.ts': {
+                                type: 'desktop',
+                                name: 'My App',
+                                identifier: 'com.example.myapp',
+                                output: { 'x86_64-unknown-linux-gnu': { directory: './dist/linux/MyApp', extension: 'deb' } },
+                                include: [{ directory: './page', filter: ['**/*.html'] }]
+                            }
+                        }
+                    }
+                }
+            }
+        }, null, 4));
+        try {
+            // Process.
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'desktop' });
+
+            // Evaluation. The command fails on the include/packaged-output combination (before any build).
+            expect(lResult.success).toBeFalsy();
+            expect(lResult.output).toContain('Includes are only supported for directory outputs');
+        } finally {
+            await lHelper.dispose();
+        }
+    });
+
     await pContext.step('Build - Only builds the entries of the requested types', async (): Promise<void> => {
         // Setup. One "page" entry and one "bundle" entry, but build only the "bundle" type.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
@@ -253,7 +339,7 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
     });
 
     await pContext.step('Build - Fails on an unknown build type', async (): Promise<void> => {
-        // Setup. A single valid entry, but request an unknown type.
+        // Setup. A single entry with an unrecognized "type", which the build's switch rejects via its default case.
         const lHelper: CommandTestHelper = await CommandTestHelper.create();
         await lHelper.addPackage('@test/package');
         lHelper.writePackageFile('@test/package', 'deno.json', JSON.stringify({
@@ -263,13 +349,13 @@ Deno.test('KgCliCommand.run()', async (pContext) => {
             kg: {
                 source: './source',
                 config: {
-                    build: { files: { './source/index.ts': { type: 'page', output: './page/bundle/main.js' } } }
+                    build: { files: { './source/index.ts': { type: 'unknown', output: './page/bundle/main.js' } } }
                 }
             }
         }, null, 4));
         try {
             // Process.
-            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package', '--types': 'unknown' });
+            const lResult: CommandTestHelperResult = await lHelper.run('kg build', { '-p': '@test/package' });
 
             // Evaluation. The command fails and reports the unknown type.
             expect(lResult.success).toBeFalsy();

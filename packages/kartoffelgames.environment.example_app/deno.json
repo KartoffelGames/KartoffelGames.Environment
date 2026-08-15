@@ -20,11 +20,12 @@
                         "type": "desktop",
                         "name": "KartoffelGames Example App",
                         "identifier": "com.kartoffelgames.example-app",
+                        "backend": "webview",
                         "output": {
-                            "windows": "./dist/windows/ExampleApp",
-                            "macosArm": "./dist/macos-arm/ExampleApp",
-                            "macosIntel": "./dist/macos-intel/ExampleApp",
-                            "linux": "./dist/linux/ExampleApp"
+                            "x86_64-pc-windows-msvc": { "directory": "./dist/windows/ExampleApp", "extension": "raw" },
+                            "aarch64-apple-darwin": { "directory": "./dist/macos-arm/ExampleApp", "extension": "app" },
+                            "x86_64-apple-darwin": { "directory": "./dist/macos-intel/ExampleApp", "extension": "raw" },
+                            "x86_64-unknown-linux-gnu": { "directory": "./dist/linux/ExampleApp", "extension": "raw" }
                         },
                         "include": [
                             { "directory": "./page", "filter": ["**/*.html", "**/*.css", "**/*.js"] }
