@@ -19,27 +19,23 @@
         "name": "Kartoffelgames.Environment.Core",
         "root": false,
         "config": {
-            "page": {
-                "directory": "./page",
-                "mimeTypeMapping": {},
-                "port": 8088
-            },
             "package-blueprint": "",
+            "build": {
+                "files": {}
+            },
             "scratchpad": {
                 "directory": "./scratchpad",
                 "mimeTypeMapping": {},
                 "build": false,
                 "port": 8088
             },
+            "page": {
+                "directory": "./page",
+                "mimeTypeMapping": {},
+                "port": 8088
+            },
             "test": {
                 "directory": "./test"
-            },
-            "transform": {
-                "enableNode": false,
-                "nodeDirectory": "./node"
-            },
-            "build": {
-                "files": {}
             }
         },
         "source": "./source"

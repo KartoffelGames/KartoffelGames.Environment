@@ -13,28 +13,22 @@
         "source": "./source",
         "config": {
             "package-blueprint": "",
+            "build": {
+                "files": {}
+            },
             "scratchpad": {
+                "directory": "./scratchpad",
                 "mimeTypeMapping": {},
-                "port": 8088,
                 "build": false,
-                "directory": "./scratchpad"
+                "port": 8088
             },
             "page": {
-                "enabled": false,
+                "directory": "./page",
                 "mimeTypeMapping": {},
-                "port": 8088,
-                "build": false,
-                "directory": "./page"
+                "port": 8088
             },
             "test": {
                 "directory": "./test"
-            },
-            "transform": {
-                "enableNode": false,
-                "nodeDirectory": "./node"
-            },
-            "build": {
-                "files": {}
             }
         }
     }

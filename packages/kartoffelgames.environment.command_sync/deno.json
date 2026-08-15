@@ -21,29 +21,23 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Sync",
         "config": {
-            "page": {
-                "enabled": false,
-                "port": 8088,
-                "mimeTypeMapping": {},
-                "build": false,
-                "directory": "./page"
-            },
             "package-blueprint": "",
+            "build": {
+                "files": {}
+            },
             "scratchpad": {
-                "port": 8088,
+                "directory": "./scratchpad",
                 "mimeTypeMapping": {},
                 "build": false,
-                "directory": "./scratchpad"
+                "port": 8088
+            },
+            "page": {
+                "directory": "./page",
+                "mimeTypeMapping": {},
+                "port": 8088
             },
             "test": {
                 "directory": "./test"
-            },
-            "transform": {
-                "enableNode": false,
-                "nodeDirectory": "./node"
-            },
-            "build": {
-                "files": {}
             }
         },
         "source": "./source"

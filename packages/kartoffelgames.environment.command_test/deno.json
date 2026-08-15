@@ -22,29 +22,23 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Test",
         "config": {
-            "page": {
-                "enabled": false,
-                "port": 8088,
-                "mimeTypeMapping": {},
-                "build": false,
-                "directory": "./page"
+            "package-blueprint": "",
+            "build": {
+                "files": {}
             },
             "scratchpad": {
-                "port": 8888,
+                "directory": "./scratchpad",
                 "mimeTypeMapping": {},
                 "build": false,
-                "directory": "./scratchpad"
+                "port": 8088
+            },
+            "page": {
+                "directory": "./page",
+                "mimeTypeMapping": {},
+                "port": 8088
             },
             "test": {
                 "directory": "./test"
-            },
-            "package-blueprint": "",
-            "transform": {
-                "enableNode": false,
-                "nodeDirectory": "./node"
-            },
-            "build": {
-                "files": {}
             }
         },
         "source": "./source"
