@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checkout needed for local composite file.
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       # Run local composite test.
       - name: 'Test Packages'
         uses: ./.github/actions/run-tests
@@ -27,7 +27,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       # Run local composite package release.
       - name: 'Publish JSR Packages'
