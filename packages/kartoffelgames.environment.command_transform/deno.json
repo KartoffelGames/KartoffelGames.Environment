@@ -30,18 +30,22 @@
             "scratchpad": {
                 "port": 8088,
                 "mimeTypeMapping": {},
-                "build": false
+                "build": false,
+                "directory": "./scratchpad"
             },
             "page": {
                 "enabled": false,
                 "port": 8088,
                 "mimeTypeMapping": {},
-                "build": false
+                "build": false,
+                "directory": "./page"
             },
             "test": {
                 "directory": "./test"
             },
-            "build": {}
+            "build": {
+                "files": {}
+            }
         },
         "source": "./source"
     }

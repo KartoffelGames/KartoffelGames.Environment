@@ -24,13 +24,15 @@
                 "enabled": false,
                 "port": 8088,
                 "mimeTypeMapping": {},
-                "build": false
+                "build": false,
+                "directory": "./page"
             },
             "package-blueprint": "",
             "scratchpad": {
                 "port": 8088,
                 "mimeTypeMapping": {},
-                "build": false
+                "build": false,
+                "directory": "./scratchpad"
             },
             "test": {
                 "directory": "./test"
@@ -39,7 +41,9 @@
                 "enableNode": false,
                 "nodeDirectory": "./node"
             },
-            "build": {}
+            "build": {
+                "files": {}
+            }
         },
         "source": "./source"
     }

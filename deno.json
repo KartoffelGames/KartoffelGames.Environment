@@ -13,7 +13,6 @@
         "./packages/kartoffelgames.environment.command_sync",
         "./packages/kartoffelgames.environment.command_test",
         "./packages/kartoffelgames.environment.core",
-        "./packages/kartoffelgames.environment.example_app",
         "./packages/kartoffelgames.environment.command_bump",
         "./packages/kartoffelgames.environment.command_transform",
         "./packages/kartoffelgames.environment.test_tools"
