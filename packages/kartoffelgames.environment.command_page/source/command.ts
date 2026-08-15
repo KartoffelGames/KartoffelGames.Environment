@@ -1,5 +1,5 @@
-import { type CliCommandDescription, type CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
-import { PageBundler } from './file_handler/page-bundler.ts';
+import { KgCliCommand as BuildCommand } from '@kartoffelgames/environment-command-build';
+import { type CliCommandDescription, CliParameter, Console, FileSystem, type ICliPackageCommand, type Package, type Project } from '@kartoffelgames/environment-core';
 import { PageFileWatcher } from './file_handler/page-file-watcher.ts';
 import { PageHttpServer } from './file_handler/page-http-server.ts';
 
@@ -10,25 +10,16 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     public get information(): CliCommandDescription<PageConfiguration> {
         return {
             command: {
-                description: 'Build and eventually serve html page files over local http server.',
+                description: 'Build and serve the page directory over a local http server.',
                 parameters: {
-                    root: 'page',
-                    optional: {
-                        force: {
-                            shortName: 'f'
-                        },
-                        'build-only': {
-                            shortName: 'b'
-                        }
-                    }
+                    root: 'page'
                 }
             },
             configuration: {
                 name: 'page',
                 default: {
-                    enabled: false,
+                    directory: './page',
                     mimeTypeMapping: {},
-                    mainBundleRequired: false,
                     port: 8088
                 },
             }
@@ -37,17 +28,16 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
 
     /**
      * Execute command.
-     * @param pParameter - Command parameter.
+     *
      * @param pProject - Project.
+     * @param pPackage - Package the command is applied to.
+     * @param _pParameter - Command parameter.
      */
-    public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
-        // Needs a package to run page.
+    public async run(pProject: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
+        // Needs a package to run the page server.
         if (pPackage === null) {
             throw new Error('Package to run page not specified.');
         }
-
-        // Cli parameter.
-        const lForceBuild: boolean = pParameter.has('force');
 
         // Read cli configuration from cli package.
         const lPackageConfiguration = await pPackage.cliConfigurationOf(this);
@@ -55,60 +45,49 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
         // Create console.
         const lConsole = new Console();
 
-        // Exit when no build is configurated.
-        if (!lForceBuild && !lPackageConfiguration.enabled) {
-            lConsole.writeLine('Disabled page build. Skip page...');
-            return;
-        }
+        // Page directory of www files (configurable) and the generated bundle output directory inside it.
+        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
+        const lPageBundleDirectory: string = FileSystem.pathToAbsolute(lPageDirectory, 'bundle');
+
+        // Ensure the page directory exists so the watcher and http server have a valid root. Its content is owned by
+        // the package, not scaffolded here.
+        FileSystem.createDirectory(lPageDirectory);
 
         // Create watch paths for package source and page directory.
         const lWatchPaths: Array<string> = [
             pPackage.sourceDirectory,
-            FileSystem.pathToAbsolute(pPackage.directory, 'page')
+            lPageDirectory
         ];
 
-        // Init page files.
-        this.initPageFiles(pPackage);
+        // Build page http-server.
+        const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lPageDirectory, lPackageConfiguration.mimeTypeMapping);
 
-        // Source directory of www files.
-        const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
-
-        // Build page http-server, watcher and bundler.
-        const lHttpServer: PageHttpServer = new PageHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
-        const lPageBundler: PageBundler = new PageBundler({
-            projectHandler: pProject,
-            package: pPackage,
-            coreBundleRequired: lPackageConfiguration.mainBundleRequired,
-            websocketPort: lPackageConfiguration.port
-        });
-
-        // Build initial build files.
+        // Build initial bundle files.
         lConsole.writeLine('Starting initial bundle...');
-        await lPageBundler.bundle();
-        this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
+        await this.bundlePage(pProject, pPackage);
 
-        // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
+        // Halt other watcher events while one is processing, to prevent concurrent builds.
         let lBuilding: boolean = false;
 
         // Rebundle page files and refresh connected browsers when files have changed.
-        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths);
+        // The bundle output directory is ignored so the bundler writing its own output does not trigger another build.
+        const lWatcher: PageFileWatcher = new PageFileWatcher(lWatchPaths, [lPageBundleDirectory]);
         lWatcher.addListener(async () => {
-            // Skip when a build is already running, to prevent multiple builds at the same time.
+            // Skip when a build is already running.
             if (lBuilding) {
                 return;
             }
             lBuilding = true;
 
-            // Bundle files and update server served page files once they have changed.
-            if (await lPageBundler.bundle()) {
-                // Write bundle files.
-                this.writePageBundeFiles(lSourceDirectory, lPageBundler.sourceFile, lPageBundler.sourceMapFile);
+            // Signal the rebuild, since bundling can take a while.
+            lConsole.writeLine('File change detected. Bundling...', 'yellow');
 
-                // Output bundle finished.
+            // Rebundle the page. Bundle errors are reported but must not stop the watcher.
+            try {
+                await this.bundlePage(pProject, pPackage);
                 lConsole.writeLine('Build finished', 'green');
-            } else {
-                // Signal bundle was not changed.
-                lConsole.writeLine('No changes detected in bundled files.', 'yellow');
+            } catch (pError) {
+                lConsole.writeLine((<Error>pError).message, 'red');
             }
 
             lBuilding = false;
@@ -127,92 +106,25 @@ export class KgCliCommand implements ICliPackageCommand<PageConfiguration> {
     }
 
     /**
-     * Initializes the initial page files for the given package.
-     * 
-     * This method creates the necessary directory structure and initializes
-     * the HTML, CSS, and TypeScript files if they do not already exist.
-     * 
-     * @param pPackage - The package for which the page files are to be initialized.
-     * 
-     * @remarks
-     * - Creates a 'page' directory inside the package directory.
-     * - Creates a 'source' directory inside the 'page' directory.
-     * - Initializes an 'index.html' file with basic HTML content.
-     * - Initializes an 'index.css' file with basic CSS content.
-     * - Initializes an 'index.ts' file inside the 'source' directory with basic TypeScript content.
+     * Bundle the page by running the build command for the "page" and "bundle" types with the live-reload client
+     * injected. Restricting to those types skips the desktop step, keeping the watch fast.
+     *
+     * @param pProject - Project.
+     * @param pPackage - Package to bundle the page for.
      */
-    private initPageFiles(pPackage: Package): void {
-        const lPageDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'page');
+    private async bundlePage(pProject: Project, pPackage: Package): Promise<void> {
+        // Run the build command for the "page" and "bundle" types only, with the live-reload client injected.
+        const lBuildParameter: CliParameter = new CliParameter('build');
+        lBuildParameter.set('types', 'page,bundle');
+        lBuildParameter.set('injectreload', null);
 
-        // Create page directorys.
-        FileSystem.createDirectory(lPageDirectory);
-        FileSystem.createDirectory(FileSystem.pathToAbsolute(lPageDirectory, 'source'));
-
-        // Init html file.
-        const lHtmlFile: string = FileSystem.pathToAbsolute(lPageDirectory, 'index.html');
-        if (!FileSystem.exists(lHtmlFile)) {
-            FileSystem.write(lHtmlFile,
-                '<html>\n' +
-                '<head>\n' +
-                '    <title>page</title>\n' +
-                '    <link rel="stylesheet" href="./index.css">\n' +
-                '    <script src="/build/page.js" defer></script>\n' +
-                '</head>\n' +
-                '<body>\n' +
-                '    <p>Hello World!!!</p>\n' +
-                '</body>\n' +
-                '</html>'
-            );
-        }
-
-        // Init css file.
-        const lCssFile: string = FileSystem.pathToAbsolute(lPageDirectory, 'index.css');
-        if (!FileSystem.exists(lCssFile)) {
-            FileSystem.write(lCssFile,
-                'p {\n' +
-                '    color: red;\n' +
-                '}\n'
-            );
-        }
-
-        // Init ts file in source directory.
-        const lTsFile: string = FileSystem.pathToAbsolute(lPageDirectory, 'source', 'index.ts');
-        if (!FileSystem.exists(lTsFile)) {
-            FileSystem.write(lTsFile,
-                `console.log('Hello World!!!');`
-            );
-        }
-    }
-
-    /**
-     * Write page bundle files into file system.
-     * 
-     * @param pSource - Source file. 
-     * @param pSourceMap - Source map file.
-     */
-    private writePageBundeFiles(pPageDirectory: string, pSource: Uint8Array, pSourceMap: Uint8Array): void {
-        // Get absolute build directory.
-        const lPageBuildDirectory: string = FileSystem.pathToAbsolute(pPageDirectory, 'build');
-
-        // Create build directory if not exists.
-        if (!FileSystem.exists(lPageBuildDirectory)) {
-            FileSystem.createDirectory(lPageBuildDirectory);
-        }
-
-        // Write source file.
-        const lPageJsFile: string = FileSystem.pathToAbsolute(lPageBuildDirectory, 'page.js');
-        FileSystem.writeBinary(lPageJsFile, pSource);
-
-        // Write source map file.
-        const lPageJsMapFile: string = FileSystem.pathToAbsolute(lPageBuildDirectory, 'page.js.map');
-        FileSystem.writeBinary(lPageJsMapFile, pSourceMap);
+        await new BuildCommand().run(pProject, pPackage, lBuildParameter);
     }
 }
 
 
 type PageConfiguration = {
-    enabled: boolean;
+    directory: string;
     mimeTypeMapping: Record<string, string>;
-    mainBundleRequired: boolean;
     port: number;
 };

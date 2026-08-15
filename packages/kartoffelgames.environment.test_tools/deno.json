@@ -1,0 +1,35 @@
+{
+    "name": "@kartoffelgames/environment-test-tools",
+    "version": "5.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {},
+    "exports": {
+        ".": "./source/index.ts"
+    },
+    "publish": false,
+    "kg": {
+        "name": "Kartoffelgames.Environment.Test_Tools",
+        "source": "./source",
+        "config": {
+            "package-blueprint": "",
+            "build": {
+                "files": {}
+            },
+            "scratchpad": {
+                "directory": "./scratchpad",
+                "mimeTypeMapping": {},
+                "build": false,
+                "port": 8088
+            },
+            "page": {
+                "directory": "./page",
+                "mimeTypeMapping": {},
+                "port": 8088
+            },
+            "test": {
+                "directory": "./test"
+            }
+        }
+    }
+}

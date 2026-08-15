@@ -20,31 +20,23 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Blueprint",
         "config": {
-            "blueprint": "kg-main",
-            "pack": false,
-            "page": {
-                "enabled": false,
-                "mainBundleRequired": false,
-                "port": 8088,
-                "mimeTypeMapping": {}
-            },
             "package-blueprint": "",
-            "scratchpad": {
-                "mainBundleRequired": false,
-                "port": 8088,
-                "mimeTypeMapping": {}
-            },
-            "bundle": {
-                "enabled": false,
+            "build": {
                 "files": {}
             },
-            "test": {
-                "bundleRequired": false,
-                "directory": "./test"
+            "scratchpad": {
+                "directory": "./scratchpad",
+                "mimeTypeMapping": {},
+                "build": false,
+                "port": 8088
             },
-            "transform": {
-                "enableNode": false,
-                "nodeDirectory": "./node"
+            "page": {
+                "directory": "./page",
+                "mimeTypeMapping": {},
+                "port": 8088
+            },
+            "test": {
+                "directory": "./test"
             }
         },
         "source": "./source"

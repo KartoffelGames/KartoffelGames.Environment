@@ -35,9 +35,10 @@ export class KgCliCommand implements ICliPackageCommand<TestConfiguration> {
 
     /**
      * Execute command.
-     * 
-     * @param pParameter - Command parameter.
+     *
      * @param pProject - Project.
+     * @param pPackage - Package the command is applied to.
+     * @param pParameter - Command parameter.
      */
     public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         // Needs a package to run test.

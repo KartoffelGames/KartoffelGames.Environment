@@ -10,7 +10,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     - uses: denoland/setup-deno@v2
       with:
         deno-version: v2.x 
@@ -20,9 +20,9 @@ runs:
       run: deno install
       shell: bash
 
-    # Bundle packages.
+    # Build packages.
     - name: Build
-      run: deno task kg bundle --all
+      run: deno task kg build --all
       shell: bash
 
     # Release Public Packages

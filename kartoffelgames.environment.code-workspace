@@ -17,12 +17,12 @@
             "path": "packages/kartoffelgames.environment.cli"
         },
         {
-            "name": "Kartoffelgames.Environment.Command_Bump",
-            "path": "packages/kartoffelgames.environment.command_bump"
+            "name": "Kartoffelgames.Environment.Command_Build",
+            "path": "packages/kartoffelgames.environment.command_build"
         },
         {
-            "name": "Kartoffelgames.Environment.Command_Bundle",
-            "path": "packages/kartoffelgames.environment.command_bundle"
+            "name": "Kartoffelgames.Environment.Command_Bump",
+            "path": "packages/kartoffelgames.environment.command_bump"
         },
         {
             "name": "Kartoffelgames.Environment.Command_Create",
@@ -49,12 +49,12 @@
             "path": "packages/kartoffelgames.environment.command_test"
         },
         {
-            "name": "Kartoffelgames.Environment.Command_Transform",
-            "path": "packages/kartoffelgames.environment.command_transform"
-        },
-        {
             "name": "Kartoffelgames.Environment.Core",
             "path": "packages/kartoffelgames.environment.core"
+        },
+        {
+            "name": "Kartoffelgames.Environment.Test_Tools",
+            "path": "packages/kartoffelgames.environment.test_tools"
         },
         {
             "name": "_ROOT",

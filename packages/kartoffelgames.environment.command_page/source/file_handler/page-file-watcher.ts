@@ -1,17 +1,20 @@
 import { FileSystem } from "@kartoffelgames/environment-core";
 
 export class PageFileWatcher {
+    private readonly mIgnoredPaths: Array<string>;
     private readonly mListener: Array<PageFileWatcherListener>;
     private readonly mWatchedPaths: Array<string>;
     private mWatcher: Deno.FsWatcher | null;
 
     /**
      * Constructor.
-     * 
+     *
      * @param pWatchPaths - Watch paths.
+     * @param pIgnorePaths - Paths that should never trigger the watcher.
      */
-    constructor(pWatchPaths: Array<string>) {
+    public constructor(pWatchPaths: Array<string>, pIgnorePaths: Array<string>) {
         this.mWatchedPaths = pWatchPaths;
+        this.mIgnoredPaths = pIgnorePaths.map((pPath) => FileSystem.normalizePath(pPath));
         this.mListener = new Array<PageFileWatcherListener>();
         this.mWatcher = null;
     }
@@ -26,7 +29,7 @@ export class PageFileWatcher {
     }
 
     /**
-     * Initialize watcher for page files.
+     * Initialize watcher for app files.
      * 
      * @param pWatchPaths - Watch paths.
      * @param pWatchCallback - Watch callback.
@@ -57,12 +60,31 @@ export class PageFileWatcher {
             }
 
             // Skip any changes that doesn't have a file extension, as they are likely to be directory changes.
-            if(!lEvent.paths.some((p) => FileSystem.pathInformation(p).isFile)) {
+            if (!lEvent.paths.some((p) => FileSystem.pathInformation(p).isFile)) {
                 continue;
             }
 
             // When a file path ends with .bundle-entry.ts ignore it, as it's a generated file that is not relevant for the watcher.
             if (lEvent.paths.some((p) => p.endsWith('.bundle-entry.ts'))) {
+                continue;
+            }
+
+            // Check if every path is ignored.
+            const lPathsAreIgnored: boolean = lEvent.paths.every((pPath) => {
+                const lNormalizedPath: string = FileSystem.normalizePath(pPath);
+
+                // Search for a ignored path.
+                for (const lIgnoredPath of this.mIgnoredPaths) {
+                    if (lNormalizedPath === lIgnoredPath || lNormalizedPath.startsWith(`${lIgnoredPath}/`)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+
+            // Skip events that only affect ignored paths.
+            if (lPathsAreIgnored) {
                 continue;
             }
 

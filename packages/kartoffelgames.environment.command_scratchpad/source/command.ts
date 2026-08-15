@@ -18,8 +18,9 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
             configuration: {
                 name: 'scratchpad',
                 default: {
+                    directory: './scratchpad',
                     mimeTypeMapping: {},
-                    mainBundleRequired: false,
+                    build: false,
                     port: 8088
                 },
             }
@@ -28,42 +29,44 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
     /**
      * Execute command.
-     * 
-     * @param pParameter - Command parameter.
+     *
      * @param pProjectHandler - Project.
+     * @param pPackage - Package the command is applied to.
+     * @param _pParameter - Command parameter.
      */
     public async run(pProjectHandler: Project, pPackage: Package | null, _pParameter: CliParameter): Promise<void> {
-        // Needs a package to run test.
+        // Needs a package to run scratchpad.
         if (pPackage === null) {
             throw new Error('Package to run scratchpad not specified.');
         }
 
         // Read cli configuration from cli package.
-        const lPackageConfiguration = await pPackage?.cliConfigurationOf(this);
+        const lPackageConfiguration = pPackage.cliConfigurationOf(this);
+
+        // Scratchpad directory of www files (configurable).
+        const lScratchpadDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, lPackageConfiguration.directory);
 
         // Create watch paths for package source and scratchpad directory.
         const lWatchPaths: Array<string> = [
             pPackage.sourceDirectory,
-            FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad')
+            lScratchpadDirectory
         ];
 
         // Init scratchpad files.
-        this.initScratchpadFiles(pPackage);
-
-        // Source directory of www files.
-        const lSourceDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad');
+        this.initScratchpadFiles(lScratchpadDirectory);
 
         // Create console.
         const lConsole = new Console();
 
         // Build scratchpad http-server, watcher and bundler.
-        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lSourceDirectory, lPackageConfiguration.mimeTypeMapping);
+        const lHttpServer: ScratchpadHttpServer = new ScratchpadHttpServer(lPackageConfiguration.port, lScratchpadDirectory, lPackageConfiguration.mimeTypeMapping);
         const lWatcher: ScratchpadFileWatcher = new ScratchpadFileWatcher(lWatchPaths);
         const lScratchpadBundler: ScratchpadBundler = new ScratchpadBundler({
             projectHandler: pProjectHandler,
             package: pPackage,
-            coreBundleRequired: lPackageConfiguration.mainBundleRequired,
+            build: lPackageConfiguration.build,
             websocketPort: lPackageConfiguration.port,
+            directory: lPackageConfiguration.directory,
         });
 
         // Build initial build files.
@@ -71,16 +74,19 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
         await lScratchpadBundler.bundle();
         lHttpServer.setScratchpadBundle(lScratchpadBundler.sourceFile, lScratchpadBundler.sourceMapFile);
         
-        // Flag to halt other watcher events while the current one is still processing, to prevent multiple builds at the same time.
+        // Halt other watcher events while one is processing, to prevent concurrent builds.
         let lBuilding: boolean = false;
 
         // Rebundle scratchpad files and refresh connected browsers when files have changed.
         lWatcher.addListener(async () => {
-            // Skip when a build is already running, to prevent multiple builds at the same time.
+            // Skip when a build is already running.
             if (lBuilding) {
                 return;
             }
             lBuilding = true;
+
+            // Signal the rebuild, since bundling can take a while.
+            lConsole.writeLine('File change detected. Bundling...', 'yellow');
 
             // Bundle files and update server served scratchpad files once they have changed.
             if (await lScratchpadBundler.bundle()) {
@@ -109,17 +115,13 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
     }
 
     /**
-     * Initializes the scratchpad files for the given package.
-     * 
-     * This method creates a scratchpad directory and initializes the following files:
-     * - `index.html`: A basic HTML file with a linked CSS file and a script.
-     * - `index.css`: A basic CSS file that styles a paragraph element.
-     * - `index.ts`: A TypeScript file that logs "Hello World!!!" to the console.
-     * 
-     * @param pPackage - The package for which the scratchpad files are to be initialized.
+     * Create the scratchpad directory and its starter files (index.html, index.css, source/index.ts) if they do not
+     * already exist.
+     *
+     * @param pScratchpadDirectory - Absolute path of the scratchpad directory the files are initialized in.
      */
-    private initScratchpadFiles(pPackage: Package): void {
-        const lScratchpadDirectory: string = FileSystem.pathToAbsolute(pPackage.directory, 'scratchpad');
+    private initScratchpadFiles(pScratchpadDirectory: string): void {
+        const lScratchpadDirectory: string = pScratchpadDirectory;
 
         // Create scratchpad directorys.
         FileSystem.createDirectory(lScratchpadDirectory);
@@ -164,7 +166,8 @@ export class KgCliCommand implements ICliPackageCommand<ScratchpadConfiguration>
 
 
 type ScratchpadConfiguration = {
+    directory: string;
     mimeTypeMapping: Record<string, string>;
-    mainBundleRequired: boolean;
+    build: boolean;
     port: number;
 };

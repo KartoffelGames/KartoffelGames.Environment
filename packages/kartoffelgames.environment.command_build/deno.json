@@ -1,0 +1,45 @@
+{
+    "name": "@kartoffelgames/environment-command-build",
+    "version": "5.0.1",
+    "license": "LGPL-3.0-only",
+    "tasks": {},
+    "imports": {
+        "@std/expect": "jsr:@std/expect@^1.0.13"
+    },
+    "exports": {
+        ".": "./source/index.ts",
+        "./kg-cli.config.json": "./kg-cli.config.json"
+    },
+    "publish": {
+        "include": [
+            "source/",
+            "deno.json",
+            "kg-cli.config.json",
+            "LICENSE"
+        ]
+    },
+    "kg": {
+        "name": "Kartoffelgames.Environment.Command_Build",
+        "source": "./source",
+        "config": {
+            "package-blueprint": "",
+            "build": {
+                "files": {}
+            },
+            "scratchpad": {
+                "directory": "./scratchpad",
+                "mimeTypeMapping": {},
+                "build": false,
+                "port": 8088
+            },
+            "page": {
+                "directory": "./page",
+                "mimeTypeMapping": {},
+                "port": 8088
+            },
+            "test": {
+                "directory": "./test"
+            }
+        }
+    }
+}

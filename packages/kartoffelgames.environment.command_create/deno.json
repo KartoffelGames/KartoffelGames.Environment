@@ -4,7 +4,8 @@
     "license": "LGPL-3.0-only",
     "tasks": {},
     "imports": {
-        "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.7.57"
+        "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.7.57",
+        "@std/expect": "jsr:@std/expect@^1.0.13"
     },
     "exports": {
         ".": "./source/index.ts",
@@ -21,31 +22,23 @@
     "kg": {
         "name": "Kartoffelgames.Environment.Command_Create",
         "config": {
-            "blueprint": "kg-main",
-            "pack": false,
-            "page": {
-                "enabled": false,
-                "mainBundleRequired": false,
-                "port": 8088,
-                "mimeTypeMapping": {}
-            },
             "package-blueprint": "",
-            "bundle": {
-                "enabled": false,
+            "build": {
                 "files": {}
             },
             "scratchpad": {
-                "mainBundleRequired": false,
-                "port": 8088,
-                "mimeTypeMapping": {}
+                "directory": "./scratchpad",
+                "mimeTypeMapping": {},
+                "build": false,
+                "port": 8088
+            },
+            "page": {
+                "directory": "./page",
+                "mimeTypeMapping": {},
+                "port": 8088
             },
             "test": {
-                "bundleRequired": false,
                 "directory": "./test"
-            },
-            "transform": {
-                "enableNode": false,
-                "nodeDirectory": "./node"
             }
         },
         "source": "./source"

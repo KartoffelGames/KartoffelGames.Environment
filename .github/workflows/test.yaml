@@ -15,7 +15,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       
       # Run local composite test.
       - name: 'Test Packages'
@@ -26,13 +26,3 @@ jobs:
         uses: ./.github/actions/release-jsr-packages
         with:
           dry-run: true
-
-      # Dry run publish.
-      - name: 'Test NPM Publish'
-        uses: ./.github/actions/release-npm-packages
-        with:
-          registry-token: ${{ secrets.CI_NPM_TOKEN }}
-          registry-url: 'https://registry.npmjs.org'
-          registry-scope: '@kartoffelgames'
-          dry-run: true
-      

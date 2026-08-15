@@ -4,11 +4,11 @@ import { BlobReader, Uint8ArrayWriter, ZipReader } from '@zip-js/zip-js';
 /**
  * Command to initialize new monorepo project.
  */
-export class Command implements ICliPackageCommand<string> {
+export class Command implements ICliPackageCommand {
     /**
      * Command description.
      */
-    public get information(): CliCommandDescription<string> {
+    public get information(): CliCommandDescription {
         return {
             command: {
                 description: 'Initialize new monorepo project.',
@@ -16,10 +16,7 @@ export class Command implements ICliPackageCommand<string> {
                     root: 'init'
                 }
             },
-            configuration: {
-                name: 'project-blueprint',
-                default: ''
-            }
+            configuration: null
         };
     }
 
@@ -41,11 +38,8 @@ export class Command implements ICliPackageCommand<string> {
 
     /**
      * Create blueprint files.
-     * 
-     * @param pProjectName - Package name.
-     * @param pBlueprint - Blueprint name.
-     * @param pCommandParameter - Command parameter.
-     * @returns 
+     *
+     * @returns Target path of the created project.
      */
     private async createBlueprint(): Promise<string> {
         const lConsole = new Console();
@@ -61,7 +55,7 @@ export class Command implements ICliPackageCommand<string> {
         // Ask the user about the project scope.
         const lProjectScope: string = await lConsole.promt('Project Scope (@example): ', /^@[a-z]+/);
 
-        // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the the blueprint path.
+        // Build blueprint file url by getting the path of kg-cli.config.json and replacing it with the blueprint path.
         const lProjectBlueprintZipUrlString: string = import.meta.url.replace('source/command.ts', 'blueprint/project-blueprint.zip');
         const lProjectBlueprintZipUrl: URL = new URL(lProjectBlueprintZipUrlString);
 
@@ -101,10 +95,10 @@ export class Command implements ICliPackageCommand<string> {
                 // Read zipped file.
                 const lZipFileData: Uint8Array = await lZipEntry.getData!<Uint8Array>(new Uint8ArrayWriter());
                 FileSystem.writeBinary(lTargetFilePath, lZipFileData);
-
-                // Replace blueprint placeholder.
-                this.replacePlaceholder(lTargetPath, lProjectScope);
             }
+
+            // Replace blueprint placeholder in all copied files once copying is finished.
+            await this.replacePlaceholder(lTargetPath, lProjectScope);
         } catch (lError) {
             lConsole.writeLine('ERROR: Try rollback.');
 

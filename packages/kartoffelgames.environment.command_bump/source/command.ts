@@ -7,7 +7,7 @@ export class KgCliCommand implements ICliPackageCommand {
     public get information(): CliCommandDescription {
         return {
             command: {
-                description: 'Bump root project version [<newversion> | major | minor | patch]',
+                description: 'Bump root project version. Use --type with major, minor, patch or an explicit <major.minor.patch> version.',
                 parameters: {
                     root: 'bump',
                     optional: {
@@ -23,8 +23,10 @@ export class KgCliCommand implements ICliPackageCommand {
 
     /**
      * Execute command.
-     * @param _pParameter - Command parameter.
-     * @param pCommandPackages - All cli packages grouped by type.
+     *
+     * @param pProject - Project.
+     * @param pPackage - Package the command is applied to.
+     * @param pParameter - Command parameter.
      */
     public async run(pProject: Project, pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         // Check if package is set.
@@ -37,7 +39,7 @@ export class KgCliCommand implements ICliPackageCommand {
             throw new Error('Type parameter is required');
         }
 
-        // Split current project version into
+        // Split the current project version into its parts.
         const lVersionParts: Array<string> = pProject.version.split('.');
         const lVersion: [number, number, number] = [
             parseInt(lVersionParts[0]) ?? 0,

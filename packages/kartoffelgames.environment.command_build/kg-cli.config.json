@@ -1,5 +1,5 @@
 {
     "type": "command",
-    "name": "transform",
+    "name": "build",
     "commandEntryClass": "KgCliCommand"
 }

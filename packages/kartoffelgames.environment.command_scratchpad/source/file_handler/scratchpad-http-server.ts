@@ -53,7 +53,7 @@ export class ScratchpadHttpServer {
     /**
      * Start webserver.
      * Listens on localhost and serves files from root path.
-     * Serves bundled files from library directory when any /bundle/ path is requested.
+     * Serves the package library directory when any /library/ path is requested.
      * Serves scratchpad.js and scratchpad.js.map from cache only on root path.
      * 
      * @param pPort - Listening port.
@@ -99,9 +99,9 @@ export class ScratchpadHttpServer {
             const lFilePathName: string = new URL(pReqest.url).pathname;
             let lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
-            // Special case for bundle directory.
-            if (lFilePathName.toLowerCase().startsWith('/bundle/')) {
-                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(8));
+            // Special case for the package library directory.
+            if (lFilePathName.toLowerCase().startsWith('/library/')) {
+                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(9));
             }
 
             // Send file when it is in fact a file path.

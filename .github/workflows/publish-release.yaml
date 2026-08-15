@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checkout needed for local composite file.
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       # Run local composite test.
       - name: 'Test Packages'
         uses: ./.github/actions/run-tests
@@ -27,36 +27,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       # Run local composite package release.
       - name: 'Publish JSR Packages'
         uses: ./.github/actions/release-jsr-packages
-
-  publish-npm-packages:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      # Run local composite package release.
-      - name: 'Publish NPM Packages'
-        uses: ./.github/actions/release-npm-packages
-        with:
-          registry-token: ${{ secrets.CI_NPM_TOKEN }}
-          registry-url: 'https://registry.npmjs.org'
-          registry-scope: '@kartoffelgames'
-
-  publish-github-packages:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      # Run local composite package release.
-      - name: 'Publish GitHub Packages'
-        uses: ./.github/actions/release-npm-packages
-        with:
-          registry-token: ${{ secrets.CI_GITHUB_TOKEN }}
-          registry-url: 'https://npm.pkg.github.com'
-          registry-scope: '@kartoffelgames'

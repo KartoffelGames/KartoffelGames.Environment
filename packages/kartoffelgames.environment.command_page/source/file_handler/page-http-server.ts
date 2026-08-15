@@ -36,12 +36,7 @@ export class PageHttpServer {
 
     /**
      * Start webserver.
-     * Listens on localhost and serves files from root path.
-     * Serves bundled files from library directory when any /bundle/ path is requested.
-     * Serves page.js and page.js.map from cache only on root path.
-     * 
-     * @param pPort - Listening port.
-     * @param pRootPath - Root path for webserver files.
+     * Listens on localhost and serves files from the configured root path.
      */
     public async start(): Promise<void> {
         // Prevent server from starting multiple times.
@@ -67,7 +62,7 @@ export class PageHttpServer {
             lMimeTypeMapping.set(lExtension, lMimeType);
         }
 
-        // Define default header.
+        // Default headers enabling cross-origin isolation, required for SharedArrayBuffer to be available on the page.
         const lDefaultHeaders = {
             'Cross-Origin-Opener-Policy': 'same-origin',
             'Cross-Origin-Embedder-Policy': 'credentialless'
@@ -81,12 +76,9 @@ export class PageHttpServer {
             }
 
             const lFilePathName: string = new URL(pReqest.url).pathname;
-            let lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
-            // Special case for bundle directory.
-            if (lFilePathName.toLowerCase().startsWith('/bundle/')) {
-                lFilePath = FileSystem.pathToAbsolute(this.mRootPath, '..', 'library', lFilePathName.substring(8));
-            }
+            // Serve files only from the page directory, exactly like a static host would.
+            const lFilePath: string = FileSystem.pathToAbsolute(this.mRootPath, '.' + lFilePathName);
 
             // Send file when it is in fact a file path.
             if (FileSystem.exists(lFilePath)) {

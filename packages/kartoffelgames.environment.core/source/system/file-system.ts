@@ -290,6 +290,20 @@ export class FileSystem {
     }
 
     /**
+     * Normalize a path for comparison by unifying separators and casing.
+     *
+     * @param pPath - Path to normalize.
+     *
+     * @returns Normalized path.
+     */
+    public static normalizePath(pPath: string): string {
+        const lForwardSlashPath: string = pPath.replaceAll('\\', '/');
+
+        // Fuck it, all systems are case-insensitive, so compare lower cased to avoid casing mismatches.
+        return lForwardSlashPath.toLowerCase();
+    }
+
+    /**
      * Get path information.
      * 
      * @param pPath - Path to file.
@@ -326,6 +340,17 @@ export class FileSystem {
      */
     public static pathToAbsolute(...pPathParts: Array<string>): string {
         return path.resolve(...pPathParts);
+    }
+
+    /**
+     * Convert a file path into a file URL.
+     *
+     * @param pPath - Absolute file path.
+     *
+     * @returns File URL of the path.
+     */
+    public static pathToFileUrl(pPath: string): URL {
+        return path.toFileUrl(pPath);
     }
 
     /**
@@ -379,7 +404,7 @@ export class FileSystem {
      * @param pContent - File content.
      */
     public static write(pPath: string, pContent: string): void {
-        Deno.writeTextFile(pPath, pContent);
+        Deno.writeTextFileSync(pPath, pContent);
     }
 
     /**

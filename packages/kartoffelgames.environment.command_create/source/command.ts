@@ -34,8 +34,10 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
     /**
      * Execute command.
+     *
+     * @param pProject - Project.
+     * @param _pPackage - Package the command is applied to.
      * @param pParameter - Command parameter.
-     * @param pBlueprintPackages - All cli packages grouped by type.
      */
     public async run(pProject: Project, _pPackage: Package | null, pParameter: CliParameter): Promise<void> {
         const lConsole = new Console();
@@ -64,7 +66,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
         if (pParameter.has('blueprint')) {
             lBlueprintName = pParameter.get('blueprint').toLowerCase();
         } else {
-            lBlueprintName = await lConsole.promt('Bluprint name: ', /^[a-z0-9-]+$/);
+            lBlueprintName = await lConsole.promt('Blueprint name: ', /^[a-z0-9-]+$/);
         }
 
         // Find blueprint by name.
@@ -73,7 +75,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
             throw `Blueprint "${lBlueprintName}" not found.`;
         }
 
-        // Find name. Get from command parameter on promt user.
+        // Find name. Get from command parameter or prompt the user.
         const lPackageNameValidation: RegExp = /^(?:@[a-z0-9-]+\/)?[a-z0-9-]+$/;
         let lNewPackageName: string;
         if (pParameter.has('packagename')) {
@@ -82,7 +84,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
             lNewPackageName = await lConsole.promt('Package Name: ', lPackageNameValidation);
         }
 
-        // Validate packag name again or for the first time.
+        // Validate package name again or for the first time.
         if (!lPackageNameValidation.test(lNewPackageName)) {
             throw 'Package name does not match JSR package name convention';
         }
@@ -112,8 +114,10 @@ export class KgCliCommand implements ICliPackageCommand<string> {
 
     /**
      * Add packages as vs code workspace to workspace settings.
-     * @param pWorkspaceName - Name of workspace. 
-     * @param pWorkspaceFolder - Folder name of workspace.
+     *
+     * @param pProject - Project.
+     * @param pPackageName - Package name.
+     * @param pPackageDirectory - Package directory.
      */
     private addWorkspace(pProject: Project, pPackageName: string, pPackageDirectory: string): void {
         // Read workspace file json.
@@ -129,7 +133,7 @@ export class KgCliCommand implements ICliPackageCommand<string> {
             path: lPackageDirectory
         });
 
-        // Sort folder alphabeticaly.
+        // Sort folder alphabetically.
         lPackageDirectoryList.sort((pFirst, pSecond) => {
             if (pFirst.name < pSecond.name) { return -1; }
             if (pFirst.name > pSecond.name) { return 1; }

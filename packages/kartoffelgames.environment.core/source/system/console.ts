@@ -20,20 +20,21 @@ export class Console {
     }
 
     /**
-     * Open promt and validate answer.
-     * @param pQuestion - Input question. 
+     * Open prompt and validate answer.
+     *
+     * @param pQuestion - Input question.
      * @param pValidationRegex - Validation for input.
      */
     public async promt(pQuestion: string, pValidationRegex: RegExp): Promise<string> {
-        // Ask user..
+        // Ask user.
         const lAnswer: string = prompt(pQuestion) ?? '';
 
         // Validate answer.
         if (pValidationRegex && !pValidationRegex.test(lAnswer)) {
-            // Output error message and retry promt.
-            this.writeLine(`Answer musst match ${pValidationRegex.toString()}`);
+            // Output error message and retry the prompt.
+            this.writeLine(`Answer must match ${pValidationRegex.toString()}`);
 
-            // Reopen promt.
+            // Reopen the prompt.
             return this.promt(pQuestion, pValidationRegex);
         } else {
             return lAnswer;
